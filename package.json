@@ -1,0 +1,24 @@
+{
+  "name": "automatic-integration",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VonageGarage/automatic-integration.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VonageGarage/automatic-integration/issues"
+  },
+  "homepage": "https://github.com/VonageGarage/automatic-integration#readme",
+  "dependencies": {
+    "express": "^4.16.0",
+    "express-session": "^1.15.6",
+    "simple-oauth2": "^1.3.0"
+  }
+}
