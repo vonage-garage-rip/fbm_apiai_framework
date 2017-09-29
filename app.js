@@ -76,7 +76,7 @@ app.get('/welcome', (req, res) => {
 
 // Main page of app with link to log in
 app.get('/', (req, res) => {
-  res.send('<a href="/auth">Log in with Automatic</a>');
+  res.send('<a href="https://accounts.automatic.com/oauth/authorize/?client_id=085e19abb5ad5376dbb5&amp;response_type=code&amp;scope=scope:public%20scope:user:profile%20scope:location%20scope:vehicle:profile%20scope:vehicle:events%20scope:trip%20scope:behavior" target="_blank"><img src="https://d1qbqqxx54sk5g.cloudfront.net/website/img/developer/buttons/signin-xlarge@2x.271d1595432a.png"></a>');
 });
 
 // Start server
