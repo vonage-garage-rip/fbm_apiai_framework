@@ -5,7 +5,7 @@ require('log-timestamp');
 
 const utility = require('./utility');
 const sessionsManager = require('../../sessionsManager');
-
+const automatic = require('../../integrations/automatic')
 
 var sendMessageToUser = function (message, sessionId) {
   let session = sessionsManager.getSessionBySessionId(sessionId);
@@ -163,12 +163,24 @@ const receivedAccountLink = (event) => {
 
   var status = event.account_linking.status;
   var authCode = event.account_linking.authorization_code.substring("MY_AUTHORIZATION_CODE_".length);
-
+  automatic.setAccessToken(authCode)
   console.log("Received account link event with for user %d with status %s " +
     "and auth code %s ", senderID, status, authCode);
   sessionsManager.getSessionByChannelEvent({from: senderID })
   .then(session => {
-    sendMessageToUser({text: "Yay! your auth code is " + authCode, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId )
+    automatic.getVehicleInfo()
+    .then(vehicleInfo => {
+      if ( vehicleInfo && vehicleInfo.results && vehicleInfo.results[0] ) {
+        let vehicle = vehicleInfo.results[0]
+        sendMessageToUser({text: "You drive " + vehicle.make + " " + vehicle.model + " " + vehicle.submodel + " " + vehicle.year, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId)
+      }
+      else {
+        sendMessageToUser({text: "Couldn't get your vehicle info but your auth code is " + authCode, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId )
+      }
+    })
+    .catch(err=> {
+      console.log("receivedAccountLink caught an error: " + err)
+    })
   })
 }
 
