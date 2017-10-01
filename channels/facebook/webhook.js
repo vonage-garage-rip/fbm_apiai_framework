@@ -173,6 +173,7 @@ const receivedAccountLink = (event) => {
       if ( vehicleInfo && vehicleInfo.results && vehicleInfo.results[0] ) {
         let vehicle = vehicleInfo.results[0]
         sendMessageToUser({text: "You drive " + vehicle.make + " " + vehicle.model + " " + vehicle.submodel + " " + vehicle.year, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId)
+        /// save to firebase db here
       }
       else {
         sendMessageToUser({text: "Couldn't get your vehicle info but your auth code is " + authCode, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId )

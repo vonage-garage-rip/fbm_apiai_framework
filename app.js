@@ -1,4 +1,3 @@
-// https://developers.facebook.com/docs/messenger-platform/design-best-practices/guides/account-linking/
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -8,6 +7,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 const sessionsManager = require('./sessionsManager')
+const firebaseAdmin = require('./integrations/firebase')
 
 var fb_redirect_uri, fb_account_linking_token
 
@@ -59,6 +59,7 @@ app.get('/auth', (req, res) => {
 app.get('/redirect', (req, res) => {
   const code = req.query.code;
 
+  // save to Firebasse
   function saveToken(error, result) {
     if (error) {
       console.log('Access token error', error.message);
