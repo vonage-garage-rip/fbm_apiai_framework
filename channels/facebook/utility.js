@@ -320,6 +320,32 @@ function sendCustomMessage(recipientId, messageObject) {
   callSendAPI(messageData);
 }
 
+
+function sendQuickReply(recipientId, text, quickReplyButtons) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: text,
+      quick_replies: quickReplyButtons.map(function (quickReply) {
+        if (typeof (quickReply) === "string") {
+          return {
+            content_type: "text",
+            title: quickReply,
+            payload: quickReply
+          }
+        }
+        else {
+          return quickReply;
+        }
+      })
+    }
+  }
+
+  callSendAPI(messageData);
+}
+
 function sendReadReceipt(recipientId) {
   console.log("Sending a read receipt to mark message as seen");
 
@@ -451,6 +477,6 @@ var verifySubscription = (req, res) => {
 
 
 module.exports = {
-  setChannel, getUserProfile, sendTextMessage, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
+  setChannel, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
   verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
 };
