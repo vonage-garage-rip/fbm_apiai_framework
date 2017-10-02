@@ -23,6 +23,7 @@ const MESSAGE_TYPES = {
 };
 
 
+const apiai = require('./apiai');
 const fbChannel = require('./channels/facebook/webhook');
 const fbUtility = require('./channels/facebook/utility');
 
@@ -89,6 +90,68 @@ var getSessionByChannelEvent = (messagingEvent) => {
 
 
 
+var handleResponseWithMessages = (apiairesponse) => {
+    var messages = apiairesponse.result.fulfillment.messages;
+
+    messages.forEach(function (message, index) {
+        //Delay or queue messages so we'll keep order in place
+        setTimeout(function () {
+            if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
+                //TODO: REFACTOR
+                if (message.payload && message.payload.urls || message.payload && message.payload.facebook.attachment.payload.isVideo || message.payload && message.payload.facebook.attachment.payload.isAudio) {
+                    if (message.payload.facebook && message.payload.facebook.attachment.payload.isVideo || message.payload.facebook && message.payload.facebook.attachment.payload.isAudio) {
+                        //Handle API.AI custom payload response
+                        message.payload = message.payload.facebook.attachment.payload;
+                    }
+                    //Handle many content urls
+                    message.payload.urls.forEach(function (url) {
+                        //Check if Message contains audio, video or image.
+                        var urlMessage = identifyUrl(message, url);
+
+                        fbChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
+                    });
+                }
+                else {
+                    fbChannel.sendMessageToUser(message, apiairesponse.sessionId);
+
+                }
+            }
+        }, 1460 * index);
+    })
+}
+
+const handleApiaiResponse = (apiairesponse) => {
+    if (apiairesponse) {
+        console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
+        switch (apiairesponse.result.action) {
+            case "collect_area_of_interest":
+                setSessionLocation(apiairesponse.sessionId, apiairesponse.result.resolvedQuery);
+                break;
+            // case "collect_job_type":
+            //     console.log("Collect Job Type");
+            //     //Fire Intent to Keep in Touch                
+            //     break;
+        }
+
+        if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
+            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
+        }
+
+        if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
+            if (apiairesponse.result.action === "collect_job_type") {
+                setTimeout(function () {
+                    handleResponseWithMessages(apiairesponse);
+                }, 3750);
+            }
+            else {
+                handleResponseWithMessages(apiairesponse);
+            }
+        }
+        else {
+            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
+        }
+    }
+}
 const handleInboundChannelMessage = (message) => {
     getSessionByChannelEvent(message)
         .then((session) => {
@@ -96,6 +159,15 @@ const handleInboundChannelMessage = (message) => {
             if (message.text==="link") {
                 fbUtility.sendAccountLinking(message.from)
             }
+            else if (message.quick_reply) {
+                return apiai.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
+            }
+            // send message to api.ai
+            console.log("session", session, "sessionsManager.handleInboundChannelMessage: sending message to api.ai: " + JSON.stringify(message));
+            return apiai.sendTextMessageToApiAi(message.text, session.sessionId);
+        })
+        .then(apiairesponse => {
+            handleApiaiResponse(apiairesponse);
         })
         .catch(err => {
             console.log("sessionsManager.handleInboundChannelMessage caught an error: " + err);
