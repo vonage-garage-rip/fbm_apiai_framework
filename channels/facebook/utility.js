@@ -148,11 +148,11 @@ function receivedDeliveryConfirmation(event) {
   var watermark = delivery.watermark;
   var sequenceNumber = delivery.seq;
 
-  /*if (messageIDs) {
+  if (messageIDs) {
     messageIDs.forEach(function(messageID) {
       console.log("Received delivery confirmation for message ID: %s", messageID);
     });
-  }*/
+  }
 
 }
 
@@ -328,7 +328,7 @@ function sendAccountLinking(recipientId) {
           text: "Welcome. Link your account.",
           buttons: [{
             type: "account_link",
-            url: process.env.AUTHORIZATION_URL
+            url: AUTHORIZATION_URL
           }]
         }
       }
@@ -368,24 +368,24 @@ function getUserProfile(userId) {
 function callSendAPI(messageData) {
   let qs = "?access_token=" + PAGE_ACCESS_TOKEN;
   fetch('https://graph.facebook.com/v2.6/me/messages' + qs,
-    {
-      method: 'POST',
-      body: JSON.stringify(messageData),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(function (res) {
-      return res.json();
-    })
-    .then(function (json) {
-      var recipientId = json.recipient_id;
-      var messageId = json.message_id;
-    })
-    .catch(err => {
-      console.error("Failed calling Send API", err); /// show status code, status message and error
-    })
+  {
+    method: 'POST',
+    body: JSON.stringify(messageData),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(function (res) {
+    return res.json();
+  })
+  .then(function (json) {
+    var recipientId = json.recipient_id;
+    var messageId = json.message_id;
+  })
+  .catch(err => {
+    console.error("Failed calling Send API", err); /// show status code, status message and error
+  })
 }
 
 var verifySubscription = (req, res) => {
