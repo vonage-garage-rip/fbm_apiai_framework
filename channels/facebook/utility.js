@@ -21,6 +21,8 @@ const PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN;
 
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL;
 
+const PERSISTENT_MENU = process.env.PERSISTENT_MENU || []
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
   console.error("Missing config values");
   process.exit(1);
@@ -36,82 +38,7 @@ const setChannel = () => {
 const setPersistentMenu = () => {
   let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
   let persistentMenu = {
-    "persistent_menu": [
-      {
-        "locale": "default",
-        "composer_input_disabled": false,
-        "call_to_actions": [
-          // {
-          //   "type": "nested",
-          //   "title": "About Vonage",
-          //   "call_to_actions": [
-          //     {
-          //       "title": "Our Culture",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "ABOUT_VONAGE_MENU_ITEM", data: { about: "culture" } })
-          //     },
-          //     {
-          //       "title": "Our Values",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "ABOUT_VONAGE_MENU_ITEM", data: { about: "values" } })
-          //     },
-          //     {
-          //       "title": "Our Benefits",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "ABOUT_VONAGE_MENU_ITEM", data: { about: "benefits" } })
-          //     }
-          //   ]
-          // },
-          // {
-          //   "title": "Our Offices",
-          //   "type": "nested",
-          //   "call_to_actions": [
-          //     {
-          //       "title": "Holmdel, NJ",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "VONAGE_OFFICE_MENU_ITEM", data: { location: "holmdel" } })
-          //     },
-          //     {
-          //       "title": "Atlanta, GA",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "VONAGE_OFFICE_MENU_ITEM", data: { location: "atlanta" } })
-          //     },
-          //     {
-          //       "title": "New York, NY",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "VONAGE_OFFICE_MENU_ITEM", data: { location: "new-york" } })
-          //     },
-          //     {
-          //       "title": "London, UK",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "VONAGE_OFFICE_MENU_ITEM", data: { location: "london" } })
-          //     },
-          //     {
-          //       "title": "San-Francisco, CA",
-          //       "type": "postback",
-          //       "payload": JSON.stringify({ type: "VONAGE_OFFICE_MENU_ITEM", data: { location: "san-francisco" } })
-          //     },
-          //   ]
-          // },
-          {
-            "title": "Explore Vonage",
-            "type": "postback",
-            "payload": JSON.stringify({ type: "CONTACT_VEE_MENU_ITEM" })
-          },
-          {
-            "title": "Contact Agent",
-            "type": "postback",
-            "payload": JSON.stringify({ type: "DISABLE_VEE_MENU_ITEM" })
-          }//,
-          // {
-          //   "title": "Tour Offices",
-          //   "type": "web_url",
-          //   "url": "http://vr-tour.us-east-1.elasticbeanstalk.com/#!/landingPage",
-          //   "webview_height_ratio":"full"
-          // }
-        ]
-      }
-    ]
+    "persistent_menu": PERSISTENT_MENU
   }
   fetch(fullURL, { method: "POST", body: JSON.stringify(persistentMenu), headers: { "Content-Type": "application/json" } })
     .then(function (res) {
@@ -131,7 +58,7 @@ const setGetStartedButton = (sessionId, text) => {
     "setting_type": "call_to_actions",
     "thread_state": "new_thread",
     "call_to_actions": [{
-      "payload": sessionsManagerEvents.HRCHATBOT_BOT_GET_STARTED_PAYLOAD
+      "payload": sessionsManagerEvents.GET_STARTED_PAYLOAD
     }]
   };
   fetch(fullURL, { method: "POST", body: JSON.stringify(getStartedMessage), headers: { "Content-Type": "application/json" } })
@@ -256,7 +183,7 @@ function sendTextMessage(recipientId, text) {
     },
     message: {
       text: text,
-      metadata: "HRCHATBOT_METADATA"
+      metadata: "CHATBOT_METADATA"
     }
   };
 
@@ -319,7 +246,6 @@ function sendCustomMessage(recipientId, messageObject) {
 
   callSendAPI(messageData);
 }
-
 
 function sendQuickReply(recipientId, text, quickReplyButtons) {
   var messageData = {
@@ -411,7 +337,6 @@ function sendAccountLinking(recipientId) {
 
   callSendAPI(messageData);
 }
-
 
 /*
  * Call the User Profile API. USER_ID and fields are part of query string. 

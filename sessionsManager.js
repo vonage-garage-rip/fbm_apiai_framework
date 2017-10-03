@@ -2,11 +2,10 @@ module.exports = {};
 
 const moment = require('moment');
 
-const EVENTS = {
-    BOT_GET_STARTED_PAYLOAD: "BOT_BOT_GET_STARTED_PAYLOAD"
-};
 
-module.exports.EVENTS = EVENTS;
+module.exports.EVENTS = {
+    GET_STARTED_PAYLOAD: Symbol("GET_STARTED_PAYLOAD")
+};
 
 require('log-timestamp');
 const uuidv4 = require('uuid/v4');
@@ -88,7 +87,22 @@ var getSessionByChannelEvent = (messagingEvent) => {
     });
 }
 
+//Get url type: Audio, Video or Image
+var identifyUrl = (message, url) => {
+    var type = message.type;
 
+    if (message.payload.isVideo) {
+        type = 6;
+    }
+    else if (message.payload.isAudio) {
+        type = 5;
+    }
+    else if (url.includes("images")) {
+        type = 3;
+    }
+
+    return { "type": type, "payload": url }
+}
 
 var handleResponseWithMessages = (apiairesponse) => {
     var messages = apiairesponse.result.fulfillment.messages;
@@ -123,29 +137,14 @@ var handleResponseWithMessages = (apiairesponse) => {
 const handleApiaiResponse = (apiairesponse) => {
     if (apiairesponse) {
         console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
-        switch (apiairesponse.result.action) {
-            case "collect_area_of_interest":
-                setSessionLocation(apiairesponse.sessionId, apiairesponse.result.resolvedQuery);
-                break;
-            // case "collect_job_type":
-            //     console.log("Collect Job Type");
-            //     //Fire Intent to Keep in Touch                
-            //     break;
-        }
+        /// Using a mechanism similar to webhook manager, map apiairesponse.result.action to method
 
         if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
             fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
         }
 
         if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
-            if (apiairesponse.result.action === "collect_job_type") {
-                setTimeout(function () {
-                    handleResponseWithMessages(apiairesponse);
-                }, 3750);
-            }
-            else {
-                handleResponseWithMessages(apiairesponse);
-            }
+            handleResponseWithMessages(apiairesponse);
         }
         else {
             fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
@@ -189,7 +188,7 @@ const handleEvent = (sessionId, event) => {
     let session = getSessionBySessionId(sessionId);
     
     switch (event.type) {
-        case EVENTS.BOT_BOT_GET_STARTED_PAYLOAD:
+        case EVENTS.GET_STARTED_PAYLOAD:
             break;
     }
 }
@@ -202,5 +201,3 @@ module.exports.getSessionByChannelEvent = getSessionByChannelEvent;
 module.exports.inboundFacebookEvent = inboundFacebookEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.handleEvent = handleEvent;
-
-
