@@ -20,4 +20,3 @@ const registerAction = (actionName, method) => {
 }
 
 module.exports = {registerAction, handleAction};
-require('require-all')(__dirname);
