@@ -11,6 +11,7 @@ const sendTextMessageToApiAi = (textMessage, sessionId) => {
             "parameters": {
                 "full_name": session.profile.first_name + " " + session.profile.last_name,
                 "first_name": session.profile.first_name,
+                "user_id": session.profile.id,
                 "last_visit": session.lastInboundMessage.toLocaleString()
             },
             "lifespan": 5
@@ -38,6 +39,7 @@ const sendEventToApiAi = (event, sessionId) => {
             "parameters": {
                 "full_name": session.profile.first_name + " " + session.profile.last_name,
                 "first_name": session.profile.first_name,
+                "user_id": session.profile.id,
                 "last_visit": session.lastInboundMessage.toLocaleString(),
             },
             "lifespan": 5
