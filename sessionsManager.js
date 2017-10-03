@@ -1,11 +1,15 @@
 module.exports = {};
 
+
+const actionsManager = require('./actions/manager')
+
 const moment = require('moment');
 
-
-module.exports.EVENTS = {
+const EVENTS = {
     GET_STARTED_PAYLOAD: Symbol("GET_STARTED_PAYLOAD")
 };
+
+module.exports.EVENTS = EVENTS
 
 require('log-timestamp');
 const uuidv4 = require('uuid/v4');
@@ -109,6 +113,7 @@ var handleResponseWithMessages = (apiairesponse) => {
 
     messages.forEach(function (message, index) {
         //Delay or queue messages so we'll keep order in place
+        /// TODO: find better way
         setTimeout(function () {
             if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
                 //TODO: REFACTOR
@@ -137,8 +142,10 @@ var handleResponseWithMessages = (apiairesponse) => {
 const handleApiaiResponse = (apiairesponse) => {
     if (apiairesponse) {
         console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
-        /// Using a mechanism similar to webhook manager, map apiairesponse.result.action to method
-
+        let actionName = apiairesponse.result.action
+        if ( actionName && actionName!=="input.unknown" ) {
+            actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result)
+        }
         if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
             fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
         }
@@ -151,6 +158,7 @@ const handleApiaiResponse = (apiairesponse) => {
         }
     }
 }
+
 const handleInboundChannelMessage = (message) => {
     getSessionByChannelEvent(message)
         .then((session) => {
@@ -176,8 +184,11 @@ const handleInboundChannelMessage = (message) => {
 const handleInboundChannelPostback = (message) => {
     getSessionByChannelEvent(message)
         .then(session => {
-            console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + JSON.stringify(message));            
-            handleEvent(session.sessionId, message.payload);
+            console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + message);
+            return apiai.sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
+        })
+        .then(apiairesponse => {
+            handleApiaiResponse(apiairesponse);
         })
         .catch(err => {
             console.log("sessionsManager.handleInboundChannelPostback caught an error: " + err);

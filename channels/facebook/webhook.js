@@ -96,7 +96,7 @@ const handlePostRequest = (req, res) => {
 
 const receivedMessage = (messagingEvent) => {
   if (messagingEvent.message.is_echo) {
-    console.log("Messageing Evnent Echo: ", messagingEvent);
+    console.log("Messageing Event Echo: ", messagingEvent);
     return;
   }
   if (messagingEvent.message.text) {
@@ -130,15 +130,9 @@ const receivedMessage = (messagingEvent) => {
  * 
  */
 const receivedPostback = (messagingEvent) => {
-  let payload = "";
-  try {
-    payload = JSON.parse(messagingEvent.postback.payload)
-  } catch (e) {
-    payload = { type: messagingEvent.postback.payload };
-  };
-
+  let payload = messagingEvent.postback.payload;
+  
   let inboundPostbackMessage =
-
     {
       from: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
