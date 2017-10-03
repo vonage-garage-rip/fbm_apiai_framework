@@ -1,6 +1,7 @@
 
 const actionsManager = require('./manager.js');
 const firebase = require('../integrations/firebase.js')
+const nexmoInterface = require('../integrations/nexmoInterface.js')
 const buyCarAction = (apiresponse) => {
     
     var sessionID = apiresponse.sessionId
@@ -40,7 +41,8 @@ const buyCarAction = (apiresponse) => {
                 delete context[key]
             }
         });
-        userProfile.context = [sessionID]
+
+        userProfile.contexts = [sessionID]
         firebase.saveUser(facebookUserID, userProfile)
         .then (function (user) {
             return firebase.saveContext(sessionID, context)
@@ -51,8 +53,45 @@ const buyCarAction = (apiresponse) => {
         });
 }
 
+const enterPhoneNumberAction =  (apiresponse) => {
+    var phoneNumber = apiresponse.result.resolvedQuery;
+
+    var userProfile = apiresponse.result.contexts.filter (function (context) {
+        return context.name == "user-profile"
+    })[0].parameters
+
+    if (userProfile == null) {
+        console.error("Could not find user profile")
+        return
+    }
+    var facebookUserID = userProfile.user_id
+
+    var _user = null;
+    firebase.getUser(facebookUserID)
+    .then (function (user) {
+      _user = user
+        //append the phone number to the user
+        _user.phoneNumbers = [phoneNumber]
+        return firebase.saveUser(facebookUserID, _user)
+    }).then(function (user) {
+       return firebase.getAllContexts(user.contexts[0])
+    }).then (function (session) {
+      let message = "Dear " + _user.first_name
+      message += " I see that you are looking for a ";
+      message += session.carFuel + " powered " + session.carType;
+      message += " with a interest in " + session.carFeature + " ";
+      message += "Please call us at " + process.env.ESSENTIALS_NUMBER + " to discuss your options"
+      return nexmoInterface.sendSMS(phoneNumber, message)
+    }).then(function () {
+     console.log("Phone Number action completed")
+    }).catch(function (error) {
+        console.error(error)
+    })
+}
+
 const subscribeActions = () => {
     actionsManager.registerAction("buycar-completed", buyCarAction)
+    actionsManager.registerAction("enterPhoneNumber-completed", enterPhoneNumberAction)
 }
 
 subscribeActions()

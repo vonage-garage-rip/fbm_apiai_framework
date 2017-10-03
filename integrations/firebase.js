@@ -11,12 +11,12 @@ admin.initializeApp({
 const CONTEXTS_DB_NAME = "Contexts" //saves API.AI respones by Context
 const FB_USERS_DB_NAME = "FB_Users"
 
-var getAllContexts = () => {
+var getAllContexts = (sessionID = null) => {
  
     return new Promise(function (resolve, reject) {
         // Get a database reference to our posts
         var db = admin.database();
-        var ref = db.ref(CONTEXTS_DB_NAME);
+        var ref = db.ref(CONTEXTS_DB_NAME).child(sessionID);
 
         // Attach an asynchronous callback to read the data at our posts reference
         ref.on("value", function (snapshot) {
