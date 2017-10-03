@@ -144,7 +144,7 @@ const handleApiaiResponse = (apiairesponse) => {
         console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
         let actionName = apiairesponse.result.action
         if ( actionName && actionName!=="input.unknown" ) {
-            actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result)
+            actionsManager.handleAction(apiairesponse.result.action, apiairesponse)
         }
         if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
             fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
