@@ -165,8 +165,10 @@ const receivedAccountLink = (event) => {
     try {
       let authCodeObj = JSON.parse(authCode)
       accountLinkedEventData.accessToken = authCodeObj.accessToken
+      accountLinkedEventData.refreshToken = authCodeObj.refreshToken
+      accountLinkedEventData.expires_at = authCodeObj.expires_at
       accountLinkedEventData.integrationName = authCodeObj.integrationName
-      accountLinkedEventData.userId = authCodeObj.userId || ""
+      accountLinkedEventData.userId = authCodeObj.userId
       
       sessionsManager.handleEventByUserChannelId(senderID, {type: sessionsManager.EVENTS.ACCOUNT_LINKED, data: accountLinkedEventData})
       
