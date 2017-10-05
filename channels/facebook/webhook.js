@@ -154,29 +154,27 @@ const receivedPostback = (messagingEvent) => {
 const receivedAccountLink = (event) => {
   var senderID = event.sender.id;
   var recipientID = event.recipient.id;
+  var accountLinkedEventData = {}
+  var integrationName
+  /// status can be either "linked" or "unlinked"
+  let authCode = event.account_linking.authorization_code
 
+  console.log("Received account link event with for user %d with status %s " + "and auth code %s ", senderID, status, authCode);
   var status = event.account_linking.status;
-  var authCode = event.account_linking.authorization_code.substring("MY_AUTHORIZATION_CODE_".length);
-  automatic.setAccessToken(authCode)
-  console.log("Received account link event with for user %d with status %s " +
-    "and auth code %s ", senderID, status, authCode);
-  sessionsManager.getSessionByChannelEvent({from: senderID })
-  .then(session => {
-    automatic.getVehicleInfo()
-    .then(vehicleInfo => {
-      if ( vehicleInfo && vehicleInfo.results && vehicleInfo.results[0] ) {
-        let vehicle = vehicleInfo.results[0]
-        sendMessageToUser({text: "You drive " + vehicle.make + " " + vehicle.model + " " + vehicle.submodel + " " + vehicle.year, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId)
-        /// save to firebase db here
-      }
-      else {
-        sendMessageToUser({text: "Couldn't get your vehicle info but your auth code is " + authCode, type: sessionsManager.MESSAGE_TYPES.TEXT}, session.sessionId )
-      }
-    })
-    .catch(err=> {
-      console.log("receivedAccountLink caught an error: " + err)
-    })
-  })
+  if ( status==="linked") {
+    try {
+      let authCodeObj = JSON.parse(authCode)
+      accountLinkedEventData.accessToken = authCodeObj.accessToken
+      accountLinkedEventData.integrationName = authCodeObj.integrationName
+      accountLinkedEventData.userId = authCodeObj.userId || ""
+      
+      sessionsManager.handleEventByUserChannelId(senderID, {type: sessionsManager.EVENTS.ACCOUNT_LINKED, data: accountLinkedEventData})
+      
+    }
+    catch (err) {
+      console.log("receivedAccountLink, couldn't parse authorization code: " + authCode)
+    } 
+  }
 }
 
 module.exports.handleInboundEvent = handleInboundEvent;

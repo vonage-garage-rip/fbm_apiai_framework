@@ -2,9 +2,9 @@
 
 var actions = {};
 
-const handleAction = (actionName, resBody) => {
+const handleAction = (actionName, body, session) => {
     if (actions[actionName])
-        return actions[actionName](resBody);
+        return actions[actionName](body, session);
     return defaultHandler(actionName);
 }
 
