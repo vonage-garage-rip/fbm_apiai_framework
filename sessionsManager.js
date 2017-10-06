@@ -147,7 +147,7 @@ const handleApiaiResponse = (apiairesponse) => {
         console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
         let actionName = apiairesponse.result.action
         if ( actionName && actionName!=="input.unknown" ) {
-            actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, session)
+            actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId[apiairesponse.sessionId])
         }
         if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
             fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
@@ -166,10 +166,7 @@ const handleInboundChannelMessage = (message) => {
     getSessionByChannelEvent(message)
         .then((session) => {
             console.log("session", session, "sessionsManager.handleInboundChannelMessage: " + JSON.stringify(message));
-            if (message.text==="link") { /// TODO remove and add intent in apiai
-                fbUtility.sendAccountLinking(message.from)
-            }
-            else if (message.quick_reply) {
+            if (message.quick_reply) {
                 return apiai.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
             }
             // send message to api.ai
