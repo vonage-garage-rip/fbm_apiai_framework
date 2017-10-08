@@ -70,6 +70,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
         }
         else {
             // Set new session 
+            /// TODO set new session only if user can't be found in DB
             let sessionId = uuidv4();
             mappedChatSession = chatSessions[sessionId] = {
                 sessionId: sessionId,
@@ -77,6 +78,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
                 userId: messagingEvent.from,
                 lastInboundMessage: moment(),
                 externalIntegrations: [],
+                phone: "",
                 data: {}
             }
             userChannelToSessions[messagingEvent.from] = mappedChatSession;
