@@ -5,7 +5,6 @@ require('log-timestamp');
 
 const utility = require('./utility');
 const sessionsManager = require('../../sessionsManager');
-const automatic = require('../../../integrations/automatic')
 
 var sendMessageToUser = function (message, sessionId) {
   let session = sessionsManager.getSessionBySessionId(sessionId);
