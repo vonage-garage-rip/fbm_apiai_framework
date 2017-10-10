@@ -1,6 +1,5 @@
 module.exports = {};
 
-
 const actionsManager = require('./actions/manager')
 
 const moment = require('moment');
@@ -34,7 +33,11 @@ const fbUtility = require('./channels/facebook/utility');
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
 var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sesssssions
+var db
 
+const initialize = dbReference => {
+    db = dbReference /// TODO should be an interface
+}
 
 const inboundFacebookEvent = (req, res) => {
     fbChannel.handleInboundEvent(req, res);
@@ -44,8 +47,8 @@ const getSessionBySessionId = sessionId => {
     return chatSessions[sessionId];
 }
 
-const setSessionPhone = (sessionId, phone) => {
-    chatSessions[sessionId].phone = phone;
+const setSessionPhone = (session, phone) => {
+    session.phoneNumbers.push(phone)
 }
 
 /*
@@ -70,7 +73,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
         }
         else {
             // Set new session 
-            /// TODO set new session only if user can't be found in DB
             let sessionId = uuidv4();
             mappedChatSession = chatSessions[sessionId] = {
                 sessionId: sessionId,
@@ -78,20 +80,31 @@ var getSessionByChannelEvent = (messagingEvent) => {
                 userId: messagingEvent.from,
                 lastInboundMessage: moment(),
                 externalIntegrations: [],
-                phone: "",
-                data: {}
+                phoneNumbers: [],
+                contexts: {}
             }
             userChannelToSessions[messagingEvent.from] = mappedChatSession;
-            fbUtility.getUserProfile(messagingEvent.from)
-                .then(json => {
-                    console.log("user profile:" + JSON.stringify(json));
-                    mappedChatSession.profile = json;
-                    return resolve(mappedChatSession);
-                })
-                .catch(err => {
-                    console.log("sessionManaer.getSessionByChannelEvent caught an error: " + err);
-                    return resolve(mappedChatSession);
-                })
+
+            db.getUser(messagingEvent.from)
+            .then(user => {
+                if ( user ) {
+                    Object.assign(mappedChatSession, user)
+                    mappedChatSession.lastInboundMessage = moment(mappedChatSession.lastInboundMessage)
+                    return resolve(mappedChatSession)
+                }
+                else {
+                    fbUtility.getUserProfile(messagingEvent.from)
+                    .then(json => {
+                        console.log("user profile:" + JSON.stringify(json));
+                        mappedChatSession.profile = json;
+                        return resolve(mappedChatSession);
+                    })
+                }
+            })
+            .catch(err => {
+                console.log("sessionManaer.getSessionByChannelEvent caught an error: " + err);
+                return resolve(mappedChatSession);
+            })
         }
     });
 }
@@ -233,3 +246,5 @@ module.exports.inboundFacebookEvent = inboundFacebookEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
+module.exports.initialize = initialize
+module.exports.setSessionPhone = setSessionPhone
