@@ -33,7 +33,7 @@ const fbUtility = require('./channels/facebook/utility');
 
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
-var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sesssssions
+var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
 
 
 const inboundFacebookEvent = (req, res) => {
@@ -215,6 +215,10 @@ const handleEventBySessionId = (sessionId, event) => {
 const handleEvent = (session, event) => {
     switch (event.type) {
         case EVENTS.GET_STARTED_PAYLOAD:
+            apiai.sendEventToApiAi(event, session.sessionId)
+                .then(apiairesponse => {
+                    handleApiaiResponse(apiairesponse);
+                });
             break;
         case EVENTS.ACCOUNT_LINKED:
             session.externalIntegrations.push(event.data)
