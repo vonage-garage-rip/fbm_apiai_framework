@@ -251,3 +251,5 @@ module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
 module.exports.setSessionPhone = setSessionPhone;
+module.exports.initialize = initialize;
+
