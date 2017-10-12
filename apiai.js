@@ -10,7 +10,7 @@ const sendTextMessageToApiAi = (textMessage, sessionId) => {
             "name": "user-profile",
             "parameters": {
                 "full_name": session.profile.first_name + " " + session.profile.last_name,
-                "first_name": session.profile.first_nam,
+                "first_name": session.profile.first_name,
                 "last_visit": session.lastInboundMessage.format()
             },
             "lifespan": 5
