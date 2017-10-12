@@ -11,22 +11,15 @@ const
 const sessionsManagerEvents = require("../../sessionsManager").EVENTS;
 
 // App Secret can be retrieved from the App Dashboard
-const APP_SECRET = process.env.MESSENGER_APP_SECRET;
-
-// Arbitrary value used to validate a webhook
-const VALIDATION_TOKEN = process.env.MESSENGER_VALIDATION_TOKEN;
+const MESSENGER_APP_SECRET = process.env.MESSENGER_APP_SECRET;
+const WORKPLACE_APP_SECRET = process.env.WORKPLACE_APP_SECRET;
 
 // Generate a page access token for your page from the App Dashboard
 const PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN;
 
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL;
 
-const PERSISTENT_MENU = process.env.PERSISTENT_MENU || []
-
-if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
-  console.error("Missing config values");
-  process.exit(1);
-}
+//const PERSISTENT_MENU = process.env.PERSISTENT_MENU || []
 
 const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.6/me/";
 
@@ -92,8 +85,14 @@ function verifyRequestSignature(req, res, buf) {
     var elements = signature.split('=');
     var method = elements[0];
     var signatureHash = elements[1];
-
-    var expectedHash = crypto.createHmac('sha1', APP_SECRET)
+    let secret = ""
+    if ( req.path==="fbm") {
+      secret = MESSENGER_APP_SECRET
+    }
+    else if ( req.path==="fbwp" ) {
+      secret = WORKPLACE_APP_SECRET
+    }
+    var expectedHash = crypto.createHmac('sha1', secret)
       .update(buf)
       .digest('hex');
 
@@ -388,8 +387,8 @@ function callSendAPI(messageData) {
   })
 }
 
-var verifySubscription = (req, res) => {
-  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VALIDATION_TOKEN) {
+var verifySubscription = (req, res, verifyToken) => {
+  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === verifyToken) {
     console.log("Validating webhook");
     res.status(200).send(req.query['hub.challenge']);
   } else {
@@ -397,6 +396,7 @@ var verifySubscription = (req, res) => {
     res.sendStatus(403);
   }
 }
+
 
 /***************************************************/
 
