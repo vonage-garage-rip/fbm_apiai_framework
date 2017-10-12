@@ -6,6 +6,10 @@ require('log-timestamp');
 const utility = require('./utility');
 const sessionsManager = require('../../sessionsManager');
 
+
+// Arbitrary value used to validate a messenger webhook
+const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
+
 var sendMessageToUser = function (message, sessionId) {
   let session = sessionsManager.getSessionBySessionId(sessionId);
   console.log("MESSAGE: ", message);
@@ -37,7 +41,7 @@ var sendMessageToUser = function (message, sessionId) {
 
 var handleInboundEvent = function (req, res, next) {
   if (req.method == 'GET') {
-    utility.verifySubscription(req, res)
+    utility.verifySubscription(req, res, MESSENGER_VERIFY_TOKEN)
   }
   else if (req.method === 'POST') {
     handlePostRequest(req, res)
