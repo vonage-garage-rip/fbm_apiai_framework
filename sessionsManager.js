@@ -25,10 +25,11 @@ const MESSAGE_TYPES = {
     CAROUSEL: 7
 };
 
+const apiai = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 
-const apiai = require('./apiai');
-const nexmoChannel = require('./channels/nexmo/webhook');
-const fbChannel = require('./channels/facebook/webhook');
+const nexmoChannel = require('./channels/nexmo/nexmohook');
+const wpChannel = require('./channels/facebook/wphook');
+const fbmChannel = require('./channels/facebook/fbmhook');
 const fbUtility = require('./channels/facebook/utility');
 
 /// TODO clean sessions that were not active for a certain duration
@@ -40,8 +41,12 @@ const initialize = dbReference => {
     db = dbReference /// TODO should be an interface
 }
 
-const inboundFacebookEvent = (req, res) => {
-    fbChannel.handleInboundEvent(req, res);
+const inboundFacebookMessengerEvent = (req, res) => {
+    fbmChannel.handleInboundEvent(req, res);
+}
+
+const inboundFacebookWorkplaceEvent = (req, res) => {
+    wpChannel.handleInboundEvent(req, res);
 }
 
 const inboundNexmoEvent = (req, res) => {
@@ -151,12 +156,12 @@ var handleResponseWithMessages = (apiairesponse) => {
                         var urlMessage = identifyUrl(message, url);
 
                         /// TODO choose the right channel (fbm, nexmo, ..)
-                        fbChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
+                        fbmChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
                     });
                 }
                 else {
                     /// TODO choose the right channel (fbm, nexmo, ..
-                    fbChannel.sendMessageToUser(message, apiairesponse.sessionId);
+                    fbmChannel.sendMessageToUser(message, apiairesponse.sessionId);
 
                 }
             }
@@ -173,7 +178,7 @@ const handleApiaiResponse = (apiairesponse) => {
         }
         if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
             /// TODO choose the right channel (fbm, nexmo, ..
-            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
+            fbmChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
         }
 
         if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
@@ -181,7 +186,7 @@ const handleApiaiResponse = (apiairesponse) => {
         }
         else {
             /// TODO choose the right channel (fbm, nexmo, ..
-            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
+            fbmChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
         }
     }
 }
@@ -255,7 +260,8 @@ module.exports.handleInboundChannelPostback = handleInboundChannelPostback;
 module.exports.handleInboundChannelMessage = handleInboundChannelMessage;
 module.exports.getSessionBySessionId = getSessionBySessionId;
 module.exports.getSessionByChannelEvent = getSessionByChannelEvent;
-module.exports.inboundFacebookEvent = inboundFacebookEvent;
+module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent;
+module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent;
 module.exports.inboundNexmoEvent = inboundNexmoEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.handleEventBySessionId = handleEventBySessionId;
