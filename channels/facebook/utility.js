@@ -30,17 +30,12 @@ if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
 
 const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.6/me/";
 
-const setChannel = () => {
-  setGetStartedButton();
-  setPersistentMenu();
-}
-
-const setPersistentMenu = () => {
+const setPersistentMenu = (persistentMenu) => {
   let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
-  let persistentMenu = {
-    "persistent_menu": PERSISTENT_MENU
+  let menu = {
+    "persistent_menu": persistentMenu
   }
-  fetch(fullURL, { method: "POST", body: JSON.stringify(persistentMenu), headers: { "Content-Type": "application/json" } })
+  fetch(fullURL, { method: "POST", body: JSON.stringify(menu), headers: { "Content-Type": "application/json" } })
     .then(function (res) {
       return res.json();
     })
@@ -52,15 +47,9 @@ const setPersistentMenu = () => {
     });
 }
 
-const setGetStartedButton = (sessionId, text) => {
+const setGetStartedButton = (getStartedMessage) => {
   let fullURL = FACEBOOK_GRAPH_URL + "thread_settings?access_token=" + PAGE_ACCESS_TOKEN;
-  let getStartedMessage = {
-    "setting_type": "call_to_actions",
-    "thread_state": "new_thread",
-    "call_to_actions": [{
-      "payload": sessionsManagerEvents.GET_STARTED_PAYLOAD
-    }]
-  };
+ 
   fetch(fullURL, { method: "POST", body: JSON.stringify(getStartedMessage), headers: { "Content-Type": "application/json" } })
     .then(function (res) {
       return res.json();
@@ -72,7 +61,6 @@ const setGetStartedButton = (sessionId, text) => {
       console.log("setGetStartedButton caught error: " + err);
     });
 };
-
 /*
  * Verify that the callback came from Facebook. Using the App Secret from 
  * the App Dashboard, we can verify the signature that is sent with each 
@@ -402,6 +390,6 @@ var verifySubscription = (req, res) => {
 
 
 module.exports = {
-  setChannel, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
+  setPersistentMenu, setGetStartedButton, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
   verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
 };
