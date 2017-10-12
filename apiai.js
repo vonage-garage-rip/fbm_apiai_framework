@@ -9,6 +9,7 @@ class ApiAi {
     }
 
     sendTextMessageToApiAi(textMessage, sessionId) {
+        var self = this
         return new Promise(function(resolve, reject) {
             let session = sessionsManager.getSessionBySessionId(sessionId);
             let userProfileContext = {
@@ -20,7 +21,7 @@ class ApiAi {
                 },
                 "lifespan": 5
             };
-            var request = this.app.textRequest(textMessage, {sessionId: sessionId, contexts: [userProfileContext], timezone: session.profile.timezone});
+            var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: [userProfileContext], timezone: session.profile.timezone});
 
             request.on('response', function(response) {
                 console.log("sendTextMessageToApiAi: response=" + JSON.stringify(response));
@@ -35,7 +36,8 @@ class ApiAi {
         });
     }
 
-    sendEventToApiAi(event, sessionId){
+    sendEventToApiAi(event, sessionId) {
+        var self = this
         return new Promise(function(resolve, reject) {
             let session = sessionsManager.getSessionBySessionId(sessionId);
             let userProfileContext = {
@@ -52,7 +54,7 @@ class ApiAi {
                 "data": event.data, 
             };
 
-            var request = this.app.eventRequest(eventArg, {sessionId: sessionId, contexts: [userProfileContext]});
+            var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: [userProfileContext]});
 
             request.on('response', function(response) {
                 console.log("sendEventToApiAi: response=" + JSON.stringify(response));
