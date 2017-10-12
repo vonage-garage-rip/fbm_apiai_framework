@@ -7,8 +7,7 @@ var nexmo = new Nexmo({
   });
 
 
-  exports.sendScheduleOptionsToCandidate = function(to, name) {
-      let message = "Dear " + name + ", \nWe're thrilled to invite you to an interview for a position in Vonage.\n\nPlease reply:\n1. for Monday between 10:00am to 1:00pm\n\n2. for Tuesday between 2:00pm-5:00pm\n\n3.  for Thursday between 1:00pm-4:00pm"
+  exports.sendMessage = function(to, message) {
       nexmo.message.sendSms(process.env.NEXMO_NUMBER, to, message,
         (err, responseData) => {
             if (err) {
@@ -18,9 +17,10 @@ var nexmo = new Nexmo({
   }
 
   exports.handleInboundEvent = function(req, res) {
-    console.log("nexmoInterface.handleInboundEvent " + from + " saying: " + req.query.text)
+    console.log("nexmoInterface.handleInboundEvent " + req.query.msisdn + " saying: " + req.query.text)
     res.sendStatus(200)
     let inboundMessage = {
+      channel: sessionsManager.CHANNELS.NEXMO,
       from: req.query.msisdn,
       to: req.query.to,
       text: req.query.text

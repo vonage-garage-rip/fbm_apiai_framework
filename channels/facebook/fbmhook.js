@@ -105,6 +105,7 @@ const receivedMessage = (messagingEvent) => {
   if (messagingEvent.message.text) {
     console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
     let inboundMessage = {
+      channel: sessionsManager.CHANNELS.FB_MESSENGER,
       from: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       text: messagingEvent.message.text,
@@ -137,6 +138,7 @@ const receivedPostback = (messagingEvent) => {
   
   let inboundPostbackMessage =
     {
+      channel: sessionsManager.CHANNELS.FB_MESSENGER,
       from: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       payload: payload
@@ -173,7 +175,10 @@ const receivedAccountLink = (event) => {
       accountLinkedEventData.integrationName = authCodeObj.integrationName
       accountLinkedEventData.userId = authCodeObj.userId
       
-      sessionsManager.handleEventByUserChannelId(senderID, {type: sessionsManager.EVENTS.ACCOUNT_LINKED, data: accountLinkedEventData})
+      sessionsManager.handleEventByUserChannelId(senderID, 
+        { type: sessionsManager.EVENTS.ACCOUNT_LINKED, 
+          channel: sessionsManager.CHANNELS.FB_MESSENGER,
+          data: accountLinkedEventData})
       
     }
     catch (err) {
