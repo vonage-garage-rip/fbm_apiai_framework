@@ -5,8 +5,8 @@ const actionsManager = require('./actions/manager')
 const moment = require('moment');
 
 const EVENTS = {
-    GET_STARTED_PAYLOAD: Symbol("GET_STARTED_PAYLOAD"),
-    ACCOUNT_LINKED: Symbol("ACCOUNT_LINKED")
+    GET_STARTED_PAYLOAD: "GET_STARTED_PAYLOAD",
+    ACCOUNT_LINKED: "ACCOUNT_LINKED"
 };
 
 module.exports.EVENTS = EVENTS
