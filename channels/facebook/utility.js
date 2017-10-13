@@ -260,6 +260,24 @@ function sendQuickReply(recipientId, text, quickReplyButtons) {
   callSendAPI(messageData);
 }
 
+function sendImageMessage(recipientId, url) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "image",
+        payload: {
+          url: url
+        }
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
 function sendReadReceipt(recipientId) {
   console.log("Sending a read receipt to mark message as seen");
 
@@ -390,6 +408,6 @@ var verifySubscription = (req, res) => {
 
 
 module.exports = {
-  setPersistentMenu, setGetStartedButton, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
+  setPersistentMenu, setGetStartedButton, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
   verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
 };
