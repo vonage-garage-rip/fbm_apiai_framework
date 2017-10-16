@@ -299,7 +299,8 @@ const handleEvent = (session, event) => {
             });
             break;
         case EVENTS.ACCOUNT_LINKED:
-            session.externalIntegrations.push(event.data)
+            //session.externalIntegrations.push(event.data)
+            session.externalIntegrations[event.data.integrationName] = {"User_ID": event.data.userId}
             userChannelToSessions[event.data.userId] = session /// do we need that?
             actionsManager.handleAction("accountLinked", event.data, session)
             break;
