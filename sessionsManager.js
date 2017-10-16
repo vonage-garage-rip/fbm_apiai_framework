@@ -47,8 +47,15 @@ const getSessionBySessionId = sessionId => {
     return chatSessions[sessionId];
 }
 
-const setSessionPhone = (session, phone) => {
-    session.phoneNumbers.push(phone)
+const setSessionContext = (session, contextId) => {
+    return new Promise(function (resolve, reject) {
+        db.getContext(contextId)
+            .then(function (context) {
+                resolve(context)
+            }).catch(function (error) {
+                reject(error)
+            })
+    })
 }
 
 /*
@@ -250,6 +257,6 @@ module.exports.inboundFacebookEvent = inboundFacebookEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-module.exports.setSessionPhone = setSessionPhone;
+module.exports.setSessionContext = setSessionContext;
 module.exports.initialize = initialize;
 
