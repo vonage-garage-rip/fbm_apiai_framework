@@ -205,7 +205,8 @@ var handleResponseWithMessages = (apiairesponse) => {
                         fbmChannel.sendMessageToUser(message, apiairesponse.sessionId);
                         break;
                     case CHANNELS.FB_WORKPLACE:
-                        wpChannel.sendMessageToUser(message, apiairesponse.sessionId);
+                        /// Decide if bot should respond user in group or chat
+                        wpChannel.sendMessageToGroup(message, session.from);
                         break;
                     case CHANNELS.NEXMO:
                         nexmoChannel.sendMessage(session.phoneNumbers[0], message.speech)
