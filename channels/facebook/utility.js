@@ -375,10 +375,10 @@ function callSendAPI(messageData) {
       'Content-Type': 'application/json'
     }
   })
-  .then(function (res) {
+  .then( res => {
     return res.json();
   })
-  .then(function (json) {
+  .then( json => {
     var recipientId = json.recipient_id;
     var messageId = json.message_id;
   })

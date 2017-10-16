@@ -4,7 +4,7 @@ module.exports = {};
 require('log-timestamp');
 
 const utility = require('./utility');
-const sessionsManager = require('../../sessionsManager');
+const sessionsMsessionsManageranager = require('../../sessionsManager');
 
 
 // Arbitrary value used to validate a messenger webhook
