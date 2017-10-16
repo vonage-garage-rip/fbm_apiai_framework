@@ -83,9 +83,10 @@ const setSessionPhone = (session, phone) => {
 var getSessionByChannelEvent = (messagingEvent) => {
     return new Promise(function (resolve) {
 
-        mappedChatSession = userChannelToSessions[messagingEvent.from]
+        mappedChatSession = userChannelToSessions[messagingEvent.source]
         if (mappedChatSession) {
             mappedChatSession.lastInboundMessage = moment();
+            mappedChatSession.from = messagingEvent.from
             return resolve(mappedChatSession);
         }
         else {
@@ -108,21 +109,21 @@ var getSessionByChannelEvent = (messagingEvent) => {
                 apiaiAgent: apiaiAgent,
                 sessionId: sessionId,
                 profile: {},
-                userId: messagingEvent.from,
+                source: messagingEvent.source, 
+                from: messagingEvent.from,
                 lastInboundMessage: moment(),
                 externalIntegrations: [],
                 phoneNumbers: [],
-                contexts: {}
+                data: {}
             }
 
-            /// TODO perhaps we should be using setSessionPhone
             if ( messagingEvent.channel===CHANNELS.NEXMO ) {
-                mappedChatSession.phoneNumbers.push(messagingEvent.from)                
+                mappedChatSession.phoneNumbers.push(messagingEvent.source)                
             }
 
-            userChannelToSessions[messagingEvent.from] = mappedChatSession;
+            userChannelToSessions[messagingEvent.source] = mappedChatSession;
 
-            db.getUser(messagingEvent.from)
+            db.getUser(messagingEvent.source)
             .then(user => {
                 if ( user ) {
                     Object.assign(mappedChatSession, user)
@@ -130,7 +131,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
                     return resolve(mappedChatSession)
                 }
                 else if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
-                    fbUtility.getUserProfile(messagingEvent.from)
+                    fbUtility.getUserProfile(messagingEvent.source)
                     .then(json => {
                         console.log("user profile:" + JSON.stringify(json));
                         mappedChatSession.profile = json;
@@ -185,7 +186,6 @@ var handleResponseWithMessages = (apiairesponse) => {
                     //Check if Message contains audio, video or image.
                     var urlMessage = identifyUrl(message, url);
 
-                    /// TODO choose the right channel (fbm, nexmo, ..)
                     switch (session.channel) {
                         case CHANNELS.FB_MESSENGER:
                             fbmChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
@@ -205,8 +205,8 @@ var handleResponseWithMessages = (apiairesponse) => {
                         fbmChannel.sendMessageToUser(message, apiairesponse.sessionId);
                         break;
                     case CHANNELS.FB_WORKPLACE:
-                        /// Decide if bot should respond user in group or chat
-                        wpChannel.sendMessageToGroup(message, session.from);
+                        // message is the comment we're sending, source is actually the post ID
+                        wpChannel.sendCommentToPost(message.speech, session.source); 
                         break;
                     case CHANNELS.NEXMO:
                         nexmoChannel.sendMessage(session.phoneNumbers[0], message.speech)

@@ -106,7 +106,7 @@ const receivedMessage = (messagingEvent) => {
     console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
     let inboundMessage = {
       channel: sessionsManager.CHANNELS.FB_MESSENGER,
-      from: messagingEvent.sender.id,
+      source: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       text: messagingEvent.message.text,
       quick_reply: messagingEvent.message.quick_reply
@@ -139,7 +139,7 @@ const receivedPostback = (messagingEvent) => {
   let inboundPostbackMessage =
     {
       channel: sessionsManager.CHANNELS.FB_MESSENGER,
-      from: messagingEvent.sender.id,
+      source: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       payload: payload
     };
