@@ -173,7 +173,7 @@ const receivedAccountLink = (event) => {
       
     }
     catch (err) {
-      console.log("receivedAccountLink, couldn't parse authorization code: " + authCode)
+      console.log("receivedAccountLink, couldn't parse authorization code: ", err)
     } 
   }
 }
