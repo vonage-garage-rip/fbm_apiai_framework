@@ -21,7 +21,7 @@ var nexmo = new Nexmo({
     res.sendStatus(200)
     let inboundMessage = {
       channel: sessionsManager.CHANNELS.NEXMO,
-      from: req.query.msisdn,
+      source: req.query.msisdn,
       to: req.query.to,
       text: req.query.text
     }
