@@ -362,7 +362,7 @@ function getUserProfile(userId) {
 /*
  * Call the Send API. The message data goes in the body. If successful, we'll 
  * get the message id in a response 
- * TODO: To get email: https://developers.facebook.com/docs/graph-api/reference/user. Requires pages_messaging permission to manage the object.
+ * To get email: https://developers.facebook.com/docs/graph-api/reference/user. Requires pages_messaging permission to manage the object.
  */
 function callSendAPI(messageData) {
   let qs = "?access_token=" + PAGE_ACCESS_TOKEN;
