@@ -6,10 +6,21 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+const sessionsMsessionsManageranager = require('../../sessionsManager');
 
 /* jshint node: true, devel: true */
 'use strict';
 const utility = require('./utility');
+
+var request = require('request');
+
+var graphapi = request.defaults({
+    baseUrl: 'https://graph.facebook.com',
+    auth: {
+        'bearer' : process.env.WORKPLACE_PAGE_ACCESS_TOKEN
+    }
+});
+
 
 // Arbitrary value used to validate a workplace webhook
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
@@ -84,7 +95,15 @@ function processPageEvents(data) {
 		// Page related changes, or mentions of the page
     if(entry.changes) {
       entry.changes.forEach(function(change){
-        console.log('Page Change',page_id,change);
+        console.log('Page Change', page_id, change);
+        let inboundMessage = {
+          channel: sessionsMsessionsManageranager.CHANNELS.FB_WORKPLACE,
+          from: change.value.sender_id, /// Change to group ID
+          to: page_id,
+          text: change.value.message.substring(change.value.message.indexOf(' ')+1)
+        };
+        /// TODO considerf adding conversation context here such as sales agent name
+        sessionsMsessionsManageranager.handleInboundChannelMessage(inboundMessage)
       });
     }
   });
@@ -117,4 +136,22 @@ function processWorkplaceSecurityEvents(data) {
   });
 }
 
+function sendMessageToGroup(message, groupId) {
+  graphapi({
+    method: 'POST',
+    url: '/' + groupId + '/feed',
+    qs: {
+        'message': message
+    }
+  },function(error, response, body) {
+      if(error) {
+          console.error(error);
+      } else {
+          var post_id = JSON.parse(body).id;
+          console.log('sendMessageToGroup: Published message. Post ID= ' + post_id);
+      }
+  });
+}
+
 module.exports.handleInboundEvent = handleInboundEvent
+module.exports.sendMessageToGroup = sendMessageToGroup
