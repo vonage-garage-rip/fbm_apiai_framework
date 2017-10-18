@@ -246,6 +246,12 @@ const handleEvent = (session, event) => {
             userChannelToSessions[event.data.userId] = session /// do we need that?
             actionsManager.handleAction("accountLinked", event.data, session)
             break;
+        default:
+        ///TODO: REFACTOR. HANDLE PROPRIETARY EVENTS
+            apiai.sendEventToApiAi(event, session.sessionId)
+            .then(apiairesponse => {
+                handleApiaiResponse(apiairesponse);
+            });
     }
 }
 
