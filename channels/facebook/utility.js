@@ -61,6 +61,24 @@ const setGetStartedButton = (getStartedMessage) => {
       console.log("setGetStartedButton caught error: " + err);
     });
 };
+
+const setGreetingText = (greetingObj) => {
+  let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
+  let greeting = {
+    "greeting": greetingObj
+  }
+  
+  fetch(fullURL, { method: "POST", body: JSON.stringify(greeting), headers: { "Content-Type": "application/json" } })
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (json) {
+      console.log(" setGreetingText returned: " + JSON.stringify(json));
+    })
+    .catch(err => {
+      console.log("setGreetingText caught error: " + err);
+    });
+}
 /*
  * Verify that the callback came from Facebook. Using the App Secret from 
  * the App Dashboard, we can verify the signature that is sent with each 
@@ -408,6 +426,6 @@ var verifySubscription = (req, res) => {
 
 
 module.exports = {
-  setPersistentMenu, setGetStartedButton, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
+  setPersistentMenu, setGetStartedButton, setGreetingText, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
   verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
 };
