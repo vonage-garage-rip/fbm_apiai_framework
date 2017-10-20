@@ -10,13 +10,13 @@
     "email": "tzahi.efrati@gmail.com",
     "url": "https://www.linkedin.com/in/efrati/"
   },
-  "license": "",
-  "dependencies": {
+  "license": ""
+  /*,"dependencies": {
     "apiai": "^4.0.3",
     "log-timestamp": "^0.1.2",
     "moment": "^2.18.1",
     "node-fetch": "^1.7.3",
     "request": "^2.83.0",
     "uuid": "^3.1.0"
-  }
+  }*/
 }
