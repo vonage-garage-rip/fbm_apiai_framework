@@ -7,7 +7,7 @@
  *
  */
 
-const sessionsMsessionsManageranager = require('../../sessionsManager');
+const sessionsManager = require('../../sessionsManager');
 
 /* jshint node: true, devel: true */
 'use strict';
@@ -98,13 +98,13 @@ function processPageEvents(data) {
       entry.changes.forEach(function(change){
         console.log('Page Change', page_id, change);
         let inboundMessage = {
-          channel: sessionsMsessionsManageranager.CHANNELS.FB_WORKPLACE,
+          channel: sessionsManager.CHANNELS.FB_WORKPLACE,
           source: change.value.post_id, 
           from: change.value.sender_name, //  perhaps this should be added to session.contexts
           to: page_id,
           text: change.value.message.substring(change.value.message.indexOf(' ')+1)
         };
-        sessionsMsessionsManageranager.handleInboundChannelMessage(inboundMessage)
+        sessionsManager.handleInboundChannelMessage(inboundMessage)
       });
     }
   });
