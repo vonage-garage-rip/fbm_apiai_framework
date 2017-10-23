@@ -23,17 +23,12 @@ const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL;
 
 const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.6/me/";
 
-const setChannel = () => {
-  setGetStartedButton();
-  setPersistentMenu();
-}
-
-const setPersistentMenu = () => {
+const setPersistentMenu = (persistentMenu) => {
   let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
-  let persistentMenu = {
-    "persistent_menu": PERSISTENT_MENU
+  let menu = {
+    "persistent_menu": persistentMenu
   }
-  fetch(fullURL, { method: "POST", body: JSON.stringify(persistentMenu), headers: { "Content-Type": "application/json" } })
+  fetch(fullURL, { method: "POST", body: JSON.stringify(menu), headers: { "Content-Type": "application/json" } })
     .then(function (res) {
       return res.json();
     })
@@ -45,15 +40,9 @@ const setPersistentMenu = () => {
     });
 }
 
-const setGetStartedButton = (sessionId, text) => {
+const setGetStartedButton = (getStartedMessage) => {
   let fullURL = FACEBOOK_GRAPH_URL + "thread_settings?access_token=" + PAGE_ACCESS_TOKEN;
-  let getStartedMessage = {
-    "setting_type": "call_to_actions",
-    "thread_state": "new_thread",
-    "call_to_actions": [{
-      "payload": sessionsManagerEvents.GET_STARTED_PAYLOAD
-    }]
-  };
+ 
   fetch(fullURL, { method: "POST", body: JSON.stringify(getStartedMessage), headers: { "Content-Type": "application/json" } })
     .then(function (res) {
       return res.json();
@@ -66,6 +55,23 @@ const setGetStartedButton = (sessionId, text) => {
     });
 };
 
+const setGreetingText = (greetingObj) => {
+  let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
+  let greeting = {
+    "greeting": greetingObj
+  }
+  
+  fetch(fullURL, { method: "POST", body: JSON.stringify(greeting), headers: { "Content-Type": "application/json" } })
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (json) {
+      console.log(" setGreetingText returned: " + JSON.stringify(json));
+    })
+    .catch(err => {
+      console.log("setGreetingText caught error: " + err);
+    });
+}
 /*
  * Verify that the callback came from Facebook. Using the App Secret from 
  * the App Dashboard, we can verify the signature that is sent with each 
@@ -271,6 +277,24 @@ function sendQuickReply(recipientId, text, quickReplyButtons) {
   callSendAPI(messageData);
 }
 
+function sendImageMessage(recipientId, url) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "image",
+        payload: {
+          url: url
+        }
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
 function sendReadReceipt(recipientId) {
   console.log("Sending a read receipt to mark message as seen");
 
@@ -402,6 +426,6 @@ var verifySubscription = (req, res, verifyToken) => {
 
 
 module.exports = {
-  setChannel, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendAccountLinking, 
+  setPersistentMenu, setGetStartedButton, setGreetingText, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
   verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
 };

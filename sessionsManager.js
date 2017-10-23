@@ -64,8 +64,15 @@ const getSessionBySessionId = sessionId => {
     return chatSessions[sessionId];
 }
 
-const setSessionPhone = (session, phone) => {
-    session.phoneNumbers.push(phone)
+const getSessionContext = (session, contextId) => {
+    return new Promise(function (resolve, reject) {
+        db.getContext(contextId)
+            .then(function (context) {
+                resolve(context)
+            }).catch(function (error) {
+                reject(error)
+            })
+    })
 }
 
 /*
@@ -112,7 +119,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
                 source: messagingEvent.source, 
                 from: messagingEvent.from,
                 lastInboundMessage: moment(),
-                externalIntegrations: [],
+                externalIntegrations: {},
                 phoneNumbers: [],
                 data: {}
             }
@@ -304,6 +311,12 @@ const handleEvent = (session, event) => {
             userChannelToSessions[event.data.userId] = session /// do we need that?
             actionsManager.handleAction("accountLinked", event.data, session)
             break;
+        default:
+        ///TODO: REFACTOR. HANDLE PROPRIETARY EVENTS
+            apiai.sendEventToApiAi(event, session.sessionId)
+            .then(apiairesponse => {
+                handleApiaiResponse(apiairesponse);
+            });
     }
 }
 
@@ -319,5 +332,6 @@ module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
 module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-module.exports.setSessionPhone = setSessionPhone;
+module.exports.getSessionContext = getSessionContext;
 module.exports.initialize = initialize;
+

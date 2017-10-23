@@ -162,10 +162,11 @@ const receivedAccountLink = (event) => {
   var accountLinkedEventData = {}
   var integrationName
   /// status can be either "linked" or "unlinked"
+  var status = event.account_linking.status;
   let authCode = event.account_linking.authorization_code
 
   console.log("Received account link event with for user %d with status %s " + "and auth code %s ", senderID, status, authCode);
-  var status = event.account_linking.status;
+  
   if ( status==="linked") {
     try {
       let authCodeObj = JSON.parse(authCode)
@@ -182,7 +183,7 @@ const receivedAccountLink = (event) => {
       
     }
     catch (err) {
-      console.log("receivedAccountLink, couldn't parse authorization code: " + authCode)
+      console.log("receivedAccountLink, couldn't parse authorization code: ", err)
     } 
   }
 }
