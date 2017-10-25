@@ -31,13 +31,18 @@ const CHANNELS = {
     NEXMO: Symbol("Nexmo")
 }
 
+const SOURCE_TYPE = {
+    POST: Symbol("POST"),
+    GROUP_CHAT: Symbol("GROUP_CHAT"),
+    ONE_ON_ONE_CHAT: Symbol("ONE_ON_ONE_CHAT")
+}
+
 const apiaiUsersAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 const apiaiBusinessAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 
 const nexmoChannel = require('./channels/nexmo/nexmohook');
 const wpChannel = require('./channels/facebook/wphook');
 const fbmChannel = require('./channels/facebook/fbmhook');
-const fbUtility = require('./channels/facebook/utility');
 
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
@@ -93,7 +98,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
         mappedChatSession = userChannelToSessions[messagingEvent.source]
         if (mappedChatSession) {
             mappedChatSession.lastInboundMessage = moment();
-            mappedChatSession.from = messagingEvent.from
             return resolve(mappedChatSession);
         }
         else {
@@ -116,6 +120,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
                 apiaiAgent: apiaiAgent,
                 sessionId: sessionId,
                 profile: {},
+                sourceType: messagingEvent.sourceType,
                 source: messagingEvent.source, 
                 from: messagingEvent.from,
                 lastInboundMessage: moment(),
@@ -138,7 +143,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
                     return resolve(mappedChatSession)
                 }
                 else if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
-                    fbUtility.getUserProfile(messagingEvent.source)
+                    fbmChannel.getUserProfile(messagingEvent.source)
                     .then(json => {
                         console.log("user profile:" + JSON.stringify(json));
                         mappedChatSession.profile = json;
@@ -212,8 +217,7 @@ var handleResponseWithMessages = (apiairesponse) => {
                         fbmChannel.sendMessageToUser(message, apiairesponse.sessionId);
                         break;
                     case CHANNELS.FB_WORKPLACE:
-                        // message is the comment we're sending, source is actually the post ID
-                        wpChannel.sendCommentToPost(message.speech, session.source); 
+                        wpChannel.sendResponse(message.speech, session)
                         break;
                     case CHANNELS.NEXMO:
                         nexmoChannel.sendMessage(session.phoneNumbers[0], message.speech)
@@ -329,6 +333,7 @@ module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent;
 module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent;
 module.exports.inboundNexmoEvent = inboundNexmoEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
+module.exports.SOURCE_TYPE = SOURCE_TYPE;
 module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
