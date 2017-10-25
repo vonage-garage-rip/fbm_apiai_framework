@@ -13,22 +13,16 @@ const sessionsManager = require('../../sessionsManager');
 'use strict';
 const utility = require('./utility');
 
-var request = require('request');
-
-var graphapi = request.defaults({
-    baseUrl: 'https://graph.facebook.com',
-    auth: {
-        'bearer' : process.env.WORKPLACE_PAGE_ACCESS_TOKEN
-    }
-});
-
+const rpn = require('request-promise-native')
 
 // Arbitrary value used to validate a workplace webhook
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
+const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
   
   var handleInboundEvent = function (req, res, next) {
     if (req.method == 'GET') {
-      utility.verifySubscription(req, res, WORKPLACE_VERIFY_TOKEN)
+      req.appSecret = WORKPLACE_VERIFY_TOKEN
+      utility.verifySubscription(req, res)
     }
     else if (req.method === 'POST') {
       handlePostRequest(req, res)
@@ -79,7 +73,8 @@ const handlePostRequest = (req, res) => {
     console.error(e);
   } finally {
     // Always respond with a 200 OK for handled webhooks, to avoid retries
-		// from Facebook
+    // from Facebook
+    /// TODO we should find a way to return this quicker rather than waiting for handling to complete
     res.sendStatus(200);
   }
 }
@@ -87,26 +82,37 @@ const handlePostRequest = (req, res) => {
 function processPageEvents(data) {
   data.entry.forEach(function(entry){
     let page_id = entry.id;
-		// Chat messages sent to the page
+    // Chat messages sent to the page/bot
+    let inboundMessage = {}
     if(entry.messaging) {
       entry.messaging.forEach(function(messaging_event){
         console.log('Page Messaging Event', page_id, messaging_event);
+        
+        inboundMessage = {
+          channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+          sourceType: messaging_event.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+          source: messaging_event.thread ? messaging_event.thread.id : messaging_event.sender.id, 
+          from: messaging_event.sender.id, 
+          to: page_id,
+          text: messaging_event.message.text
+        };
       });
     }
-		// Page related changes, or mentions of the page
-    if(entry.changes) {
+		// Page related changes, or mentions of the page/bot in a group post
+    else if(entry.changes) {
       entry.changes.forEach(function(change){
         console.log('Page Change', page_id, change);
-        let inboundMessage = {
+        inboundMessage = {
           channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+          sourceType: sessionsManager.SOURCE_TYPE.POST,
           source: change.value.post_id, 
-          from: change.value.sender_name, //  perhaps this should be added to session.contexts
+          from: change.value.sender_name, //  perhaps this should be added to session.data
           to: page_id,
           text: change.value.message.substring(change.value.message.indexOf(' ')+1)
         };
-        sessionsManager.handleInboundChannelMessage(inboundMessage)
       });
     }
+    sessionsManager.handleInboundChannelMessage(inboundMessage)
   });
 }
 
@@ -114,7 +120,7 @@ function processGroupEvents(data) {
   data.entry.forEach(function(entry){
     let group_id = entry.id;
     entry.changes.forEach(function(change){
-      console.log('Group Change',group_id,change);
+      console.log('Group Change', group_id, change);
     });
   });
 }
@@ -137,48 +143,37 @@ function processWorkplaceSecurityEvents(data) {
   });
 }
 
+function sendResponse(message, session) {
+  switch ( session.sourceType ) {
+    case sessionsManager.SOURCE_TYPE.POST:
+        sendCommentToPost(message, session.source); // post ID
+        break;
+    case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
+        sendTextMessageToExistingGroup(message, session.source); // thread ID
+        break;
+    case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
+        /// TODO Once more types of content are required, do similar to fbmChannel.sendMessageToUser
+        sendTextMessageToUser(message, session.source); // user ID
+        break;
+  }  
+}
+
+function sendNewPostToGroup(message, groupId) {
+  return utility.sendNewPostToGroup(message, groupId, WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+
 function sendCommentToPost(message, postId) {
-  return new Promise((resolve, reject) => {
-    graphapi({
-      method: 'POST',
-      url: '/' + postId + '/comments',
-      qs: {
-          'message': message
-      }
-    }, (error, response, body) => {
-        if(error) {
-            console.error("sendCommentToPost got an error: " + error);
-            return reject(error)
-        } else {
-            var commentId = JSON.parse(body).id;
-            console.log('sendCommentToPost: Published comment. comment ID= ' + commentId);
-            return resolve(commentId)
-        }
-    });
-  })
+  return utility.sendCommentToPost(message, postId, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendMessageToGroup(message, groupId) {
-  return new Promise((resolve, reject) => {
-    graphapi({
-      method: 'POST',
-      url: '/' + groupId + '/feed',
-      qs: {
-          'message': message
-      }
-    }, (error, response, body) => {
-        if(error) {
-            console.error(error);
-            return reject(error)
-        } else {
-            var post_id = JSON.parse(body).id;
-            console.log('sendMessageToGroup: Published message. Post ID= ' + post_id);
-            return resolve(post_id)
-        }
-    });
-  })
+function sendTextMessageToUser(message, userId) {
+  return utility.sendTextMessage(message, userId, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
+function sendTextMessageToExistingGroup(message, threadId) {
+  return utility.sendTextMessageToExistingGroup(message, threadId, WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+ 
 module.exports.handleInboundEvent = handleInboundEvent
-module.exports.sendMessageToGroup = sendMessageToGroup
-module.exports.sendCommentToPost = sendCommentToPost
+module.exports.sendResponse = sendResponse
+module.exports.sendNewPostToGroup = sendNewPostToGroup
