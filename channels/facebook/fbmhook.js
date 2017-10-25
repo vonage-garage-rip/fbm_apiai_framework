@@ -6,9 +6,9 @@ require('log-timestamp');
 const utility = require('./utility');
 const sessionsManager = require('../../sessionsManager');
 
-
 // Arbitrary value used to validate a messenger webhook
 const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
+const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
 var sendMessageToUser = function (message, sessionId) {
   let session = sessionsManager.getSessionBySessionId(sessionId);
@@ -16,34 +16,35 @@ var sendMessageToUser = function (message, sessionId) {
 
   switch (message.type) {
     case sessionsManager.MESSAGE_TYPES.CUSTOME:
-      utility.sendCustomMessage(session.userId, message.payload.facebook);
+      utility.sendCustomMessage(session.source, message.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.TEXT:
-      utility.sendTextMessage(session.userId, message.speech || message.text);
+      utility.sendTextMessage(session.source, message.speech || message.text, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.CARD:
-      utility.sendGenericMessage(session.userId, message.title, message.subtitle, message.imageUrl, message.buttons);
+      utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-      utility.sendQuickReply(session.userId, message.title, message.replies);
+      utility.sendQuickReply(session.source, message.title, message.replies, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.IMAGE:
-      utility.sendImageMessage(session.userId, message.payload);
+      utility.sendImageMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.AUDIO:
-      utility.sendAudioMessage(session.userId, message.payload);
+      utility.sendAudioMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
     case sessionsManager.MESSAGE_TYPES.VIDEO:
-      utility.sendVideoMessage(session.userId, message.payload);
+      utility.sendVideoMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
   }
 };
 
 var handleInboundEvent = function (req, res, next) {
   if (req.method == 'GET') {
-    utility.verifySubscription(req, res, MESSENGER_VERIFY_TOKEN)
+    req.appSecret = MESSENGER_VERIFY_TOKEN
+    utility.verifySubscription(req, res)
   }
-  else if (req.method === 'POST') {
+  else  if (req.method === 'POST') {
     handlePostRequest(req, res)
   }
 }
@@ -62,12 +63,12 @@ const handlePostRequest = (req, res) => {
     if (data && data.object && data.object == 'page') {
       // Iterate over each entry
       // There may be multiple if batched
-      data.entry.forEach(function (pageEntry) {
+      data.entry.forEach( pageEntry => {
         var pageID = pageEntry.id;
         var timeOfEvent = pageEntry.time;
 
         // Iterate over each messaging event
-        pageEntry.messaging.forEach(function (messagingEvent) {
+        pageEntry.messaging && pageEntry.messaging.forEach( messagingEvent => {
           if (messagingEvent.optin) {
             receivedAuthentication(messagingEvent);
           } else if (messagingEvent.message) {
@@ -188,6 +189,11 @@ const receivedAccountLink = (event) => {
   }
 }
 
+const getUserProfile = userId => {
+  return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent;
 module.exports.sendMessageToUser = sendMessageToUser;
+module.exports.getUserProfile = getUserProfile;
 
