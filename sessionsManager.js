@@ -162,71 +162,25 @@ var getSessionByChannelEvent = (messagingEvent) => {
     });
 }
 
-//Get url type: Audio, Video or Image
-var identifyUrl = (message, url) => {
-    var type = message.type;
-
-    if (message.payload.isVideo) {
-        type = 6;
-    }
-    else if (message.payload.isAudio) {
-        type = 5;
-    }
-    else if (url.includes("images")) {
-        type = 3;
-    }
-
-    return { "type": type, "payload": url }
-}
-
-var handleResponseWithMessages = (apiairesponse) => {
-    var messages = apiairesponse.result.fulfillment.messages;
-
-    messages.forEach(function (message, index) {
+var handleResponseWithMessages = (messages, session) => {
+    
+    
+    messages.forEach( (message, index) => {
         //Delay or queue messages so we'll keep order in place
         /// TODO: find better way
-        setTimeout(function () {
-            //TODO: REFACTOR
-            let session = getSessionBySessionId(apiairesponse.sessionId)
-            if (message.payload && message.payload.urls || message.payload && message.payload.facebook.attachment.payload.isVideo || message.payload && message.payload.facebook.attachment.payload.isAudio) {
-                if (message.payload.facebook && message.payload.facebook.attachment.payload.isVideo || message.payload.facebook && message.payload.facebook.attachment.payload.isAudio) {
-                    //Handle API.AI custom payload response
-                    message.payload = message.payload.facebook.attachment.payload;
-                }
-                //Handle many content urls
-                message.payload.urls.forEach(function (url) {
-                    //Check if Message contains audio, video or image.
-                    var urlMessage = identifyUrl(message, url);
-
-                    switch (session.channel) {
-                        case CHANNELS.FB_MESSENGER:
-                            fbmChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
-                            break;
-                        case CHANNELS.NEXMO:
-                            // can't send rich media
-                            break;
-                        case CHANNELS.FB_WORKPLACE:
-                            wpChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
-                            break;
-                    }
-                });
+        setTimeout( () => {
+            switch (session.channel) {
+                /// TODO should we filter based on message.platform value?
+                case CHANNELS.FB_MESSENGER:
+                    fbmChannel.sendMessage(message, session);
+                    break;x
+                case CHANNELS.FB_WORKPLACE:
+                    wpChannel.sendMessage(message, session)
+                    break;
+                case CHANNELS.NEXMO:
+                    nexmoChannel.sendMessage(message, session)
+                    break;
             }
-            else {
-                switch (session.channel) {
-                    case CHANNELS.FB_MESSENGER:
-                        fbmChannel.sendMessageToUser(message, apiairesponse.sessionId);
-                        break;
-                    case CHANNELS.FB_WORKPLACE:
-                        wpChannel.sendResponse(message.speech, session)
-                        break;
-                    case CHANNELS.NEXMO:
-                        nexmoChannel.sendMessage(session.phoneNumbers[0], message.speech)
-                        break;
-                }
-                
-                
-
-            }            
         }, 1460 * index);
     })
 }
@@ -238,18 +192,9 @@ const handleApiaiResponse = (apiairesponse) => {
         if ( actionName && actionName!=="input.unknown" ) {
             actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId(apiairesponse.sessionId))
         }
-        if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
-            /// TODO choose the right channel (fbm, nexmo, ..
-            fbmChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
-        }
-
-        if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
-            handleResponseWithMessages(apiairesponse);
-        }
-        else {
-            /// TODO choose the right channel (fbm, nexmo, ..
-            fbmChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
-        }
+        
+        let messages = apiairesponse.result.fulfillment.messages ? apiairesponse.result.fulfillment.messages : [apiairesponse.result.fulfillment.speech]
+        handleResponseWithMessages(messages, getSessionBySessionId(apiairesponse.sessionId))
     }
 }
 
@@ -260,8 +205,6 @@ const handleInboundChannelMessage = (message) => {
             if (message.quick_reply) {
                 return session.apiaiAgent.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
             }
-            // send message to api.ai
-            console.log("session", session, "sessionsManager.handleInboundChannelMessage: sending message to api.ai: " + JSON.stringify(message));
             return session.apiaiAgent.sendTextMessageToApiAi(message.text, session.sessionId);
         })
         .then(apiairesponse => {
@@ -292,7 +235,7 @@ const handleEventByUserChannelId = (userChannelId, event) => {
         handleEvent(session, event)
     }
     else {
-        console.log("sessionManager: couldn't find sessiosn for user channel ID: " + userChannelId)
+        console.log("sessionManager: couldn't find session for user channel ID: " + userChannelId)
     }
 }
 
@@ -310,7 +253,6 @@ const handleEvent = (session, event) => {
             });
             break;
         case EVENTS.ACCOUNT_LINKED:
-            //session.externalIntegrations.push(event.data)
             session.externalIntegrations[event.data.integrationName] = {"User_ID": event.data.userId}
             userChannelToSessions[event.data.userId] = session /// do we need that?
             actionsManager.handleAction("accountLinked", event.data, session)
