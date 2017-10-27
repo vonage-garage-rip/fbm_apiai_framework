@@ -10,31 +10,24 @@ const sessionsManager = require('../../sessionsManager');
 const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
 const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
-var sendMessageToUser = function (message, sessionId) {
-  let session = sessionsManager.getSessionBySessionId(sessionId);
+var sendMessage = function (message, session) {
   console.log("MESSAGE: ", message);
 
   switch (message.type) {
-    case sessionsManager.MESSAGE_TYPES.CUSTOME:
-      utility.sendCustomMessage(session.source, message.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
     case sessionsManager.MESSAGE_TYPES.TEXT:
-      utility.sendTextMessage(session.source, message.speech || message.text, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
-    case sessionsManager.MESSAGE_TYPES.CARD:
-      utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
+      utility.sendTextMessage(session.source, message.speech, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
     case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
       utility.sendQuickReply(session.source, message.title, message.replies, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
+    break;
     case sessionsManager.MESSAGE_TYPES.IMAGE:
-      utility.sendImageMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
-    case sessionsManager.MESSAGE_TYPES.AUDIO:
-      utility.sendAudioMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
-      break;
-    case sessionsManager.MESSAGE_TYPES.VIDEO:
-      utility.sendVideoMessage(session.source, message.payload, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendImageMessage(session.source, message.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
+    case sessionsManager.MESSAGE_TYPES.CARD:
+      utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
+    case sessionsManager.MESSAGE_TYPES.CUSTOME:
+      utility.sendCustomMessage(session.source, message.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
   }
 };
@@ -194,6 +187,6 @@ const getUserProfile = userId => {
 }
 
 module.exports.handleInboundEvent = handleInboundEvent;
-module.exports.sendMessageToUser = sendMessageToUser;
+module.exports.sendMessage = sendMessage;
 module.exports.getUserProfile = getUserProfile;
 

@@ -211,14 +211,14 @@ function sendCustomMessage(recipientId, messageObject, accessToken) {
   callMessageAPI(messageData, accessToken);
 }
 
-function sendQuickReply(recipientId, text, quickReplyButtons, accessToken) {
+function sendQuickReply(recipientId, title, quickReplies, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
     },
     message: {
-      text: text,
-      quick_replies: quickReplyButtons.map(function (quickReply) {
+      text: title,
+      quick_replies: quickReplies.map( quickReply => {
         if (typeof (quickReply) === "string") {
           return {
             content_type: "text",
@@ -246,6 +246,7 @@ function sendImageMessage(recipientId, url, accessToken) {
         type: "image",
         payload: {
           url: url
+          /// TODO consider adding is_reusable
         }
       }
     }
@@ -432,7 +433,7 @@ var verifySubscription = (req, res) => {
 }
 
 module.exports = {
-  PROFILE_API, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
+  PROFILE_API, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+  sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
   verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, 
-  sendNewPostToGroup, sendCommentToPost
 };

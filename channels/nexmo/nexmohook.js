@@ -7,8 +7,8 @@ var nexmo = new Nexmo({
   });
 
 
-  exports.sendMessage = function(to, message) {
-      nexmo.message.sendSms(process.env.NEXMO_NUMBER, to, message,
+  exports.sendMessage = function(message, session) {
+      nexmo.message.sendSms(process.env.NEXMO_NUMBER, session.phoneNumbers[0], message.speech,
         (err, responseData) => {
             if (err) {
               console.error(err);

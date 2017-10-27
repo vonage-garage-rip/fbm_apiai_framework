@@ -143,17 +143,17 @@ function processWorkplaceSecurityEvents(data) {
   });
 }
 
-function sendResponse(message, session) {
+function sendMessage(message, session) {
   switch ( session.sourceType ) {
     case sessionsManager.SOURCE_TYPE.POST:
-        sendCommentToPost(message, session.source); // post ID
+        sendCommentToPost(message.speech, session.source); // post ID
         break;
     case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-        sendTextMessageToExistingGroup(message, session.source); // thread ID
+        sendTextMessageToExistingGroup(message.speech, session.source); // thread ID
         break;
     case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
-        /// TODO Once more types of content are required, do similar to fbmChannel.sendMessageToUser
-        sendTextMessageToUser(message, session.source); // user ID
+        /// TODO Once more types of content are required, do similar to fbmChannel.sendMessage
+        sendTextMessageToUser(message.speech, session.source); // user ID
         break;
   }  
 }
@@ -175,5 +175,5 @@ function sendTextMessageToExistingGroup(message, threadId) {
 }
  
 module.exports.handleInboundEvent = handleInboundEvent
-module.exports.sendResponse = sendResponse
+module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
