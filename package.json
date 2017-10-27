@@ -1,28 +1,22 @@
 {
-  "name": "automatic-integration",
+  "name": "fbm_apiai_framework",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "Framework for Facebook Messenger, Dialogflow applications. Developed by the VonageGarge Team.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/VonageGarage/automatic-integration.git"
+  "author": {
+    "name": "Zach Efrati",
+    "email": "tzahi.efrati@gmail.com",
+    "url": "https://www.linkedin.com/in/efrati/"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/VonageGarage/automatic-integration/issues"
-  },
-  "homepage": "https://github.com/VonageGarage/automatic-integration#readme",
-  "dependencies": {
+  "license": ""
+  /*,"dependencies": {
     "apiai": "^4.0.3",
-    "body-parser": "^1.18.2",
-    "express": "^4.16.0",
     "log-timestamp": "^0.1.2",
     "moment": "^2.18.1",
     "node-fetch": "^1.7.3",
+    "request": "^2.83.0",
     "uuid": "^3.1.0"
-  }
+  }*/
 }

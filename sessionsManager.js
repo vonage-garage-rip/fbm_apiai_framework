@@ -25,10 +25,24 @@ const MESSAGE_TYPES = {
     CAROUSEL: 7
 };
 
+const CHANNELS = {
+    FB_MESSENGER: Symbol("FB_MESSENGER"),
+    FB_WORKPLACE: Symbol("FB_WORKPLACE"),
+    NEXMO: Symbol("Nexmo")
+}
 
-const apiai = require('./apiai');
-const fbChannel = require('./channels/facebook/webhook');
-const fbUtility = require('./channels/facebook/utility');
+const SOURCE_TYPE = {
+    POST: Symbol("POST"),
+    GROUP_CHAT: Symbol("GROUP_CHAT"),
+    ONE_ON_ONE_CHAT: Symbol("ONE_ON_ONE_CHAT")
+}
+
+const apiaiUsersAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
+const apiaiBusinessAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
+
+const nexmoChannel = require('./channels/nexmo/nexmohook');
+const wpChannel = require('./channels/facebook/wphook');
+const fbmChannel = require('./channels/facebook/fbmhook');
 
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
@@ -39,15 +53,23 @@ const initialize = dbReference => {
     db = dbReference /// TODO should be an interface
 }
 
-const inboundFacebookEvent = (req, res) => {
-    fbChannel.handleInboundEvent(req, res);
+const inboundFacebookMessengerEvent = (req, res) => {
+    fbmChannel.handleInboundEvent(req, res);
+}
+
+const inboundFacebookWorkplaceEvent = (req, res) => {
+    wpChannel.handleInboundEvent(req, res);
+}
+
+const inboundNexmoEvent = (req, res) => {
+    nexmoChannel.handleInboundEvent(req, res);
 }
 
 const getSessionBySessionId = sessionId => {
     return chatSessions[sessionId];
 }
 
-const setSessionContext = (session, contextId) => {
+const getSessionContext = (session, contextId) => {
     return new Promise(function (resolve, reject) {
         db.getContext(contextId)
             .then(function (context) {
@@ -73,7 +95,7 @@ const setSessionContext = (session, contextId) => {
 var getSessionByChannelEvent = (messagingEvent) => {
     return new Promise(function (resolve) {
 
-        mappedChatSession = userChannelToSessions[messagingEvent.from]
+        mappedChatSession = userChannelToSessions[messagingEvent.source]
         if (mappedChatSession) {
             mappedChatSession.lastInboundMessage = moment();
             return resolve(mappedChatSession);
@@ -81,31 +103,55 @@ var getSessionByChannelEvent = (messagingEvent) => {
         else {
             // Set new session 
             let sessionId = uuidv4();
+            let apiaiAgent;
+            // TODO this should be moved to parent app logic
+            switch ( messagingEvent.channel ) {
+                case CHANNELS.FB_MESSENGER:
+                case CHANNELS.NEXMO:
+                    apiaiAgent = apiaiUsersAgent
+                    break;
+                case CHANNELS.FB_WORKPLACE:
+                    apiaiAgent = apiaiBusinessAgent
+                    break;
+            }
+
             mappedChatSession = chatSessions[sessionId] = {
+                channel: messagingEvent.channel,
+                apiaiAgent: apiaiAgent,
                 sessionId: sessionId,
                 profile: {},
-                userId: messagingEvent.from,
+                sourceType: messagingEvent.sourceType,
+                source: messagingEvent.source, 
+                from: messagingEvent.from,
                 lastInboundMessage: moment(),
                 externalIntegrations: {},
                 phoneNumbers: [],
-                contexts: {}
+                data: {}
             }
-            userChannelToSessions[messagingEvent.from] = mappedChatSession;
 
-            db.getUser(messagingEvent.from)
+            if ( messagingEvent.channel===CHANNELS.NEXMO ) {
+                mappedChatSession.phoneNumbers.push(messagingEvent.source)                
+            }
+
+            userChannelToSessions[messagingEvent.source] = mappedChatSession;
+
+            db.getUser(messagingEvent.source)
             .then(user => {
                 if ( user ) {
                     Object.assign(mappedChatSession, user)
                     mappedChatSession.lastInboundMessage = moment(mappedChatSession.lastInboundMessage)
                     return resolve(mappedChatSession)
                 }
-                else {
-                    fbUtility.getUserProfile(messagingEvent.from)
+                else if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
+                    fbmChannel.getUserProfile(messagingEvent.source)
                     .then(json => {
                         console.log("user profile:" + JSON.stringify(json));
                         mappedChatSession.profile = json;
                         return resolve(mappedChatSession);
                     })
+                }
+                else {
+                    return resolve(mappedChatSession);
                 }
             })
             .catch(err => {
@@ -116,49 +162,24 @@ var getSessionByChannelEvent = (messagingEvent) => {
     });
 }
 
-//Get url type: Audio, Video or Image
-var identifyUrl = (message, url) => {
-    var type = message.type;
-
-    if (message.payload.isVideo) {
-        type = 6;
-    }
-    else if (message.payload.isAudio) {
-        type = 5;
-    }
-    else if (url.includes("images")) {
-        type = 3;
-    }
-
-    return { "type": type, "payload": url }
-}
-
-var handleResponseWithMessages = (apiairesponse) => {
-    var messages = apiairesponse.result.fulfillment.messages;
-
-    messages.forEach(function (message, index) {
+var handleResponseWithMessages = (messages, session) => {
+    
+    
+    messages.forEach( (message, index) => {
         //Delay or queue messages so we'll keep order in place
         /// TODO: find better way
-        setTimeout(function () {
-            if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
-                //TODO: REFACTOR
-                if (message.payload && message.payload.urls || message.payload && message.payload.facebook.attachment.payload.isVideo || message.payload && message.payload.facebook.attachment.payload.isAudio) {
-                    if (message.payload.facebook && message.payload.facebook.attachment.payload.isVideo || message.payload.facebook && message.payload.facebook.attachment.payload.isAudio) {
-                        //Handle API.AI custom payload response
-                        message.payload = message.payload.facebook.attachment.payload;
-                    }
-                    //Handle many content urls
-                    message.payload.urls.forEach(function (url) {
-                        //Check if Message contains audio, video or image.
-                        var urlMessage = identifyUrl(message, url);
-
-                        fbChannel.sendMessageToUser(urlMessage, apiairesponse.sessionId);
-                    });
-                }
-                else {
-                    fbChannel.sendMessageToUser(message, apiairesponse.sessionId);
-
-                }
+        setTimeout( () => {
+            switch (session.channel) {
+                /// TODO should we filter based on message.platform value?
+                case CHANNELS.FB_MESSENGER:
+                    fbmChannel.sendMessage(message, session);
+                    break;x
+                case CHANNELS.FB_WORKPLACE:
+                    wpChannel.sendMessage(message, session)
+                    break;
+                case CHANNELS.NEXMO:
+                    nexmoChannel.sendMessage(message, session)
+                    break;
             }
         }, 1460 * index);
     })
@@ -171,16 +192,9 @@ const handleApiaiResponse = (apiairesponse) => {
         if ( actionName && actionName!=="input.unknown" ) {
             actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId(apiairesponse.sessionId))
         }
-        if (apiairesponse.result.fulfillment.data && apiairesponse.result.fulfillment.data.facebook) {
-            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.CUSTOME, payload: { facebook: apiairesponse.result.fulfillment.data.facebook } }, apiairesponse.sessionId);
-        }
-
-        if (apiairesponse.result.fulfillment.messages && apiairesponse.result.fulfillment.messages.length > 0) {
-            handleResponseWithMessages(apiairesponse);
-        }
-        else {
-            fbChannel.sendMessageToUser({ type: MESSAGE_TYPES.TEXT, speech: apiairesponse.result.fulfillment.speech }, apiairesponse.sessionId);
-        }
+        
+        let messages = apiairesponse.result.fulfillment.messages ? apiairesponse.result.fulfillment.messages : [apiairesponse.result.fulfillment.speech]
+        handleResponseWithMessages(messages, getSessionBySessionId(apiairesponse.sessionId))
     }
 }
 
@@ -189,11 +203,9 @@ const handleInboundChannelMessage = (message) => {
         .then((session) => {
             console.log("session", session, "sessionsManager.handleInboundChannelMessage: " + JSON.stringify(message));
             if (message.quick_reply) {
-                return apiai.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
+                return session.apiaiAgent.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
             }
-            // send message to api.ai
-            console.log("session", session, "sessionsManager.handleInboundChannelMessage: sending message to api.ai: " + JSON.stringify(message));
-            return apiai.sendTextMessageToApiAi(message.text, session.sessionId);
+            return session.apiaiAgent.sendTextMessageToApiAi(message.text, session.sessionId);
         })
         .then(apiairesponse => {
             handleApiaiResponse(apiairesponse);
@@ -207,7 +219,7 @@ const handleInboundChannelPostback = (message) => {
     getSessionByChannelEvent(message)
         .then(session => {
             console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + message);
-            return apiai.sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
+            return session.apiaiAgent.sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
         })
         .then(apiairesponse => {
             handleApiaiResponse(apiairesponse);
@@ -223,7 +235,7 @@ const handleEventByUserChannelId = (userChannelId, event) => {
         handleEvent(session, event)
     }
     else {
-        console.log("sessionManager: couldn't find sessiosn for user channel ID: " + userChannelId)
+        console.log("sessionManager: couldn't find session for user channel ID: " + userChannelId)
     }
 }
 
@@ -235,13 +247,12 @@ const handleEventBySessionId = (sessionId, event) => {
 const handleEvent = (session, event) => {
     switch (event.type) {
         case EVENTS.GET_STARTED_PAYLOAD:
-            apiai.sendEventToApiAi(event, session.sessionId)
-                .then(apiairesponse => {
-                    handleApiaiResponse(apiairesponse);
-                });
+            session.apiaiAgent.sendEventToApiAi(event, session.sessionId)
+            .then(apiairesponse => {
+                handleApiaiResponse(apiairesponse);
+            });
             break;
         case EVENTS.ACCOUNT_LINKED:
-            //session.externalIntegrations.push(event.data)
             session.externalIntegrations[event.data.integrationName] = {"User_ID": event.data.userId}
             userChannelToSessions[event.data.userId] = session /// do we need that?
             actionsManager.handleAction("accountLinked", event.data, session)
@@ -260,10 +271,14 @@ module.exports.handleInboundChannelPostback = handleInboundChannelPostback;
 module.exports.handleInboundChannelMessage = handleInboundChannelMessage;
 module.exports.getSessionBySessionId = getSessionBySessionId;
 module.exports.getSessionByChannelEvent = getSessionByChannelEvent;
-module.exports.inboundFacebookEvent = inboundFacebookEvent;
+module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent;
+module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent;
+module.exports.inboundNexmoEvent = inboundNexmoEvent;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
+module.exports.SOURCE_TYPE = SOURCE_TYPE;
+module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-module.exports.setSessionContext = setSessionContext;
+module.exports.getSessionContext = getSessionContext;
 module.exports.initialize = initialize;
 

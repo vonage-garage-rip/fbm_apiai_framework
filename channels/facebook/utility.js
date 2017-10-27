@@ -5,80 +5,39 @@ const MAX_GENERIC_TEMPLATE_ELEMENTS = 10;
 const
   bodyParser = require('body-parser'),
   crypto = require('crypto'),
-  fetch = require('node-fetch');
-
+  rpn = require('request-promise-native')
 
 const sessionsManagerEvents = require("../../sessionsManager").EVENTS;
 
-// App Secret can be retrieved from the App Dashboard
-const APP_SECRET = process.env.MESSENGER_APP_SECRET;
-
-// Arbitrary value used to validate a webhook
-const VALIDATION_TOKEN = process.env.MESSENGER_VALIDATION_TOKEN;
-
-// Generate a page access token for your page from the App Dashboard
-const PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN;
-
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL;
 
-const PERSISTENT_MENU = process.env.PERSISTENT_MENU || []
+const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.10/";
 
-if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
-  console.error("Missing config values");
-  process.exit(1);
+const PROFILE_API = {
+  PERSISTENT_MENU: "persistent_menu",
+  GET_STARTED_MESSAGE: "get_started"
 }
 
-const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.6/me/";
+const sendProfileApiBatch = ( propertyBody, accessToken) => {
+  var options = {
+    method: 'POST',
+    uri: FACEBOOK_GRAPH_URL + 'me?access_token=' + accessToken ,
+    headers: { "Content-Type": "application/json" },
+    body: propertyBody,
+    json: true // Automatically stringifies the body to JSON
+  };
 
-const setPersistentMenu = (persistentMenu) => {
-  let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
-  let menu = {
-    "persistent_menu": persistentMenu
-  }
-  fetch(fullURL, { method: "POST", body: JSON.stringify(menu), headers: { "Content-Type": "application/json" } })
-    .then(function (res) {
-      return res.json();
+  rpn(options)
+    .then( parsedBody => {
+        // POST succeeded...
+        console.log("sendProfileApiBatch returned: " + parsedBody);
     })
-    .then(function (json) {
-      console.log(" setPersistentMenu returned: " + JSON.stringify(json));
-    })
-    .catch(err => {
-      console.log("setPersistentMenu caught error: " + err);
+    .catch( err => {
+        // POST failed...
+        console.log("sendProfileApiBatch returned error: " + err);
     });
 }
 
-const setGetStartedButton = (getStartedMessage) => {
-  let fullURL = FACEBOOK_GRAPH_URL + "thread_settings?access_token=" + PAGE_ACCESS_TOKEN;
- 
-  fetch(fullURL, { method: "POST", body: JSON.stringify(getStartedMessage), headers: { "Content-Type": "application/json" } })
-    .then(function (res) {
-      return res.json();
-    })
-    .then(function (json) {
-      console.log("setGetStartedButton returned: " + JSON.stringify(json));
-    })
-    .catch(err => {
-      console.log("setGetStartedButton caught error: " + err);
-    });
-};
-
-const setGreetingText = (greetingObj) => {
-  let fullURL = FACEBOOK_GRAPH_URL + "messenger_profile?access_token=" + PAGE_ACCESS_TOKEN;
-  let greeting = {
-    "greeting": greetingObj
-  }
-  
-  fetch(fullURL, { method: "POST", body: JSON.stringify(greeting), headers: { "Content-Type": "application/json" } })
-    .then(function (res) {
-      return res.json();
-    })
-    .then(function (json) {
-      console.log(" setGreetingText returned: " + JSON.stringify(json));
-    })
-    .catch(err => {
-      console.log("setGreetingText caught error: " + err);
-    });
-}
 /*
  * Verify that the callback came from Facebook. Using the App Secret from 
  * the App Dashboard, we can verify the signature that is sent with each 
@@ -98,8 +57,8 @@ function verifyRequestSignature(req, res, buf) {
     var elements = signature.split('=');
     var method = elements[0];
     var signatureHash = elements[1];
-
-    var expectedHash = crypto.createHmac('sha1', APP_SECRET)
+    
+    var expectedHash = crypto.createHmac('sha1', req.appSecret)
       .update(buf)
       .digest('hex');
 
@@ -162,7 +121,6 @@ function receivedDeliveryConfirmation(event) {
 
 }
 
-
 /*
  * Message Read Event
  *
@@ -182,7 +140,7 @@ function receivedMessageRead(event) {
     "number %d", watermark, sequenceNumber);*/
 }
 
-function sendTextMessage(recipientId, text) {
+function sendTextMessage(recipientId, text, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
@@ -193,10 +151,10 @@ function sendTextMessage(recipientId, text) {
     }
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendButtonMessage(recipientId, text, buttons) {
+function sendButtonMessage(recipientId, text, buttons, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
@@ -213,10 +171,10 @@ function sendButtonMessage(recipientId, text, buttons) {
     }
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons) {
+function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, accessToken) {
   let element = {
     title: title,
     image_url: imageUrl,
@@ -239,10 +197,10 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons) {
     }
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendCustomMessage(recipientId, messageObject) {
+function sendCustomMessage(recipientId, messageObject, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
@@ -250,17 +208,17 @@ function sendCustomMessage(recipientId, messageObject) {
     message: messageObject
   }
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendQuickReply(recipientId, text, quickReplyButtons) {
+function sendQuickReply(recipientId, title, quickReplies, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
     },
     message: {
-      text: text,
-      quick_replies: quickReplyButtons.map(function (quickReply) {
+      text: title,
+      quick_replies: quickReplies.map( quickReply => {
         if (typeof (quickReply) === "string") {
           return {
             content_type: "text",
@@ -275,10 +233,10 @@ function sendQuickReply(recipientId, text, quickReplyButtons) {
     }
   }
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendImageMessage(recipientId, url) {
+function sendImageMessage(recipientId, url, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
@@ -288,15 +246,16 @@ function sendImageMessage(recipientId, url) {
         type: "image",
         payload: {
           url: url
+          /// TODO consider adding is_reusable
         }
       }
     }
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendReadReceipt(recipientId) {
+function sendReadReceipt(recipientId, accessToken) {
   console.log("Sending a read receipt to mark message as seen");
 
   var messageData = {
@@ -306,10 +265,10 @@ function sendReadReceipt(recipientId) {
     sender_action: "mark_seen"
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendTypingOn(recipientId) {
+function sendTypingOn(recipientId, accessToken) {
   console.log("Turning typing indicator on");
 
   var messageData = {
@@ -319,10 +278,10 @@ function sendTypingOn(recipientId) {
     sender_action: "typing_on"
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-function sendTypingOff(recipientId) {
+function sendTypingOff(recipientId, accessToken) {
   console.log("Turning typing indicator off");
 
   var messageData = {
@@ -332,14 +291,14 @@ function sendTypingOff(recipientId) {
     sender_action: "typing_off"
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
 /*
  * Send a message with the account linking call-to-action
  *
  */
-function sendAccountLinking(recipientId) {
+function sendAccountLinking(recipientId, accessToken) {
   var messageData = {
     recipient: {
       id: recipientId
@@ -359,51 +318,32 @@ function sendAccountLinking(recipientId) {
     }
   };
 
-  callSendAPI(messageData);
+  callMessageAPI(messageData, accessToken);
 }
 
-/*
- * Call the User Profile API. USER_ID and fields are part of query string. 
- * If successful, we'll get the user name, profile pic, locale, timezone, gender, is_payment_enabled,
- */
-function getUserProfile(userId) {
-  return new Promise(function (resolve, reject) {
-    let qs = "?fields=first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled&access_token=" + PAGE_ACCESS_TOKEN
-    fetch('https://graph.facebook.com/v2.6/' + userId + qs)
-      .then(function (res) {
-        return res.json();
-      })
-      .then(function (json) {
-        return resolve(json);
-      })
-      .catch(err => {
-        console.log("facebook/utility getUserProfile caught an error: " + err);
-        return reject(err);
-      })
-  })
+function sendTextMessageToExistingGroup(message, threadId, accessToken)
+{
+  var messageData = {
+    recipient: {
+      thread_key: threadId
+    },
+    message: {text: message}
+  }
+
+  callMessageAPI(messageData, accessToken);
 }
 
-
-/*
- * Call the Send API. The message data goes in the body. If successful, we'll 
- * get the message id in a response 
- * TODO: To get email: https://developers.facebook.com/docs/graph-api/reference/user. Requires pages_messaging permission to manage the object.
- */
-function callSendAPI(messageData) {
-  let qs = "?access_token=" + PAGE_ACCESS_TOKEN;
-  fetch('https://graph.facebook.com/v2.6/me/messages' + qs,
-  {
+function callMessageAPI(messageData, accessToken) {
+  var options = {
     method: 'POST',
-    body: JSON.stringify(messageData),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(function (res) {
-    return res.json();
-  })
-  .then(function (json) {
+    uri: FACEBOOK_GRAPH_URL + 'me/messages?access_token=' + accessToken ,
+    headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    body: messageData,
+    json: true
+  };
+
+  rpn(options)
+  .then( json => {
     var recipientId = json.recipient_id;
     var messageId = json.message_id;
   })
@@ -412,8 +352,78 @@ function callSendAPI(messageData) {
   })
 }
 
+/*
+ * Call the User Profile API. USER_ID and fields are part of query string.
+ */
+/// 10/24 passed
+function getUserProfile(userId, fields, accessToken) {
+  return new Promise(function (resolve, reject) {
+    var options = {
+      method: 'GET',
+      uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&access_token=" + accessToken ,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+      json: true
+    };
+  
+    rpn(options)
+      .then( json => {
+        return resolve(json);
+      })
+      .catch(err => {
+        console.log("facebook/utility getUserProfile caught an error: " + err);
+        return reject(err);
+      })    
+  })
+}
+
+function sendNewPostToGroup(message, groupId, accessToken) {
+  return new Promise((resolve, reject) => {
+    var options = {
+      method: 'POST',
+      uri: FACEBOOK_GRAPH_URL + groupId + '/feed?access_token=' + accessToken + "&message=" + message ,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+    rpn(options)
+    .then( json => {
+      var newPostId = JSON.parse(json).id;
+      console.log('sendNewPostToGroup: Published post. post ID= ' + newPostId);
+      return resolve(newPostId)
+    })
+    .catch(err => {
+      console.error("sendNewPostToGroup got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
+function sendCommentToPost(message, postId, accessToken) {
+  return new Promise((resolve, reject) => {
+    var options = {
+      method: 'POST',
+      uri: FACEBOOK_GRAPH_URL + postId + '/comments?access_token=' + accessToken + "&message=" + message ,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+
+    rpn(options)
+    .then( json => {
+      var commentId = JSON.parse(json).id;
+      console.log('sendCommentToPost: Published comment. comment ID= ' + commentId);
+      return resolve(commentId)
+    })
+    .catch(err => {
+      console.error("sendCommentToPost got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
+var verifyWithChannelAppSecretHandler = (appSecret) => {
+  return function(req, res, next) {
+    req.appSecret = appSecret
+    return bodyParser.json({ verify: verifyRequestSignature })(req, res, next)
+  }
+}
+
 var verifySubscription = (req, res) => {
-  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VALIDATION_TOKEN) {
+  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === req.appSecret) {
     console.log("Validating webhook");
     res.status(200).send(req.query['hub.challenge']);
   } else {
@@ -422,10 +432,8 @@ var verifySubscription = (req, res) => {
   }
 }
 
-/***************************************************/
-
-
 module.exports = {
-  setPersistentMenu, setGetStartedButton, setGreetingText, getUserProfile, sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
-  verifySubscription, receivedDeliveryConfirmation, receivedMessageRead
+  PROFILE_API, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+  sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
+  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, 
 };

@@ -6,40 +6,38 @@ require('log-timestamp');
 const utility = require('./utility');
 const sessionsManager = require('../../sessionsManager');
 
-var sendMessageToUser = function (message, sessionId) {
-  let session = sessionsManager.getSessionBySessionId(sessionId);
+// Arbitrary value used to validate a messenger webhook
+const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
+const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
+
+var sendMessage = function (message, session) {
   console.log("MESSAGE: ", message);
 
   switch (message.type) {
-    case sessionsManager.MESSAGE_TYPES.CUSTOME:
-      utility.sendCustomMessage(session.userId, message.payload.facebook);
-      break;
     case sessionsManager.MESSAGE_TYPES.TEXT:
-      utility.sendTextMessage(session.userId, message.speech || message.text);
-      break;
-    case sessionsManager.MESSAGE_TYPES.CARD:
-      utility.sendGenericMessage(session.userId, message.title, message.subtitle, message.imageUrl, message.buttons);
-      break;
+      utility.sendTextMessage(session.source, message.speech, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
     case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-      utility.sendQuickReply(session.userId, message.title, message.replies);
-      break;
+      utility.sendQuickReply(session.source, message.title, message.replies, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
     case sessionsManager.MESSAGE_TYPES.IMAGE:
-      utility.sendImageMessage(session.userId, message.payload);
-      break;
-    case sessionsManager.MESSAGE_TYPES.AUDIO:
-      utility.sendAudioMessage(session.userId, message.payload);
-      break;
-    case sessionsManager.MESSAGE_TYPES.VIDEO:
-      utility.sendVideoMessage(session.userId, message.payload);
+      utility.sendImageMessage(session.source, message.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
+    case sessionsManager.MESSAGE_TYPES.CARD:
+      utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
+    break;
+    case sessionsManager.MESSAGE_TYPES.CUSTOME:
+      utility.sendCustomMessage(session.source, message.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
   }
 };
 
 var handleInboundEvent = function (req, res, next) {
   if (req.method == 'GET') {
+    req.appSecret = MESSENGER_VERIFY_TOKEN
     utility.verifySubscription(req, res)
   }
-  else if (req.method === 'POST') {
+  else  if (req.method === 'POST') {
     handlePostRequest(req, res)
   }
 }
@@ -58,12 +56,12 @@ const handlePostRequest = (req, res) => {
     if (data && data.object && data.object == 'page') {
       // Iterate over each entry
       // There may be multiple if batched
-      data.entry.forEach(function (pageEntry) {
+      data.entry.forEach( pageEntry => {
         var pageID = pageEntry.id;
         var timeOfEvent = pageEntry.time;
 
         // Iterate over each messaging event
-        pageEntry.messaging.forEach(function (messagingEvent) {
+        pageEntry.messaging && pageEntry.messaging.forEach( messagingEvent => {
           if (messagingEvent.optin) {
             receivedAuthentication(messagingEvent);
           } else if (messagingEvent.message) {
@@ -101,7 +99,8 @@ const receivedMessage = (messagingEvent) => {
   if (messagingEvent.message.text) {
     console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
     let inboundMessage = {
-      from: messagingEvent.sender.id,
+      channel: sessionsManager.CHANNELS.FB_MESSENGER,
+      source: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       text: messagingEvent.message.text,
       quick_reply: messagingEvent.message.quick_reply
@@ -133,7 +132,8 @@ const receivedPostback = (messagingEvent) => {
   
   let inboundPostbackMessage =
     {
-      from: messagingEvent.sender.id,
+      channel: sessionsManager.CHANNELS.FB_MESSENGER,
+      source: messagingEvent.sender.id,
       to: messagingEvent.recipient.id,
       payload: payload
     };
@@ -170,7 +170,10 @@ const receivedAccountLink = (event) => {
       accountLinkedEventData.integrationName = authCodeObj.integrationName
       accountLinkedEventData.userId = authCodeObj.userId
       
-      sessionsManager.handleEventByUserChannelId(senderID, {type: sessionsManager.EVENTS.ACCOUNT_LINKED, data: accountLinkedEventData})
+      sessionsManager.handleEventByUserChannelId(senderID, 
+        { type: sessionsManager.EVENTS.ACCOUNT_LINKED, 
+          channel: sessionsManager.CHANNELS.FB_MESSENGER,
+          data: accountLinkedEventData})
       
     }
     catch (err) {
@@ -179,6 +182,11 @@ const receivedAccountLink = (event) => {
   }
 }
 
+const getUserProfile = userId => {
+  return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent;
-module.exports.sendMessageToUser = sendMessageToUser;
+module.exports.sendMessage = sendMessage;
+module.exports.getUserProfile = getUserProfile;
 
