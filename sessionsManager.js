@@ -166,19 +166,26 @@ var handleResponseWithMessages = (messages, session) => {
     
     
     messages.forEach( (message, index) => {
+        
         //Delay or queue messages so we'll keep order in place
         /// TODO: find better way
         setTimeout( () => {
             switch (session.channel) {
-                /// TODO should we filter based on message.platform value?
+                // filtering by platofmr property but this will add unneccessary delays
                 case CHANNELS.FB_MESSENGER:
-                    fbmChannel.sendMessage(message, session);
+                    if (!message.platform || message.platform=="facebook") {            
+                        fbmChannel.sendMessage(message, session);
+                    }
                     break;x
                 case CHANNELS.FB_WORKPLACE:
-                    wpChannel.sendMessage(message, session)
+                    if (!message.platform || message.platform=="facebook") {   
+                        wpChannel.sendMessage(message, session)
+                    }
                     break;
                 case CHANNELS.NEXMO:
-                    nexmoChannel.sendMessage(message, session)
+                    if (!message.platform) {
+                        nexmoChannel.sendMessage(message, session)
+                    }
                     break;
             }
         }, 1460 * index);
