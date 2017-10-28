@@ -266,7 +266,7 @@ const handleEvent = (session, event) => {
             break;
         default:
         ///TODO: REFACTOR. HANDLE PROPRIETARY EVENTS
-            apiai.sendEventToApiAi(event, session.sessionId)
+            session.apiaiAgent.sendEventToApiAi(event, session.sessionId)
             .then(apiairesponse => {
                 handleApiaiResponse(apiairesponse);
             });
