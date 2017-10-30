@@ -40,17 +40,27 @@ const SOURCE_TYPE = {
 const apiaiUsersAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 const apiaiBusinessAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 
-const nexmoChannel = require('./channels/nexmo/nexmohook');
+/* const nexmoChannel = require('./channels/nexmo/nexmohook');
 const wpChannel = require('./channels/facebook/wphook');
 const fbmChannel = require('./channels/facebook/fbmhook');
+ */
+
+var nexmoChannel, wpChannel, fbmChannel
 
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
 var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
 var db
 
-const initialize = dbReference => {
+const initializeDb = dbReference => {
     db = dbReference /// TODO should be an interface
+}
+
+const initializeChannels = (fbmChannel, wpChannel, nexmoChannel) => {
+    fbmChannel = fbmChannel
+    wpChannel = wpChannel
+    nexmoChannel = nexmoChannel
+    nexmoChannel.startQueue()
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
@@ -287,5 +297,5 @@ module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
 module.exports.getSessionContext = getSessionContext;
-module.exports.initialize = initialize;
-
+module.exports.initializeDb = initializeDb;
+module.exports.initializeChannels = initializeChannels;
