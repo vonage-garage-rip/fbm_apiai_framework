@@ -37,16 +37,21 @@ class NexmoChannel {
     let maxMessagesToSend = Math.min(MAX_MESSAGES_PER_SECOND, this.messagesQueue.length)
     for (var index=0 ; index < maxMessagesToSend ; index++) {
       let messageObj = this.messagesQueue[index]
-      nexmo.message.sendSms(messageObj.from, messageObj.to, messageObj.message, 
+      /// TODO add delivery receipt?
+      this.nexmo.message.sendSms(messageObj.from, messageObj.to, messageObj.message, 
         (err, responseData) => {
           if (err) {
             /// TODO handle errors. Most importantly, velocity
-            console.error(err);
-          } 
+            console.error("dispatchMessages: " + err);
+          }
+          else {
+            console.log("dispatchMessages: %d message(s) sent: %s", 
+              responseData["message-count"], responseData.messages.map(message => message["message-id"]).toString())
+          }
         });
     }
     /// TODO delete only upon getting delivery-receipt
-    this.messagesQueue = this.messagesQueue.slice(0, maxMessagesToSend)
+    this.messagesQueue = this.messagesQueue.slice(maxMessagesToSend)
   }
 
   handleInboundEvent(req, res) {
@@ -58,7 +63,7 @@ class NexmoChannel {
       to: req.query.to,
       text: req.query.text
     }
-
+    /// TODO store status in DB
     sessionsManager.handleInboundChannelMessage(inboundMessage);
   }
 }
