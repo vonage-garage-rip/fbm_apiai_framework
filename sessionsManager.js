@@ -56,10 +56,10 @@ const initializeDb = dbReference => {
     db = dbReference /// TODO should be an interface
 }
 
-const initializeChannels = (fbmChannel, wpChannel, nexmoChannel) => {
-    fbmChannel = fbmChannel
-    wpChannel = wpChannel
-    nexmoChannel = nexmoChannel
+const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
+    fbmChannel = fbmCh
+    wpChannel = wpCh
+    nexmoChannel = nexmoCh
     nexmoChannel.startQueue()
 }
 
@@ -173,8 +173,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 }
 
 var handleResponseWithMessages = (messages, session) => {
-    
-    
+
     messages.forEach( (message, index) => {
         
         //Delay or queue messages so we'll keep order in place
