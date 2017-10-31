@@ -15,13 +15,14 @@ const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.10/";
 
 const PROFILE_API = {
   PERSISTENT_MENU: "persistent_menu",
-  GET_STARTED_MESSAGE: "get_started"
+  GET_STARTED_MESSAGE: "get_started",
+  GREETING:"greeting"
 }
 
-const sendProfileApiBatch = ( propertyBody, accessToken) => {
+const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
   var options = {
     method: 'POST',
-    uri: FACEBOOK_GRAPH_URL + 'me?access_token=' + accessToken ,
+    uri:FACEBOOK_GRAPH_URL +path+"?access_token=" + accessToken,
     headers: { "Content-Type": "application/json" },
     body: propertyBody,
     json: true // Automatically stringifies the body to JSON
@@ -433,7 +434,7 @@ var verifySubscription = (req, res) => {
 }
 
 module.exports = {
-  PROFILE_API, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+  PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
   sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
   verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, 
 };
