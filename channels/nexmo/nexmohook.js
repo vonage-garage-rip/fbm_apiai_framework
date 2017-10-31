@@ -2,7 +2,7 @@ var Nexmo = require('nexmo');
 var sessionsManager = require("../../sessionsManager")
 
 const QUEUE_DELAY = 1000
-const MAX_MESSAGES_PER_SECOND =1
+const MAX_MESSAGES_PER_SECOND = 10
 
 class NexmoChannel {
   
@@ -13,46 +13,64 @@ class NexmoChannel {
       apiSecret: process.env.NEXMO_API_SECRET
     });
     this.messagesQueue = []
-    this.intervalId = -1
     this.dispatchMessages = this.dispatchMessages.bind(this);
   }
 
-  startQueue() {
-    this.intervalId = setInterval(this.dispatchMessages, QUEUE_DELAY)
-  }
-
-  stopQueue() {
-    clearInterval(this.intervalId)
+  resumeQueue(delay) {
+    setTimeout(this.dispatchMessages, delay)
   }
 
   sendMessage(message, session) {
     this.messagesQueue.push({
+      /// Should we add sessionID ? other identifying parameters?q  
       message: message.speech,
       to: session.phoneNumbers[0],
-      from: process.env.NEXMO_NUMBER
+      from: process.env.NEXMO_NUMBER,
+      sendAttempts: 0
     })
   }
 
   dispatchMessages() {
     let maxMessagesToSend = Math.min(MAX_MESSAGES_PER_SECOND, this.messagesQueue.length)
+    let messageResponses = 0
+    let retriesArray = []
+    let backoff = 0
+
+    let handleNexmoResponse = (messageObj, err, responseData) => {
+      messageResponses++
+      if (err) {
+        console.error("dispatchMessages error: " + err);
+        // https://developer.nexmo.com/api/sms#error-codes
+        if ( err.status==1 && messageObj.sendAttempts<4 ) {
+          console.log("pushing messgae to retriesArray. retry #" + messageObj.sendAttempts)
+          backoff = Math.max(backoff, messageObj.sendAttempts)
+          retriesArray.push(messageObj)
+        }
+      }
+      else {           
+        console.log("dispatchMessages: %d message(s) sent: %s", 
+          responseData["message-count"], responseData.messages.map(message => message["message-id"]).toString())
+      }
+      if ( messageResponses===maxMessagesToSend ) {
+        this.messagesQueue = retriesArray.concat(this.messagesQueue.slice(maxMessagesToSend))
+        this.resumeQueue(2**backoff*process.env.NEXMO_THROUGHPUT /*+ add jitter */ )
+      }
+    };
+
+    if ( maxMessagesToSend===0 ) {
+      this.resumeQueue(process.env.NEXMO_THROUGHPUT)
+    }
     for (var index=0 ; index < maxMessagesToSend ; index++) {
       let messageObj = this.messagesQueue[index]
-      /// TODO add delivery receipt?
-      this.nexmo.message.sendSms(messageObj.from, messageObj.to, messageObj.message, 
-        (err, responseData) => {
-          if (err) {
-            /// TODO handle errors. Most importantly, velocity
-            console.error("dispatchMessages: " + err);
-          }
-          else {
-            console.log("dispatchMessages: %d message(s) sent: %s", 
-              responseData["message-count"], responseData.messages.map(message => message["message-id"]).toString())
-          }
-        });
+
+      /// add simulation of sent messages with 0.2 probability of velocity errors
+      messageObj.sendAttempts++
+      console.log("sending message. attempt number " + messageObj.sendAttempts)
+      this.nexmo.message.sendSms(messageObj.from, messageObj.to, messageObj.message, handleNexmoResponse.bind(this, messageObj))
     }
-    /// TODO delete only upon getting delivery-receipt
-    this.messagesQueue = this.messagesQueue.slice(maxMessagesToSend)
   }
+
+
 
   handleInboundEvent(req, res) {
     console.log("nexmoInterface.handleInboundEvent " + req.query.msisdn + " saying: " + req.query.text)

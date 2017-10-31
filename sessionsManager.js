@@ -60,7 +60,7 @@ const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
     fbmChannel = fbmCh
     wpChannel = wpCh
     nexmoChannel = nexmoCh
-    nexmoChannel.startQueue()
+    nexmoChannel.resumeQueue(process.env.NEXMO_THROUGHPUT)
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
@@ -175,7 +175,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
 var handleResponseWithMessages = (messages, session) => {
 
     messages.forEach( (message, index) => {
-        
         //Delay or queue messages so we'll keep order in place
         /// TODO: find better way
         setTimeout( () => {
