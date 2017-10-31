@@ -148,6 +148,19 @@ var getSessionByChannelEvent = (messagingEvent) => {
                         console.log("user profile:" + JSON.stringify(json));
                         mappedChatSession.profile = json;
                         return resolve(mappedChatSession);
+                    }).catch(error => {
+                        console.log("Facebook user profile caught an error: " + err);
+                        reject(error);
+                    })
+                } else if ( messagingEvent.channel===CHANNELS.FB_WORKPLACE ) {
+                    wpChannel.getUserProfile(messagingEvent.source)
+                    .then(json => {
+                        console.log("user profile:" + JSON.stringify(json));
+                        mappedChatSession.profile = json;
+                        return resolve(mappedChatSession);
+                    }).catch(error => {
+                        console.log("Workplace user profile caught an error: " + err);
+                        reject(error)
                     })
                 }
                 else {

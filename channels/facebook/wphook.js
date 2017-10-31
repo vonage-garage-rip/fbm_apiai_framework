@@ -173,7 +173,12 @@ function sendTextMessageToUser(message, userId) {
 function sendTextMessageToExistingGroup(message, threadId) {
   return utility.sendTextMessageToExistingGroup(message, threadId, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
+
+const getUserProfile = userId => {
+  return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
+}
  
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
+module.exports.getUserProfile = getUserProfile
