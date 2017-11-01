@@ -377,7 +377,7 @@ function getUserProfile(userId, fields, accessToken) {
   })
 }
 
-function sendNewPostToGroup(message, groupId, accessToken) {
+function sendNewPostToGroup(groupId, message, accessToken) {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
@@ -396,7 +396,7 @@ function sendNewPostToGroup(message, groupId, accessToken) {
   })
 }
 
-function sendCommentToPost(message, postId, accessToken) {
+function sendCommentToPost(postId, message, accessToken) {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
