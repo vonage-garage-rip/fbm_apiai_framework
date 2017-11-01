@@ -214,7 +214,14 @@ const handleApiaiResponse = (apiairesponse) => {
         }
         
         let messages = apiairesponse.result.fulfillment.messages ? apiairesponse.result.fulfillment.messages : [apiairesponse.result.fulfillment.speech]
-        handleResponseWithMessages(messages, getSessionBySessionId(apiairesponse.sessionId))
+        var filteredMessages = messages.filter(function (message) {
+            return message.speech != "" ;
+        });
+        if (filteredMessages.length == 0) {
+            console.warn("handleApiaiResponse: No message to send")
+            return
+        }
+        handleResponseWithMessages(filteredMessages, getSessionBySessionId(apiairesponse.sessionId))
     }
 }
 
