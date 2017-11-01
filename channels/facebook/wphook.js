@@ -80,42 +80,100 @@ const handlePostRequest = (req, res) => {
 }
 
 function processPageEvents(data) {
-  data.entry.forEach(function(entry){
-    let page_id = entry.id;
-    // Chat messages sent to the page/bot
-    let inboundMessage = {}
-    if(entry.messaging) {
-      entry.messaging.forEach(function(messaging_event){
-        console.log('Page Messaging Event', page_id, messaging_event);
-        
-        inboundMessage = {
-          channel: sessionsManager.CHANNELS.FB_WORKPLACE,
-          sourceType: messaging_event.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
-          source: messaging_event.thread ? messaging_event.thread.id : messaging_event.sender.id, 
-          from: messaging_event.sender.id, 
-          to: page_id,
-          text: messaging_event.message.text
-        };
-      });
-    }
-		// Page related changes, or mentions of the page/bot in a group post
-    else if(entry.changes) {
-      entry.changes.forEach(function(change){
-        console.log('Page Change', page_id, change);
-        inboundMessage = {
-          channel: sessionsManager.CHANNELS.FB_WORKPLACE,
-          sourceType: sessionsManager.SOURCE_TYPE.POST,
-          source: change.value.post_id, 
-          from: change.value.sender_name, //  perhaps this should be added to session.data
-          to: page_id,
-          text: change.value.message.substring(change.value.message.indexOf(' ')+1)
-        };
-      });
-    }
-    sessionsManager.handleInboundChannelMessage(inboundMessage)
-  });
+    // Iterate over each entry
+    // There may be multiple if batched
+    data.entry.forEach( pageEntry => {
+      var pageID = pageEntry.id;
+      var timeOfEvent = pageEntry.time;
+
+      // Iterate over each messaging event
+      if(pageEntry.messaging) {  
+        pageEntry.messaging.forEach( messagingEvent => {
+          if (messagingEvent.message) {
+            receivedMessage(messagingEvent, pageID);
+          } else if (messagingEvent.delivery) {
+            utility.receivedDeliveryConfirmation(messagingEvent);
+          } else if (messagingEvent.postback) {
+            receivedPostback(messagingEvent);
+          } else if (messagingEvent.read) {
+            utility.receivedMessageRead(messagingEvent);
+          } else {
+            console.log("Webhook received unknown messagingEvent: ", messagingEvent);
+          }
+        });
+      } else if (pageEntry.changes) {
+        pageEntry.changes.forEach(function(change){
+          console.log('Page Change', pageID, change);
+          let inboundMessage = {
+            channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+            sourceType: sessionsManager.SOURCE_TYPE.POST,
+            source: change.value.post_id, 
+            from: change.value.sender_name, //  perhaps this should be added to session.data
+            to: pageID,
+            text: change.value.message.substring(change.value.message.indexOf(' ')+1)
+          };
+          sessionsManager.handleInboundChannelMessage(inboundMessage)          
+        });
+      }
+    });
 }
 
+const receivedMessage = (messagingEvent, pageID) => {
+  if (messagingEvent.message.is_echo) {
+    console.log("Messageing Event Echo: ", messagingEvent);
+    return;
+  }
+  if (messagingEvent.message.text) {
+    console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
+    let inboundMessage = {
+      channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+      sourceType: messagingEvent.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+      source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id, 
+      from: messagingEvent.sender.id, 
+      to: pageID,
+      text: messagingEvent.message.text
+    };
+
+    sessionsManager.handleInboundChannelMessage(inboundMessage);
+  }
+  else if (messagingEvent.message.attachments) {
+    console.log("facebook.webhook.receivedMessage. incoming attachments");
+    messagingEvent.message.attachments.forEach(function (attachment) {
+      switch (attachment.type) {
+        default:
+          console.log("facebook.webhook.receivedMessage. attachment " + attachment.type + " unhandled");
+          break;
+      }
+    })
+  }
+}
+
+/*
+ * Postback Event
+ *
+ * This event is called when a postback is tapped on a Structured Message. 
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
+ * 
+ */
+const receivedPostback = (messagingEvent) => {
+  let payload = messagingEvent.postback.payload;
+  
+  let inboundPostbackMessage =
+    {
+      channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+      sourceType: messagingEvent.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+      source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id, 
+      from: messagingEvent.sender.id, 
+      to: messagingEvent.recipient.id,
+      payload: payload
+    };
+
+  /// TODO: promisfy this to send the 200 response back as quickly as possible
+  sessionsManager.handleInboundChannelPostback(inboundPostbackMessage);
+}
+function processMessageEvent(data) {
+
+}
 function processGroupEvents(data) {
   data.entry.forEach(function(entry){
     let group_id = entry.id;
