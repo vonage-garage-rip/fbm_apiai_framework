@@ -433,8 +433,26 @@ var verifySubscription = (req, res) => {
   }
 }
 
+function getCommunity(accessToken) {
+  return new Promise(function (resolve, reject) {
+    var options = {
+      uri: FACEBOOK_GRAPH_URL + '/community?access_token=' + accessToken,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+
+    rpn(options)
+    .then( json => {
+      return resolve(JSON.parse(json))
+    })
+    .catch(err => {
+      console.error("getCommunity got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
+
 module.exports = {
   PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
   sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
-  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, 
+  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, getCommunity
 };
