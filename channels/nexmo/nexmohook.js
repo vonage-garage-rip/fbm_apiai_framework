@@ -11,7 +11,9 @@ class NexmoChannel {
     this.nexmo = new Nexmo({
       apiKey: process.env.NEXMO_API_KEY,
       apiSecret: process.env.NEXMO_API_SECRET
-    });
+      },
+      {debug: process.env.NEXMO_DEBUG || false}
+    );
     this.messagesQueue = []
     this.dispatchMessages = this.dispatchMessages.bind(this);
   }
@@ -42,14 +44,22 @@ class NexmoChannel {
         console.error("dispatchMessages error: " + err);
         // https://developer.nexmo.com/api/sms#error-codes
         if ( err.status==1 && messageObj.sendAttempts<4 ) {
-          console.log("pushing messgae to retriesArray. retry #" + messageObj.sendAttempts)
+          console.log("err. pushing messgae to retriesArray. retry #" + messageObj.sendAttempts)
           backoff = Math.max(backoff, messageObj.sendAttempts)
           retriesArray.push(messageObj)
         }
       }
-      else {           
-        console.log("dispatchMessages: %d message(s) sent: %s", 
-          responseData["message-count"], responseData.messages.map(message => message["message-id"]).toString())
+      else {
+        let errorMessages = responseData.messages.filter(message => message.status===1)
+        if ( errorMessages.length>0 ) {
+          console.log("error in responseData. pushing messgae to retriesArray. retry #" + messageObj.sendAttempts)
+          backoff = Math.max(backoff, messageObj.sendAttempts)
+          retriesArray.push(messageObj)
+        }
+        else {
+          console.log("dispatchMessages: %d message(s) sent: %s", 
+            responseData["message-count"], responseData.messages.map(message => "msgID="+message["message-id"]+", status="+message.status+" ").toString())
+        }
       }
       if ( messageResponses===maxMessagesToSend ) {
         this.messagesQueue = retriesArray.concat(this.messagesQueue.slice(maxMessagesToSend))
