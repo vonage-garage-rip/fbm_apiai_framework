@@ -146,32 +146,32 @@ function processWorkplaceSecurityEvents(data) {
 function sendMessage(message, session) {
   switch ( session.sourceType ) {
     case sessionsManager.SOURCE_TYPE.POST:
-        sendCommentToPost(message.speech, session.source); // post ID
+        sendCommentToPost(session.source, message.speech); // post ID
         break;
     case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-        sendTextMessageToExistingGroup(message.speech, session.source); // thread ID
+        sendTextMessageToExistingGroup(session.source, message.speech); // thread ID
         break;
     case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
         /// TODO Once more types of content are required, do similar to fbmChannel.sendMessage
-        sendTextMessageToUser(message.speech, session.source); // user ID
+        sendTextMessageToUser(session.source, message.speech); // user ID
         break;
   }  
 }
 
-function sendNewPostToGroup(message, groupId) {
-  return utility.sendNewPostToGroup(message, groupId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendNewPostToGroup(groupId, message) {
+  return utility.sendNewPostToGroup(groupId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendCommentToPost(message, postId) {
-  return utility.sendCommentToPost(message, postId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendCommentToPost(postId, message) {
+  return utility.sendCommentToPost(postId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendTextMessageToUser(message, userId) {
-  return utility.sendTextMessage(message, userId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendTextMessageToUser(userId, message) {
+  return utility.sendTextMessage(userId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendTextMessageToExistingGroup(message, threadId) {
-  return utility.sendTextMessageToExistingGroup(message, threadId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendTextMessageToExistingGroup(threadId, message) {
+  return utility.sendTextMessageToExistingGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
 const getUserProfile = userId => {
