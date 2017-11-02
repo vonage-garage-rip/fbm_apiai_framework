@@ -91,7 +91,6 @@ class NexmoChannel {
       to: req.query.to,
       text: req.query.text
     }
-    /// TODO store status in DB
     sessionsManager.handleInboundChannelMessage(inboundMessage);
   }
 }

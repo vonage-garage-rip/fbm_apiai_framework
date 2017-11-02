@@ -40,11 +40,6 @@ const SOURCE_TYPE = {
 const apiaiUsersAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 const apiaiBusinessAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
 
-/* const nexmoChannel = require('./channels/nexmo/nexmohook');
-const wpChannel = require('./channels/facebook/wphook');
-const fbmChannel = require('./channels/facebook/fbmhook');
- */
-
 var nexmoChannel, wpChannel, fbmChannel
 
 /// TODO clean sessions that were not active for a certain duration
@@ -176,7 +171,6 @@ var handleResponseWithMessages = (messages, session) => {
 
     messages.forEach( (message, index) => {
         //Delay or queue messages so we'll keep order in place
-        /// TODO: find better way
         setTimeout( () => {
             switch (session.channel) {
                 // filtering by platofmr property but this will add unneccessary delays

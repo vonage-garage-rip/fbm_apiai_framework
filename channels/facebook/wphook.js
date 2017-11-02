@@ -152,7 +152,6 @@ function sendMessage(message, session) {
         sendTextMessageToExistingGroup(message.speech, session.source); // thread ID
         break;
     case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
-        /// TODO Once more types of content are required, do similar to fbmChannel.sendMessage
         sendTextMessageToUser(message.speech, session.source); // user ID
         break;
   }  
