@@ -450,9 +450,27 @@ function getCommunity(accessToken) {
   })
 }
 
+function getMembers(community_id, next = null, limit, accessToken) {
+  return new Promise(function (resolve, reject) {
+    var qs = '&fields=title, department, name, location, locale'
+    var options = {      
+      uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id+'/members?limit='+limit+ '&fields=title, department, name, location, locale' +'&access_token=' + accessToken,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+
+    rpn(options)
+    .then( json => {
+      return resolve(JSON.parse(json))
+    })
+    .catch(err => {
+      console.error("getCommunity got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
 
 module.exports = {
   PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
   sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
-  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, getCommunity
+  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, getCommunity, getMembers
 };
