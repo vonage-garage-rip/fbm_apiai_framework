@@ -15,13 +15,14 @@ const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.10/";
 
 const PROFILE_API = {
   PERSISTENT_MENU: "persistent_menu",
-  GET_STARTED_MESSAGE: "get_started"
+  GET_STARTED_MESSAGE: "get_started",
+  GREETING:"greeting"
 }
 
-const sendProfileApiBatch = ( propertyBody, accessToken) => {
+const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
   var options = {
     method: 'POST',
-    uri: FACEBOOK_GRAPH_URL + 'me?access_token=' + accessToken ,
+    uri:FACEBOOK_GRAPH_URL +path+"?access_token=" + accessToken,
     headers: { "Content-Type": "application/json" },
     body: propertyBody,
     json: true // Automatically stringifies the body to JSON
@@ -376,7 +377,7 @@ function getUserProfile(userId, fields, accessToken) {
   })
 }
 
-function sendNewPostToGroup(message, groupId, accessToken) {
+function sendNewPostToGroup(groupId, message, accessToken) {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
@@ -395,7 +396,7 @@ function sendNewPostToGroup(message, groupId, accessToken) {
   })
 }
 
-function sendCommentToPost(message, postId, accessToken) {
+function sendCommentToPost(postId, message, accessToken) {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
@@ -432,8 +433,44 @@ var verifySubscription = (req, res) => {
   }
 }
 
+function getCommunity(accessToken) {
+  return new Promise(function (resolve, reject) {
+    var options = {
+      uri: FACEBOOK_GRAPH_URL + '/community?access_token=' + accessToken,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+
+    rpn(options)
+    .then( json => {
+      return resolve(JSON.parse(json))
+    })
+    .catch(err => {
+      console.error("getCommunity got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
+function getMembers(community_id, next = null, limit, accessToken) {
+  return new Promise(function (resolve, reject) {
+    var qs = '&fields=title, department, name, location, locale'
+    var options = {      
+      uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id+'/members?limit='+limit+ '&fields=title, department, name, location, locale' +'&access_token=' + accessToken,
+      headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+    };
+
+    rpn(options)
+    .then( json => {
+      return resolve(JSON.parse(json))
+    })
+    .catch(err => {
+      console.error("getCommunity got an error:", err); /// show status code, status message and error
+    })
+  })
+}
+
+
 module.exports = {
-  PROFILE_API, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+  PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
   sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
-  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, 
+  verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, getCommunity, getMembers
 };

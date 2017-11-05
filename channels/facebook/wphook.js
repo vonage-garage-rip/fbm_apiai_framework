@@ -18,16 +18,16 @@ const rpn = require('request-promise-native')
 // Arbitrary value used to validate a workplace webhook
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
 const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
-  
-  var handleInboundEvent = function (req, res, next) {
-    if (req.method == 'GET') {
-      req.appSecret = WORKPLACE_VERIFY_TOKEN
-      utility.verifySubscription(req, res)
-    }
-    else if (req.method === 'POST') {
-      handlePostRequest(req, res)
-    }
+
+var handleInboundEvent = function (req, res, next) {
+  if (req.method == 'GET') {
+    req.appSecret = WORKPLACE_VERIFY_TOKEN
+    utility.verifySubscription(req, res)
   }
+  else if (req.method === 'POST') {
+    handlePostRequest(req, res)
+  }
+}
 /*
  * All callbacks for webhooks are POST-ed. They will be sent to the same
  * webhook. Be sure to subscribe your app to your page to receive callbacks.
@@ -48,25 +48,25 @@ const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
  *
  */
 const handlePostRequest = (req, res) => {
-  try{
+  try {
     var data = req.body;
     // On Workplace, webhooks can be sent for page, group, user and
-		// workplace_security objects
+    // workplace_security objects
     switch (data.object) {
-    case 'page':
-      processPageEvents(data);
-      break;
-    case 'group':
-      processGroupEvents(data);
-      break;
-    case 'user':
-      processUserEvents(data);
-      break;
-    case 'workplace_security':
-      processWorkplaceSecurityEvents(data);
-      break;
-    default:
-      console.log('Unhandled Webhook Object', data.object);
+      case 'page':
+        processPageEvents(data);
+        break;
+      case 'group':
+        processGroupEvents(data);
+        break;
+      case 'user':
+        processUserEvents(data);
+        break;
+      case 'workplace_security':
+        processWorkplaceSecurityEvents(data);
+        break;
+      default:
+        console.log('Unhandled Webhook Object', data.object);
     }
   } catch (e) {
     // Write out any exceptions for now
@@ -80,100 +80,179 @@ const handlePostRequest = (req, res) => {
 }
 
 function processPageEvents(data) {
-  data.entry.forEach(function(entry){
-    let page_id = entry.id;
-    // Chat messages sent to the page/bot
-    let inboundMessage = {}
-    if(entry.messaging) {
-      entry.messaging.forEach(function(messaging_event){
-        console.log('Page Messaging Event', page_id, messaging_event);
-        
-        inboundMessage = {
-          channel: sessionsManager.CHANNELS.FB_WORKPLACE,
-          sourceType: messaging_event.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
-          source: messaging_event.thread ? messaging_event.thread.id : messaging_event.sender.id, 
-          from: messaging_event.sender.id, 
-          to: page_id,
-          text: messaging_event.message.text
-        };
+  // Iterate over each entry
+  // There may be multiple if batched
+  data.entry.forEach(pageEntry => {
+    var pageID = pageEntry.id;
+    var timeOfEvent = pageEntry.time;
+
+    // Iterate over each messaging event
+    if (pageEntry.messaging) {
+      pageEntry.messaging.forEach(messagingEvent => {
+        if (messagingEvent.message) {
+          receivedMessage(messagingEvent, pageID);
+        } else if (messagingEvent.delivery) {
+          utility.receivedDeliveryConfirmation(messagingEvent);
+        } else if (messagingEvent.postback) {
+          receivedPostback(messagingEvent);
+        } else if (messagingEvent.read) {
+          utility.receivedMessageRead(messagingEvent);
+        } else {
+          console.log("Webhook received unknown messagingEvent: ", messagingEvent);
+        }
       });
-    }
-		// Page related changes, or mentions of the page/bot in a group post
-    else if(entry.changes) {
-      entry.changes.forEach(function(change){
-        console.log('Page Change', page_id, change);
-        inboundMessage = {
+    } else if (pageEntry.changes) {
+      pageEntry.changes.forEach(function (change) {
+        console.log('Page Change', pageID, change);
+        let inboundMessage = {
           channel: sessionsManager.CHANNELS.FB_WORKPLACE,
           sourceType: sessionsManager.SOURCE_TYPE.POST,
-          source: change.value.post_id, 
+          source: change.value.post_id,
           from: change.value.sender_name, //  perhaps this should be added to session.data
-          to: page_id,
-          text: change.value.message.substring(change.value.message.indexOf(' ')+1)
+          to: pageID,
+          text: change.value.message.substring(change.value.message.indexOf(' ') + 1)
         };
+        sessionsManager.handleInboundChannelMessage(inboundMessage)
       });
     }
-    sessionsManager.handleInboundChannelMessage(inboundMessage)
   });
 }
 
+const receivedMessage = (messagingEvent, pageID) => {
+  if (messagingEvent.message.is_echo) {
+    console.log("Messageing Event Echo: ", messagingEvent);
+    return;
+  }
+  if (messagingEvent.message.text) {
+    console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
+    let inboundMessage = {
+      channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+      sourceType: messagingEvent.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+      source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id,
+      from: messagingEvent.sender.id,
+      to: pageID,
+      text: messagingEvent.message.text
+    };
+
+    sessionsManager.handleInboundChannelMessage(inboundMessage);
+  }
+  else if (messagingEvent.message.attachments) {
+    console.log("facebook.webhook.receivedMessage. incoming attachments");
+    messagingEvent.message.attachments.forEach(function (attachment) {
+      switch (attachment.type) {
+        default:
+          console.log("facebook.webhook.receivedMessage. attachment " + attachment.type + " unhandled");
+          break;
+      }
+    })
+  }
+}
+
+/*
+ * Postback Event
+ *
+ * This event is called when a postback is tapped on a Structured Message. 
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
+ * 
+ */
+const receivedPostback = (messagingEvent) => {
+  let payload = messagingEvent.postback.payload;
+
+  let inboundPostbackMessage =
+    {
+      channel: sessionsManager.CHANNELS.FB_WORKPLACE,
+      sourceType: messagingEvent.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+      source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id,
+      from: messagingEvent.sender.id,
+      to: messagingEvent.recipient.id,
+      payload: payload
+    };
+
+  /// TODO: promisfy this to send the 200 response back as quickly as possible
+  sessionsManager.handleInboundChannelPostback(inboundPostbackMessage);
+}
+function processMessageEvent(data) {
+
+}
 function processGroupEvents(data) {
-  data.entry.forEach(function(entry){
+  data.entry.forEach(function (entry) {
     let group_id = entry.id;
-    entry.changes.forEach(function(change){
+    entry.changes.forEach(function (change) {
       console.log('Group Change', group_id, change);
     });
   });
 }
 
 function processUserEvents(data) {
-  data.entry.forEach(function(entry){
+  data.entry.forEach(function (entry) {
     let group_id = entry.id;
-    entry.changes.forEach(function(change){
-      console.log('User Change',group_id,change);
+    entry.changes.forEach(function (change) {
+      console.log('User Change', group_id, change);
     });
   });
 }
 
 function processWorkplaceSecurityEvents(data) {
-  data.entry.forEach(function(entry){
+  data.entry.forEach(function (entry) {
     let group_id = entry.id;
-    entry.changes.forEach(function(change){
+    entry.changes.forEach(function (change) {
       console.log('Workplace Security Change', group_id, change);
     });
   });
 }
 
 function sendMessage(message, session) {
-  switch ( session.sourceType ) {
-    case sessionsManager.SOURCE_TYPE.POST:
-        sendCommentToPost(message.speech, session.source); // post ID
+
+  if (session.sourceType) {
+    switch (session.sourceType) {
+      case sessionsManager.SOURCE_TYPE.POST:
+        sendCommentToPost(session.source, message.speech); // post ID
         break;
-    case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-        sendTextMessageToExistingGroup(message.speech, session.source); // thread ID
+      case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
+        sendTextMessageToExistingGroup(session.source, message.speech); // thread ID
         break;
-    case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
-        /// TODO Once more types of content are required, do similar to fbmChannel.sendMessage
-        sendTextMessageToUser(message.speech, session.source); // user ID
+      case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
+
+        //HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
+        switch (message.type) {
+          case sessionsManager.MESSAGE_TYPES.TEXT:
+            utility.sendTextMessage(session.source, message.speech, WORKPLACE_PAGE_ACCESS_TOKEN);
+            break;
+          case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
+            utility.sendQuickReply(session.source, message.title, message.replies, WORKPLACE_PAGE_ACCESS_TOKEN);
+            break;
+          case sessionsManager.MESSAGE_TYPES.IMAGE:
+            utility.sendImageMessage(session.source, message.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN);
+            break;
+          case sessionsManager.MESSAGE_TYPES.CARD:
+            utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, WORKPLACE_PAGE_ACCESS_TOKEN);
+            break;
+          case sessionsManager.MESSAGE_TYPES.CUSTOME:
+            utility.sendCustomMessage(session.source, message.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN);
+            break;
+        }
         break;
-  }  
+    }
+  }
 }
 
-function sendNewPostToGroup(message, groupId) {
-  return utility.sendNewPostToGroup(message, groupId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendNewPostToGroup(groupId, message) {
+  return utility.sendNewPostToGroup(groupId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendCommentToPost(message, postId) {
-  return utility.sendCommentToPost(message, postId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendCommentToPost(postId, message) {
+  return utility.sendCommentToPost(postId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendTextMessageToUser(message, userId) {
-  return utility.sendTextMessage(message, userId, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendTextMessageToExistingGroup(threadId, message) {
+  return utility.sendTextMessageToExistingGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-function sendTextMessageToExistingGroup(message, threadId) {
-  return utility.sendTextMessageToExistingGroup(message, threadId, WORKPLACE_PAGE_ACCESS_TOKEN)
+const getUserProfile = userId => {
+  return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
 }
- 
+
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
+module.exports.getUserProfile = getUserProfile
