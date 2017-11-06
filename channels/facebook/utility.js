@@ -396,7 +396,7 @@ var sendNewPostToGroup = (groupId, message, accessToken) => {
   })
 }
 
-var sendCommentToPost(postId, message, accessToken) => {
+var sendCommentToPost = (postId, message, accessToken) => {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
