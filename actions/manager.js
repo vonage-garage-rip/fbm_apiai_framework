@@ -15,6 +15,7 @@ const defaultHandler = (resBody) => {
     })
 }
 
+/// TODO add an option to register an array of methods to be called sequentially
 const registerAction = (actionName, method) => {
     actions[actionName] = method;
 }
