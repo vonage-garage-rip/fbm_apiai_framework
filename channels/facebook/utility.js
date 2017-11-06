@@ -377,7 +377,7 @@ function getUserProfile(userId, fields, accessToken) {
   })
 }
 
-function sendNewPostToGroup(groupId, message, accessToken) {
+var sendNewPostToGroup = (groupId, message, accessToken) => {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
@@ -396,7 +396,7 @@ function sendNewPostToGroup(groupId, message, accessToken) {
   })
 }
 
-function sendCommentToPost(postId, message, accessToken) {
+var sendCommentToPost = (postId, message, accessToken) => {
   return new Promise((resolve, reject) => {
     var options = {
       method: 'POST',
@@ -433,7 +433,7 @@ var verifySubscription = (req, res) => {
   }
 }
 
-function getCommunity(accessToken) {
+var getCommunity = (accessToken) => {
   return new Promise(function (resolve, reject) {
     var options = {
       uri: FACEBOOK_GRAPH_URL + '/community?access_token=' + accessToken,
@@ -450,7 +450,7 @@ function getCommunity(accessToken) {
   })
 }
 
-function getMembers(community_id, next = null, limit, accessToken) {
+var getMembers = (community_id, next = null, limit, accessToken) => {
   return new Promise(function (resolve, reject) {
     var qs = '&fields=title, department, name, location, locale'
     var options = {      

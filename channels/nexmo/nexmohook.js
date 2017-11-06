@@ -64,7 +64,7 @@ class NexmoChannel {
 
       if ( messageResponses===maxMessagesToSend ) {
         this.messagesQueue = retriesArray.concat(this.messagesQueue.slice(maxMessagesToSend))
-        this.resumeQueue(2**backoff*process.env.NEXMO_THROUGHPUT /* + add jitter */ )
+        this.resumeQueue(2**backoff*process.env.NEXMO_THROUGHPUT) // add jitter
       }
     };
 
