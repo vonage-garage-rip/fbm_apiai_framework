@@ -100,13 +100,16 @@ const getSessionContext = (session, contextId) => {
 var getSessionByChannelEvent = (messagingEvent) => {
     return new Promise(function (resolve) {
 
-        mappedChatSession = userChannelToSessions[messagingEvent.source]
+        console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
+        let mappedChatSession = userChannelToSessions[messagingEvent.source]
         if (mappedChatSession) {
+            console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
             mappedChatSession.lastInboundMessage = moment();
             return resolve(mappedChatSession);
         }
         else {
             // Set new session 
+            console.log("getSessionByChannelEvent did not found source: %s.", messagingEvent.source)
             let sessionId = uuidv4();
             let apiaiAgent;
             // TODO this should be moved to parent app logic
@@ -209,7 +212,7 @@ var handleResponseWithMessages = (messages, session) => {
 
 const handleApiaiResponse = (apiairesponse) => {
     if (apiairesponse) {
-        console.log("HANDLE APIAI RESPONSE: ", apiairesponse);
+        console.log("HANDLE APIAI RESPONSE", apiairesponse);
         let actionName = apiairesponse.result.action
         if ( actionName && actionName!=="input.unknown" ) {
             actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId(apiairesponse.sessionId))
