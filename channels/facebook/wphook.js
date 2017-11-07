@@ -201,34 +201,34 @@ function processWorkplaceSecurityEvents(data) {
   });
 }
 
-function sendMessage(message, session) {
+function sendMessage(messageObj, session) {
 
   if (session.sourceType) {
     switch (session.sourceType) {
       case sessionsManager.SOURCE_TYPE.POST:
-        sendCommentToPost(session.source, message.speech); // post ID
+        sendCommentToPost(session.source, messageObj.speech); // post ID
         break;
       case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-        sendTextMessageToExistingGroup(session.source, message.speech); // thread ID
+        sendTextMessageToExistingGroup(session.source, messageObj.speech); // thread ID
         break;
       case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
 
         //HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
-        switch (message.type) {
+        switch (messageObj.type) {
           case sessionsManager.MESSAGE_TYPES.TEXT:
-            utility.sendTextMessage(session.source, message.speech, WORKPLACE_PAGE_ACCESS_TOKEN);
+            utility.sendTextMessage(session.source, messageObj.speech, WORKPLACE_PAGE_ACCESS_TOKEN);
             break;
           case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-            utility.sendQuickReply(session.source, message.title, message.replies, WORKPLACE_PAGE_ACCESS_TOKEN);
+            utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, WORKPLACE_PAGE_ACCESS_TOKEN);
             break;
           case sessionsManager.MESSAGE_TYPES.IMAGE:
-            utility.sendImageMessage(session.source, message.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN);
+            utility.sendImageMessage(session.source, messageObj.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN);
             break;
           case sessionsManager.MESSAGE_TYPES.CARD:
-            utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, WORKPLACE_PAGE_ACCESS_TOKEN);
+            utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, WORKPLACE_PAGE_ACCESS_TOKEN);
             break;
           case sessionsManager.MESSAGE_TYPES.CUSTOME:
-            utility.sendCustomMessage(session.source, message.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN);
+            utility.sendCustomMessage(session.source, messageObj.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN);
             break;
         }
         break;

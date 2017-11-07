@@ -21,11 +21,11 @@ class NexmoChannel {
     setTimeout(this.dispatchMessages, delay)
   }
 
-  sendMessage(message, session) {
+  sendMessage(messageObj, session) {
     this.messagesQueue.push({
       /// Should we add sessionID ? other identifying parameters?q
       id: uuidv4(),
-      message: message.speech,
+      message: messageObj.speech,
       to: session.phoneNumbers[0],
       from: process.env.NEXMO_NUMBER,
       sendAttempts: 0

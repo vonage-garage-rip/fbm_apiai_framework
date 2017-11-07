@@ -185,24 +185,24 @@ var getSessionByChannelEvent = (messagingEvent) => {
 
 var handleResponseWithMessages = (messages, session) => {
 
-    messages.forEach( (message, index) => {
+    messages.forEach( (messageObj, index) => {
         //Delay or queue messages so we'll keep order in place
         setTimeout( () => {
             switch (session.channel) {
                 // filtering by platofmr property but this will add unneccessary delays
                 case CHANNELS.FB_MESSENGER:
-                    if (!message.platform || message.platform=="facebook") {            
-                        fbmChannel.sendMessage(message, session);
+                    if (!messageObj.platform || messageObj.platform=="facebook") {            
+                        fbmChannel.sendMessage(messageObj, session);
                     }
                     break;x
                 case CHANNELS.FB_WORKPLACE:
-                    if (!message.platform || message.platform=="facebook") {   
-                        wpChannel.sendMessage(message, session)
+                    if (!messageObj.platform || messageObj.platform=="facebook") {   
+                        wpChannel.sendMessage(messageObj, session)
                     }
                     break;
                 case CHANNELS.NEXMO:
-                    if (!message.platform) {
-                        nexmoChannel.sendMessage(message, session)
+                    if (!messageObj.platform) {
+                        nexmoChannel.sendMessage(messageObj, session)
                     }
                     break;
             }

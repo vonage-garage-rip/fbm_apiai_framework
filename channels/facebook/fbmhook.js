@@ -10,24 +10,24 @@ const sessionsManager = require('../../sessionsManager');
 const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
 const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
-var sendMessage = function (message, session) {
-  console.log("MESSAGE: ", message);
+var sendMessage = function (messageObj, session) {
+  console.log("MESSAGE: ", messageObj);
 
-  switch (message.type) {
+  switch (messageObj.type) {
     case sessionsManager.MESSAGE_TYPES.TEXT:
-      utility.sendTextMessage(session.source, message.speech, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendTextMessage(session.source, messageObj.speech, MESSENGER_PAGE_ACCESS_TOKEN);
     break;
     case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-      utility.sendQuickReply(session.source, message.title, message.replies, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, MESSENGER_PAGE_ACCESS_TOKEN);
     break;
     case sessionsManager.MESSAGE_TYPES.IMAGE:
-      utility.sendImageMessage(session.source, message.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendImageMessage(session.source, messageObj.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
     break;
     case sessionsManager.MESSAGE_TYPES.CARD:
-      utility.sendGenericMessage(session.source, message.title, message.subtitle, message.imageUrl, message.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
     break;
     case sessionsManager.MESSAGE_TYPES.CUSTOME:
-      utility.sendCustomMessage(session.source, message.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
+      utility.sendCustomMessage(session.source, messageObj.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
       break;
   }
 };
