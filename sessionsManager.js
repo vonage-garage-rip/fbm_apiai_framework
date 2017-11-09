@@ -183,6 +183,19 @@ var getSessionByChannelEvent = (messagingEvent) => {
     });
 }
 
+
+var removeSessionBySource = (source) => {
+    let session = userChannelToSessions[source]
+    if ( session ) {
+        delete userChannelToSessions[source]
+        delete chatSessions[session.sessionId]
+        delete session
+    }
+    else {
+        console.log("removeSessionBySource: no session was found for source: " + source)
+    }
+}
+
 var handleResponseWithMessages = (messages, session) => {
 
     messages.forEach( (messageObj, index) => {
@@ -314,3 +327,4 @@ module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
 module.exports.getSessionContext = getSessionContext;
 module.exports.initializeDb = initializeDb;
 module.exports.initializeChannels = initializeChannels;
+module.exports.removeSessionBySource = removeSessionBySource
