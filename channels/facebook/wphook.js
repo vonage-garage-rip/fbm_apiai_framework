@@ -108,7 +108,7 @@ function processPageEvents(data) {
           channel: sessionsManager.CHANNELS.FB_WORKPLACE,
           sourceType: sessionsManager.SOURCE_TYPE.POST,
           source: change.value.post_id,
-          from: change.value.sender_name, //  perhaps this should be added to session.data
+          from: change.value.sender_id, 
           to: pageID,
           text: change.value.message.substring(change.value.message.indexOf(' ') + 1)
         };

@@ -105,6 +105,9 @@ var getSessionByChannelEvent = (messagingEvent) => {
         if (mappedChatSession) {
             console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
             mappedChatSession.lastInboundMessage = moment();
+            if ( messagingEvent.from ) {
+                mappedChatSession.from = messagingEvent.from
+            }
             return resolve(mappedChatSession);
         }
         else {
@@ -161,14 +164,14 @@ var getSessionByChannelEvent = (messagingEvent) => {
                         reject(error);
                     })
                 } else if ( messagingEvent.channel===CHANNELS.FB_WORKPLACE ) {
-                    wpChannel.getUserProfile(messagingEvent.source)
+                    wpChannel.getUserProfile(messagingEvent.from)
                     .then(json => {
                         console.log("user profile:" + JSON.stringify(json));
                         mappedChatSession.profile = json;
                         return resolve(mappedChatSession);
                     }).catch(error => {
-                        console.log("Workplace user profile caught an error: " + err);
-                        reject(error)
+                        console.log("Workplace user profile caught an error: " + error);
+                        return resolve(mappedChatSession)
                     })
                 }
                 else {

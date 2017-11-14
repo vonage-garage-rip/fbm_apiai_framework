@@ -359,6 +359,9 @@ function callMessageAPI(messageData, accessToken) {
 /// 10/24 passed
 function getUserProfile(userId, fields, accessToken) {
   return new Promise(function (resolve, reject) {
+    if ( !userId ) {
+      return resolve({})
+    }
     var options = {
       method: 'GET',
       uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&access_token=" + accessToken ,
