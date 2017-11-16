@@ -45,10 +45,23 @@ var nexmoChannel, wpChannel, fbmChannel
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
 var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
-var db
+var SessionsDbClass = require('./sessionsDB')
 
-const initializeDb = dbReference => {
-	db = dbReference /// TODO should be an interface
+
+const setDB = (db) => {
+	sessionsDb = new SessionsDbClass(db)
+	sessionsDb.getAllActiveSessions()
+	.then(activeSessions => {
+		if ( activeSessions ) {
+			activeSessions.forEach(session => {
+				chatSessions[session.sessionId] = session
+				userChannelToSessions[session.source] = session;
+			})
+		}
+	})
+	.catch(error => {
+		console.error("sessionsManager.initialize caught an error: " + error)
+	})
 }
 
 const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
@@ -77,16 +90,16 @@ const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId];
 }
 
-const getSessionContext = (session, contextId) => {
+/* const getSessionContext = (session, contextId) => {
 	return new Promise(function (resolve, reject) {
-		db.getContext(contextId)
+		sessionsDb.getContext(contextId)
 			.then(function (context) {
 				resolve(context)
 			}).catch(function (error) {
 				reject(error)
 			})
 	})
-}
+} */
 
 /*
  * Return new or existing chat session Object.
@@ -110,7 +123,9 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			mappedChatSession.lastInboundMessage = moment();
 			if ( messagingEvent.from ) {
 				mappedChatSession.from = messagingEvent.from
+				sessionsDb.updateSession(mappedChatSession.sessionId, mappedChatSession.from)
 			}
+			/// TODO should we also update lastInboundMessage? seems excessive
 			return resolve(mappedChatSession);
 		}
 		else {
@@ -149,44 +164,28 @@ var getSessionByChannelEvent = (messagingEvent) => {
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession;
 
-			db.getUser(messagingEvent.source)
-				.then(user => {
-					if ( user ) {
-						Object.assign(mappedChatSession, user)
-						mappedChatSession.lastInboundMessage = moment(mappedChatSession.lastInboundMessage)
-						return resolve(mappedChatSession)
-					}
-					else if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
-						fbmChannel.getUserProfile(messagingEvent.source)
-							.then(json => {
-								console.log("user profile:" + JSON.stringify(json));
-								mappedChatSession.profile = json;
-								return resolve(mappedChatSession);
-							}).catch(error => {
-								console.log("Facebook user profile caught an error: " + error);
-								reject(error);
-							})
-					} else if ( messagingEvent.channel===CHANNELS.FB_WORKPLACE ) {
-						wpChannel.getUserProfile(messagingEvent.from)
-							.then(json => {
-								console.log("user profile:" + JSON.stringify(json));
-								mappedChatSession.profile = json;
-								return resolve(mappedChatSession);
-							}).catch(error => {
-								console.log("Workplace user profile caught an error: " + error);
-								return resolve(mappedChatSession)
-							})
-					}
-					else {
-						return resolve(mappedChatSession);
-					}
-				})
-				.catch(err => {
-					console.log("sessionManaer.getSessionByChannelEvent caught an error: " + err);
-					return resolve(mappedChatSession);
-				})
+			let getUserProfilePromise = Promise.resolve({})
+			if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
+				getUserProfilePromise = fbmChannel.getUserProfile(messagingEvent.source)
+			}
+			else if ( messagingEvent.channel===CHANNELS.FB_WORKPLACE ) {
+				getUserProfilePromise = wpChannel.getUserProfile(messagingEvent.from)
+			}
+			getUserProfilePromise
+			.then(json => {
+				console.log("user profile:" + JSON.stringify(json));
+				mappedChatSession.profile = json;
+				return mappedChatSession;
+			})
+			.then(session => {
+				sessionsDb.saveSession(session)
+			})
+			.catch(error => {
+				console.log("calling get user profile caught an error: " + error);
+				reject(error);
+			})
 		}
-	});
+	})
 }
 
 
@@ -195,6 +194,7 @@ var removeSessionBySource = (source) => {
 	if ( session ) {
 		delete userChannelToSessions[source]
 		delete chatSessions[session.sessionId]
+		sessionsDb.removeSession(session.sessionId)
 	}
 	else {
 		console.log("removeSessionBySource: no session was found for source: " + source)
@@ -316,7 +316,6 @@ const handleEvent = (session, event) => {
 	}
 }
 
-
 module.exports.handleInboundChannelPostback = handleInboundChannelPostback;
 module.exports.handleInboundChannelMessage = handleInboundChannelMessage;
 module.exports.getSessionBySessionId = getSessionBySessionId;
@@ -329,7 +328,7 @@ module.exports.SOURCE_TYPE = SOURCE_TYPE;
 module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-module.exports.getSessionContext = getSessionContext;
-module.exports.initializeDb = initializeDb;
+//module.exports.getSessionContext = getSessionContext;
+module.exports.setDB = setDB;
 module.exports.initializeChannels = initializeChannels;
 module.exports.removeSessionBySource = removeSessionBySource
