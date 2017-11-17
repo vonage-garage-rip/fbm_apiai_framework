@@ -51,7 +51,7 @@ class SessionsDB {
             var ref = self.db.ref(ACTIVE_SESSIONS);
             var sessionRef = ref.child(sessionId)
             sessionRef.remove()
-            resolve(session);
+            resolve(sessionId);
         })
     }
 
