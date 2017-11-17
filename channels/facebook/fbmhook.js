@@ -104,6 +104,8 @@ const receivedMessage = (messagingEvent) => {
 		let inboundMessage = {
 			channel: sessionsManager.CHANNELS.FB_MESSENGER,
 			source: messagingEvent.sender.id,
+			sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+			from: messagingEvent.sender.id,
 			to: messagingEvent.recipient.id,
 			text: messagingEvent.message.text,
 			quick_reply: messagingEvent.message.quick_reply
@@ -134,7 +136,9 @@ const receivedPostback = (messagingEvent) => {
 	let payload = messagingEvent.postback.payload;
 	let inboundPostbackMessage = {
 		channel: sessionsManager.CHANNELS.FB_MESSENGER,
+		sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
 		source: messagingEvent.sender.id,
+		from: messagingEvent.sender.id,
 		to: messagingEvent.recipient.id,
 		payload: payload
 	};
@@ -181,7 +185,7 @@ const receivedAccountLink = (event) => {
 	}
 }
 
-const getUserProfile = userId => {
+const getUserProfile = (userId) => {
 	return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
 }
 
