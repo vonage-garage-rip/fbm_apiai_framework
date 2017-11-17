@@ -32,9 +32,9 @@ const CHANNELS = {
 }
 
 const SOURCE_TYPE = {
-	POST: Symbol("POST"),
-	GROUP_CHAT: Symbol("GROUP_CHAT"),
-	ONE_ON_ONE_CHAT: Symbol("ONE_ON_ONE_CHAT")
+	POST: "POST",
+	GROUP_CHAT: "GROUP_CHAT",
+	ONE_ON_ONE_CHAT: "ONE_ON_ONE_CHAT"
 }
 
 const apiaiModule  = require('./apiai')
@@ -50,6 +50,12 @@ const getAllActiveSessions = () => {
 	.then(activeSessions => {
 		for ( const sessionID in activeSessions) {
 			let session = activeSessions[sessionID]
+			
+			// Firebase don't save empty arrays/objects so we create them here if needed
+			if ( !session.profile ) { session.profile = {} }
+			if ( !session.data ) { session.data = {} }
+			if ( !session.apiaiContexts ) { apiaiContexts = [] }
+			
 			chatSessions[sessionID] = session
 			userChannelToSessions[session.source] = session;
 		}
@@ -63,6 +69,12 @@ const setDB = (db) => {
 	sessionsDb = new SessionsDbClass(db)
 	getAllActiveSessions()
 }
+
+const updateSession = (session, newPropertiesObj) => {
+	Object.assign(session, newPropertiesObj)
+	sessionsDb.updateSession(session.sessionId, newPropertiesObj)
+}
+
 
 const setChannel = (channelType, channel, apiaiToken) => {
 	channels[channelType] = {
@@ -96,17 +108,6 @@ const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId];
 }
 
-/* const getSessionContext = (session, contextId) => {
-	return new Promise(function (resolve, reject) {
-		sessionsDb.getContext(contextId)
-			.then(function (context) {
-				resolve(context)
-			}).catch(function (error) {
-				reject(error)
-			})
-	})
-} */
-
 /*
  * Return new or existing chat session Object.
  * 
@@ -129,7 +130,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			mappedChatSession.lastInboundMessage = moment().format('MMMM Do YYYY, h:mm:ss a');
 			if ( messagingEvent.from ) {
 				mappedChatSession.from = messagingEvent.from
-				sessionsDb.updateSession(mappedChatSession.sessionId, mappedChatSession.from)
+				updateSession(mappedChatSession, {from: mappedChatSession.from})
 			}
 			return resolve(mappedChatSession);
 		}
@@ -147,14 +148,15 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				from: messagingEvent.from || null,
 				lastInboundMessage: moment().format('MMMM Do YYYY, h:mm:ss a'),
 				externalIntegrations: {},
-				contexts: []
+				data: {},
+				apiaiContexts: []
 			}
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession;
 
-			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.source)
+			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
 			.then(json => {
-				console.log("user profile:" + JSON.stringify(json));
+				console.log("'from' profile:" + JSON.stringify(json));
 				mappedChatSession.profile = json;
 				return mappedChatSession;
 			})
@@ -313,7 +315,7 @@ module.exports.SOURCE_TYPE = SOURCE_TYPE;
 module.exports.CHANNELS = CHANNELS;
 module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-//module.exports.getSessionContext = getSessionContext;
 module.exports.setDB = setDB;
 module.exports.setChannel = setChannel;
 module.exports.removeSessionBySource = removeSessionBySource
+module.exports.updateSession = updateSession
