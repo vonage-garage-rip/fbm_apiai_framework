@@ -43,7 +43,7 @@ var channels = {}
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
 var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
-var SessionsDbClass = require('./sessionsDB')
+var SessionsDbClass = require('./DB/sessionsDB')
 
 const getAllActiveSessions = () => {
 	sessionsDb.getAllActiveSessions()
