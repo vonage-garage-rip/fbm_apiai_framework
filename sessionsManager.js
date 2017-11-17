@@ -26,9 +26,9 @@ const MESSAGE_TYPES = {
 };
 
 const CHANNELS = {
-	FB_MESSENGER: Symbol("FB_MESSENGER"),
-	FB_WORKPLACE: Symbol("FB_WORKPLACE"),
-	NEXMO: Symbol("Nexmo")
+	FB_MESSENGER: "FB_MESSENGER",
+	FB_WORKPLACE: "FB_WORKPLACE",
+	NEXMO: "Nexmo"
 }
 
 const SOURCE_TYPE = {
@@ -37,53 +37,59 @@ const SOURCE_TYPE = {
 	ONE_ON_ONE_CHAT: Symbol("ONE_ON_ONE_CHAT")
 }
 
-const apiaiUsersAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
-const apiaiBusinessAgent = require('./apiai').getAgent(process.env.APIAI_TOKEN)
-
-var nexmoChannel, wpChannel, fbmChannel
+const apiaiModule  = require('./apiai')
+var channels = {}
 
 /// TODO clean sessions that were not active for a certain duration
 var chatSessions = {};
 var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
 var SessionsDbClass = require('./sessionsDB')
 
-
-const setDB = (db) => {
-	sessionsDb = new SessionsDbClass(db)
+const getAllActiveSessions = () => {
 	sessionsDb.getAllActiveSessions()
 	.then(activeSessions => {
-		if ( activeSessions ) {
-			activeSessions.forEach(session => {
-				chatSessions[session.sessionId] = session
-				userChannelToSessions[session.source] = session;
-			})
+		for ( const sessionID in activeSessions) {
+			let session = activeSessions[sessionID]
+			chatSessions[sessionID] = session
+			userChannelToSessions[session.source] = session;
 		}
 	})
 	.catch(error => {
-		console.error("sessionsManager.initialize caught an error: " + error)
+		console.error("sessionsManager.getAllActiveSessions caught an error: " + error)
 	})
 }
 
-const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
-	fbmChannel = fbmCh
-	wpChannel = wpCh
-	if ( nexmoCh ) {
-		nexmoChannel = nexmoCh
-		nexmoChannel.resumeQueue(process.env.NEXMO_THROUGHPUT)
+const setDB = (db) => {
+	sessionsDb = new SessionsDbClass(db)
+	getAllActiveSessions()
+}
+
+const setChannel = (channelType, channel, apiaiToken) => {
+	channels[channelType] = {
+		channel: channel,
+		apiaiAgent: apiaiModule.getAgent(apiaiToken)
 	}
-    
+	channel.startChannel()
+}
+
+const getChannel = (channelType) => {
+	return channels[channelType].channel
+}
+
+const getApiAiAgent = (channelType) => {
+	return channels[channelType].apiaiAgent
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
-	fbmChannel.handleInboundEvent(req, res);
+	getChannel(CHANNELS.FB_MESSENGER).handleInboundEvent(req, res);
 }
 
 const inboundFacebookWorkplaceEvent = (req, res) => {
-	wpChannel.handleInboundEvent(req, res);
+	getChannel(CHANNELS.FB_WORKPLACE).handleInboundEvent(req, res);
 }
 
 const inboundNexmoEvent = (req, res) => {
-	nexmoChannel.handleInboundEvent(req, res);
+	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res);
 }
 
 const getSessionBySessionId = sessionId => {
@@ -120,58 +126,33 @@ var getSessionByChannelEvent = (messagingEvent) => {
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
 		if (mappedChatSession) {
 			console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
-			mappedChatSession.lastInboundMessage = moment();
+			mappedChatSession.lastInboundMessage = moment().format('MMMM Do YYYY, h:mm:ss a');
 			if ( messagingEvent.from ) {
 				mappedChatSession.from = messagingEvent.from
 				sessionsDb.updateSession(mappedChatSession.sessionId, mappedChatSession.from)
 			}
-			/// TODO should we also update lastInboundMessage? seems excessive
 			return resolve(mappedChatSession);
 		}
 		else {
 			// Set new session 
 			console.log("getSessionByChannelEvent did not found source: %s.", messagingEvent.source)
 			let sessionId = uuidv4();
-			let apiaiAgent;
-			// TODO this should be moved to parent app logic
-			switch ( messagingEvent.channel ) {
-			case CHANNELS.FB_MESSENGER:
-			case CHANNELS.NEXMO:
-				apiaiAgent = apiaiUsersAgent
-				break;
-			case CHANNELS.FB_WORKPLACE:
-				apiaiAgent = apiaiBusinessAgent
-				break;
-			}
 
 			mappedChatSession = chatSessions[sessionId] = {
-				channel: messagingEvent.channel,
-				apiaiAgent: apiaiAgent,
+				channelType: messagingEvent.channel,
 				sessionId: sessionId,
 				profile: {},
-				sourceType: messagingEvent.sourceType,
-				source: messagingEvent.source, 
-				from: messagingEvent.from,
-				lastInboundMessage: moment(),
+				sourceType: messagingEvent.sourceType || null,
+				source: messagingEvent.source || null, 
+				from: messagingEvent.from || null,
+				lastInboundMessage: moment().format('MMMM Do YYYY, h:mm:ss a'),
 				externalIntegrations: {},
-				phoneNumbers: [],
-				data: {}
-			}
-
-			if ( messagingEvent.channel===CHANNELS.NEXMO ) {
-				mappedChatSession.phoneNumbers.push(messagingEvent.source)                
+				contexts: []
 			}
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession;
 
-			let getUserProfilePromise = Promise.resolve({})
-			if ( messagingEvent.channel===CHANNELS.FB_MESSENGER ) {
-				getUserProfilePromise = fbmChannel.getUserProfile(messagingEvent.source)
-			}
-			else if ( messagingEvent.channel===CHANNELS.FB_WORKPLACE ) {
-				getUserProfilePromise = wpChannel.getUserProfile(messagingEvent.from)
-			}
-			getUserProfilePromise
+			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.source)
 			.then(json => {
 				console.log("user profile:" + JSON.stringify(json));
 				mappedChatSession.profile = json;
@@ -179,9 +160,10 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			})
 			.then(session => {
 				sessionsDb.saveSession(session)
+				return resolve(session)
 			})
 			.catch(error => {
-				console.log("calling get user profile caught an error: " + error);
+				console.error("calling get user profile caught an error: " + error);
 				reject(error);
 			})
 		}
@@ -206,21 +188,18 @@ var handleResponseWithMessages = (messages, session) => {
 	messages.forEach( (messageObj, index) => {
 		//Delay or queue messages so we'll keep order in place
 		setTimeout( () => {
-			switch (session.channel) {
+			let channel = getChannel(session.channelType)
+			switch (session.channelType) {
 			// filtering by platofmr property but this will add unneccessary delays
 			case CHANNELS.FB_MESSENGER:
-				if (!messageObj.platform || messageObj.platform=="facebook") {            
-					fbmChannel.sendMessage(messageObj, session);
-				}
-				break;
 			case CHANNELS.FB_WORKPLACE:
-				if (!messageObj.platform || messageObj.platform=="facebook") {   
-					wpChannel.sendMessage(messageObj, session)
+				if (!messageObj.platform || messageObj.platform=="facebook") {            
+					channel.sendMessage(messageObj, session);
 				}
 				break;
 			case CHANNELS.NEXMO:
 				if (!messageObj.platform) {
-					nexmoChannel.sendMessage(messageObj, session)
+					channel.sendMessage(messageObj, session)
 				}
 				break;
 			}
@@ -253,15 +232,15 @@ const handleInboundChannelMessage = (message) => {
 		.then((session) => {
 			console.log("session", session, "sessionsManager.handleInboundChannelMessage: " + JSON.stringify(message));
 			if (message.quick_reply) {
-				return session.apiaiAgent.sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
+				return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
 			}
-			return session.apiaiAgent.sendTextMessageToApiAi(message.text, session.sessionId);
+			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(message.text, session.sessionId);
 		})
 		.then(apiairesponse => {
 			handleApiaiResponse(apiairesponse);
 		})
 		.catch(err => {
-			console.log("sessionsManager.handleInboundChannelMessage caught an error: " + err);
+			console.error("sessionsManager.handleInboundChannelMessage caught an error: " + err);
 		});
 }
 
@@ -269,13 +248,13 @@ const handleInboundChannelPostback = (message) => {
 	getSessionByChannelEvent(message)
 		.then(session => {
 			console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + message);
-			return session.apiaiAgent.sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
+			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
 		})
 		.then(apiairesponse => {
 			handleApiaiResponse(apiairesponse);
 		})
 		.catch(err => {
-			console.log("sessionsManager.handleInboundChannelPostback caught an error: " + err);
+			console.error("sessionsManager.handleInboundChannelPostback caught an error: " + err);
 		});
 }
 
@@ -297,7 +276,7 @@ const handleEventBySessionId = (sessionId, event) => {
 const handleEvent = (session, event) => {
 	switch (event.type) {
 	case EVENTS.GET_STARTED_PAYLOAD:
-		session.apiaiAgent.sendEventToApiAi(event, session.sessionId)
+		getApiAiAgent(session.channelType).sendEventToApiAi(event, session.sessionId)
 			.then(apiairesponse => {
 				handleApiaiResponse(apiairesponse);
 			});
@@ -309,7 +288,7 @@ const handleEvent = (session, event) => {
 		break;
 	default:
 		///TODO: REFACTOR. HANDLE PROPRIETARY EVENTS
-		session.apiaiAgent.sendEventToApiAi(event, session.sessionId)
+		getApiAiAgent(session.channelType).sendEventToApiAi(event, session.sessionId)
 			.then(apiairesponse => {
 				handleApiaiResponse(apiairesponse);
 			});
@@ -330,5 +309,5 @@ module.exports.handleEventBySessionId = handleEventBySessionId;
 module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
 //module.exports.getSessionContext = getSessionContext;
 module.exports.setDB = setDB;
-module.exports.initializeChannels = initializeChannels;
+module.exports.setChannel = setChannel;
 module.exports.removeSessionBySource = removeSessionBySource
