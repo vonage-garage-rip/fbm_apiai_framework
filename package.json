@@ -5,6 +5,9 @@
   "scripts": {
     "test": "mocha --recursive tests/unit_tests/"
   },
+  "pre-push": [
+    "test"
+  ],
   "author": {
     "name": "Zach Efrati",
     "email": "tzahi.efrati@gmail.com",
@@ -20,6 +23,7 @@
     "log-timestamp": "^0.1.2",
     "mocha": "^4.0.1",
     "moment": "^2.19.2",
+    "pre-push": "^0.1.1",
     "uuid": "^3.1.0",
     "winston": "^2.4.0"
   }
