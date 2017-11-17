@@ -4,22 +4,23 @@ require('dotenv').config();
 const sessionsManager = require("../../sessionsManager.js");
 const apiai = require("../../apiai.js");
 //Dependencies
-const session = require('./dependencies/session');
-const apiaiMsg = require('./dependencies/message');
+const messageEvent = require('./dependencies/messageEvent');
+const apiaiMsg = require('./dependencies/apiAiResponse');
+const firebaseAdmin = require('./dependencies/firebase')
 const expect = require("chai").expect;
 const assert = require('assert');
 const nock = require('nock');
 
 describe('*****ApiAi Test Suite: ', function() {
-    describe('Function: getAgent() ', function() {
-      var agent;
-        
-        before(() => {
-          agent = apiai.getAgent(process.env.APIAI_TOKEN);
-        });
+    var agent;
 
+    beforeEach(() => {
+        agent = apiai.getAgent(process.env.APIAI_TOKEN);
+    });
+
+    describe('Function: getAgent() ', function() {
         it('should get return an apiai agent', function() {
-          expect(agent.app.hostname).to.equal('api.api.ai');
+            expect(agent.app.hostname).to.equal('api.api.ai');
         });
     });
 
@@ -27,12 +28,18 @@ describe('*****ApiAi Test Suite: ', function() {
     describe('Function: sendTextMessageToApiAi() ', function() {
         before(() => {
             nock('https://api.dialogflow.com/v1/')
-                .post('/query/?v=20150910')
+                .post('/query')
                 .reply(200, apiaiMsg);
-        });
 
-        it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
-            // sessionsManager.handleInboundChannelPostback();
+            sessionsManager.initializeDb(firebaseAdmin);
         });
+        it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
+            return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
+                return agent.sendTextMessageToApiAi("This is a test.", session.sessionId).then(function(apiAiresponse) {
+                    expect(apiAiresponse).to.exist;
+                    expect(apiAiresponse.result.resolvedQuery).to.equal("This is a test.");
+                });
+            })
+        })
     });
 });
