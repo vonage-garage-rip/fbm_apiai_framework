@@ -9,10 +9,13 @@ const apiaiMsg = require('./dependencies/apiAiResponse');
 const firebaseAdmin = require('./dependencies/firebase')
 const expect = require("chai").expect;
 const assert = require('assert');
-const nock = require('nock');
 
 describe('*****ApiAi Test Suite: ', function() {
     var agent;
+
+    before(() => {
+        sessionsManager.initializeDb(firebaseAdmin);
+    });
 
     beforeEach(() => {
         agent = apiai.getAgent(process.env.APIAI_TOKEN);
@@ -26,18 +29,22 @@ describe('*****ApiAi Test Suite: ', function() {
 
 
     describe('Function: sendTextMessageToApiAi() ', function() {
-        before(() => {
-            nock('https://api.dialogflow.com/v1/')
-                .post('/query')
-                .reply(200, apiaiMsg);
-
-            sessionsManager.initializeDb(firebaseAdmin);
-        });
         it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
             return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
                 return agent.sendTextMessageToApiAi("This is a test.", session.sessionId).then(function(apiAiresponse) {
                     expect(apiAiresponse).to.exist;
                     expect(apiAiresponse.result.resolvedQuery).to.equal("This is a test.");
+                });
+            })
+        })
+    });
+
+    describe('Function: sendEventToApiAi() ', function() {
+        it('should get session, sendEventToApiAi, then handleApiaiResponse ', function() {
+            return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
+                return agent.sendEventToApiAi(messageEvent, session.sessionId).then(function(apiAiresponse) {
+                    expect(apiAiresponse).to.exist;
+                    expect(apiAiresponse.result.resolvedQuery).to.equal("TEST_CHANNEL");
                 });
             })
         })

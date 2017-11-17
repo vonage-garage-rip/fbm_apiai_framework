@@ -53,7 +53,7 @@ class ApiAi {
 				"name": event.type,
 				"data": event.data, 
 			};
-
+            console.log("eventArg: ", eventArg);
 			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: [userProfileContext]});
 
 			request.on('response', function(response) {
@@ -62,6 +62,7 @@ class ApiAi {
 			});
 
 			request.on('error', function(error) {
+                console.log(error);
 				return reject(error);
 			});
 

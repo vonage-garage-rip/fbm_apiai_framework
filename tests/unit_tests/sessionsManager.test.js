@@ -7,7 +7,7 @@ const expect = require("chai").expect;
 const assert = require('assert');
 
 describe('*****SessionsManager Test Suite: ', function() {
-  beforeEach(function() {
+  beforeEach(() => {
     // runs before each test in this block
     var message = {};
     var session = {};
