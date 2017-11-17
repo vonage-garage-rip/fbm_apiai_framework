@@ -172,15 +172,21 @@ var getSessionByChannelEvent = (messagingEvent) => {
 
 
 var removeSessionBySource = (source) => {
-	let session = userChannelToSessions[source]
-	if ( session ) {
-		delete userChannelToSessions[source]
-		delete chatSessions[session.sessionId]
-		sessionsDb.removeSession(session.sessionId)
-	}
-	else {
-		console.log("removeSessionBySource: no session was found for source: " + source)
-	}
+	return new Promise( resolve => { 
+		let session = userChannelToSessions[source]
+		if ( session ) {
+			delete userChannelToSessions[source]
+			delete chatSessions[session.sessionId]
+			sessionsDb.removeSession(session.sessionId)
+			.then(sessionId => {
+				resolve(sessionId)
+			})
+		}
+		else {
+			console.log("removeSessionBySource: no session was found for source: " + source)
+			resolve(-1)
+		}
+	})
 }
 
 var handleResponseWithMessages = (messages, session) => {
