@@ -97,6 +97,7 @@ class NexmoChannel {
     let inboundMessage = {
       channel: sessionsManager.CHANNELS.NEXMO,
       source: req.query.msisdn,
+      from: req.query.msisdn,
       to: req.query.to,
       text: req.query.text
     }
