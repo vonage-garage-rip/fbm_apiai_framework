@@ -43,8 +43,9 @@ describe('*****ApiAi Test Suite: ', function() {
         it('should get session, sendEventToApiAi, then handleApiaiResponse ', function() {
             return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
                 return agent.sendEventToApiAi(messageEvent, session.sessionId).then(function(apiAiresponse) {
+                    console.log(apiAiresponse);
                     expect(apiAiresponse).to.exist;
-                    expect(apiAiresponse.result.resolvedQuery).to.equal("TEST_CHANNEL");
+                    expect(apiAiresponse.result.resolvedQuery).to.equal("FB_WORKPLACE");
                 });
             })
         })
