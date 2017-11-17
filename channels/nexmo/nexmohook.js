@@ -17,8 +17,17 @@ class NexmoChannel {
     this.dispatchMessages = this.dispatchMessages.bind(this);
   }
 
+  startChannel() {
+    console.log("Nexmo Channel started")
+    this.resumeQueue(process.env.NEXMO_THROUGHPUT)
+  }
+
   resumeQueue(delay) {
     setTimeout(this.dispatchMessages, delay)
+  }
+
+  getUserProfile(userId) {
+    return Promise.resolve({})
   }
 
   sendMessage(messageObj, session) {
@@ -26,7 +35,7 @@ class NexmoChannel {
       /// Should we add sessionID ? other identifying parameters?q
       id: uuidv4(),
       message: messageObj.speech,
-      to: session.phoneNumbers[0],
+      to: session.source,
       from: process.env.NEXMO_NUMBER,
       sendAttempts: 0
     })
@@ -50,15 +59,13 @@ class NexmoChannel {
         }
       }
       else {
-        let errorMessages = responseData.messages.filter(message => message.status===1)
-        if ( errorMessages.length>0 ) {
+        console.log("dispatchMessages: for message %s, %d message(s) returned with the following status: %s", messageObj.id,
+          responseData["message-count"], responseData.messages.map(message => "Nexmo msgID=" + message["message-id"]+", status=" + message.status+" ").toString())
+        let velocityErrorMessages = responseData.messages.filter(message => message.status===1)
+        if ( velocityErrorMessages.length>0 ) {
           console.log("error in responseData. pushing message " + messageObj.id + " to retriesArray. retry #" + messageObj.sendAttempts)
           backoff = Math.max(backoff, messageObj.sendAttempts)
           retriesArray.push(messageObj)
-        }
-        else {
-          console.log("dispatchMessages: for message %s, %d message(s) sent: %s", messageObj.id,
-            responseData["message-count"], responseData.messages.map(message => "Nexmo msgID=" + message["message-id"]+", status=" + message.status+" ").toString())
         }
       }
 
