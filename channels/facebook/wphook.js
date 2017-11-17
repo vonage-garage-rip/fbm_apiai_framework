@@ -53,6 +53,7 @@ var handleInboundEvent = function (req, res) {
  */
 const handlePostRequest = (req, res) => {
 	try {
+		console.log("handlePostRequest started")
 		var data = req.body;
 		// On Workplace, webhooks can be sent for page, group, user and
 		// workplace_security objects
@@ -72,14 +73,16 @@ const handlePostRequest = (req, res) => {
 		default:
 			console.log('Unhandled Webhook Object', data.object);
 		}
-	} catch (e) {
+	} catch (error) {
 		// Write out any exceptions for now
-		console.error(e);
+		console.error("handlePostRequest caught an error: " + error);
 	} finally {
 		// Always respond with a 200 OK for handled webhooks, to avoid retries
 		// from Facebook
 		/// TODO we should find a way to return this quicker rather than waiting for handling to complete
-		res.sendStatus(200);
+		let send200Result = res.sendStatus(200);
+		console.log("handlePostRequest finished. call to res.sendStatus(200) returned ", send200Result)
+		
 	}
 }
 
