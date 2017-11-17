@@ -13,7 +13,7 @@ class ApiAi {
 		return new Promise((resolve, reject) => {
 			let session = sessionsManager.getSessionBySessionId(sessionId);
 
-			var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: session.contexts});
+			var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: session.apiaiContexts});
 
 			request.on('response', function(response) {
 				console.log("sendTextMessageToApiAi: response=" + JSON.stringify(response));
@@ -38,7 +38,7 @@ class ApiAi {
 				"data": event.data, 
 			};
 
-			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.contexts});
+			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts});
 
 			request.on('response', function(response) {
 				console.log("sendEventToApiAi: response=" + JSON.stringify(response));
