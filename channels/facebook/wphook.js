@@ -19,6 +19,10 @@ const rpn = require('request-promise-native')
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
 const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 
+var startChannel= () => {
+	console.log("Facebook Workplace Channel started")
+}
+
 var handleInboundEvent = function (req, res) {
 	if (req.method == 'GET') {
 		req.appSecret = WORKPLACE_VERIFY_TOKEN
@@ -253,3 +257,4 @@ module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
+module.exports.startChannel = startChannel

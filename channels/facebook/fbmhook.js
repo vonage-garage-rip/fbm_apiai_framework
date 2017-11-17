@@ -10,6 +10,10 @@ const sessionsManager = require('../../sessionsManager');
 const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
 const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
+var startChannel= () => {
+	console.log("Facebook Messenger Channel started")
+}
+
 var sendMessage = function (messageObj, session) {
 	console.log("MESSAGE: ", messageObj);
 
@@ -184,4 +188,4 @@ const getUserProfile = userId => {
 module.exports.handleInboundEvent = handleInboundEvent;
 module.exports.sendMessage = sendMessage;
 module.exports.getUserProfile = getUserProfile;
-
+module.exports.startChannel = startChannel
