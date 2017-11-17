@@ -34,14 +34,13 @@ class SessionsDB {
         })
     }
 
-    /// TODO this version will only update the 'from' property. Should change 2nd argument to args, expand and save all new values
-    updateSession(sessionId, from) {
+    updateSession(sessionId, newPropertiesObj) {
         let self = this
         return new Promise( resolve => {    
             var ref = self.db.ref(ACTIVE_SESSIONS);
             var sessionRef = ref.child(sessionId)
-            sessionRef.update({from: from})
-            resolve(session);
+            sessionRef.update(newPropertiesObj)
+            resolve(sessionId);
         })
     }
 
