@@ -41,7 +41,7 @@ class ApiAi {
 			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts});
 
 			request.on('response', function(response) {
-				console.log("sendEventToApiAi: response=" + JSON.stringify(response));
+				console.log("sendEventToApiAi: received response");
 				return resolve(response);
 			});
 

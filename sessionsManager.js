@@ -177,6 +177,7 @@ var removeSessionBySource = (source) => {
 	return new Promise( resolve => { 
 		let session = userChannelToSessions[source]
 		if ( session ) {
+			console.log("removeSessionBySource: removing session for source: " + source)
 			delete userChannelToSessions[source]
 			delete chatSessions[session.sessionId]
 			sessionsDb.removeSession(session.sessionId)
