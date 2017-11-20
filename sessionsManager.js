@@ -63,6 +63,7 @@ const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
 		nexmoChannel.resumeQueue(process.env.NEXMO_THROUGHPUT)
 	}
  
+ //Return channels for testing
  return [fbmChannel, wpChannel, nexmoCh];
 }
 
