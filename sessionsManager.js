@@ -51,6 +51,11 @@ const initializeDb = dbReference => {
 	db = dbReference /// TODO should be an interface
 }
 
+const returnDb = () =>{
+	//Return db for testing
+	return db;
+}
+
 const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
 	fbmChannel = fbmCh
 	wpChannel = wpCh
@@ -58,7 +63,9 @@ const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
 		nexmoChannel = nexmoCh
 		nexmoChannel.resumeQueue(process.env.NEXMO_THROUGHPUT)
 	}
-    
+ 
+ //Return channels for testing
+ return [fbmChannel, wpChannel, nexmoCh];
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
@@ -333,3 +340,4 @@ module.exports.getSessionContext = getSessionContext;
 module.exports.initializeDb = initializeDb;
 module.exports.initializeChannels = initializeChannels;
 module.exports.removeSessionBySource = removeSessionBySource
+module.exports.returnDb = returnDb;
