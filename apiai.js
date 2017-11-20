@@ -36,7 +36,7 @@ class ApiAi {
 		});
 	}
 
-	sendEventToApiAi(event, sessionId) {
+	sendEventToApiAi(event, sessionId) { 
 		var self = this
 		return new Promise( (resolve, reject) => {
 			let session = sessionsManager.getSessionBySessionId(sessionId);
