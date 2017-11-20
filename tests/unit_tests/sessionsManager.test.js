@@ -11,8 +11,11 @@ const wpCh = require('./../../channels/facebook/wphook');
 const fbmCh = require('./../../channels/facebook/fbmhook');
 const httpResponse = require('./dependencies/httpResponse');
 const nexmoCh = require('./../../channels/nexmo/nexmohook');
-const inboundWorkplaceGETEvent = require('./dependencies/inboundEvents/inboundWorkplaceGET');
-const inboundWorkplacePOSTEvent = require('./dependencies/inboundEvents/inboundWorkplacePOST');
+const inboundWorkplaceGETEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplaceGET');
+const inboundWorkplacePagePOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
+const inboundWorkplaceUserPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
+const inboundWorkplaceGroupPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
+const inboundWorkplaceSecurityPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
 
 
 
@@ -53,7 +56,7 @@ describe('*****SessionsManager Test Suite: ', function() {
 
         it('should handle TRUTHY inbound facebook workplace GET events', function() {
             var truthyEvent = inboundWorkplaceGETEvent;
-            
+
             sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
 
             expect(httpResponse.statusCode).to.equal(200);
@@ -62,10 +65,18 @@ describe('*****SessionsManager Test Suite: ', function() {
         it('should handle FALSY inbound facebook workplace GET events', function() {
             inboundWorkplaceGETEvent.query['hub.mode'] = "test_false_scenario";
             var falsyEvent = inboundWorkplaceGETEvent;
-            
+
             sessionsManager.inboundFacebookWorkplaceEvent(falsyEvent, httpResponse);
-            
+
             expect(httpResponse.statusCode).to.equal(403);
+        });
+
+        it('should handle TRUTHY inbound facebook workplace Page POST events', function() {
+            var truthyEvent = inboundWorkplacePagePOSTEvent;
+
+            sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
+
+            expect(httpResponse.statusCode).to.equal(200);
         });
     });
 
