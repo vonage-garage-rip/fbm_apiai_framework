@@ -4,7 +4,7 @@ require('dotenv').config();
 const sessionsManager = require("../../sessionsManager.js");
 const apiai = require("../../apiai.js");
 //Dependencies
-const messageEvent = require('./dependencies/messageEvent');
+const channelTest = require('./dependencies/inboundEvents/channelTest');
 const apiaiMsg = require('./dependencies/apiAiResponse');
 const firebaseAdmin = require('./dependencies/firebase');
 const expect = require("chai").expect;
@@ -32,7 +32,7 @@ describe('*****ApiAi Test Suite: ', function() {
 
     describe('Function: sendTextMessageToApiAi() ', function() {
         it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
-            return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
+            return sessionsManager.getSessionByChannelEvent(channelTest).then(function(session) {
                 return agent.sendTextMessageToApiAi("This is a test.", session.sessionId).then(function(apiAiresponse) {
                     expect(apiAiresponse).to.exist;
                     expect(apiAiresponse.result.resolvedQuery).to.equal("This is a test.");
@@ -43,8 +43,8 @@ describe('*****ApiAi Test Suite: ', function() {
 
     describe('Function: sendEventToApiAi() ', function() {
         it('should get session, sendEventToApiAi, then handleApiaiResponse ', function() {
-            return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
-                return agent.sendEventToApiAi(messageEvent, session.sessionId).then(function(apiAiresponse) {
+            return sessionsManager.getSessionByChannelEvent(channelTest).then(function(session) {
+                return agent.sendEventToApiAi(channelTest, session.sessionId).then(function(apiAiresponse) {
                     expect(apiAiresponse).to.exist;
                     expect(apiAiresponse.result.resolvedQuery).to.equal("FB_WORKPLACE");
                 });

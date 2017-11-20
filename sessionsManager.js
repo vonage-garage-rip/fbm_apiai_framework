@@ -52,6 +52,7 @@ const initializeDb = dbReference => {
 }
 
 const returnDb = () =>{
+	//Return db for testing
 	return db;
 }
 
