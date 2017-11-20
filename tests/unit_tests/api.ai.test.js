@@ -33,7 +33,7 @@ describe('*****ApiAi Test Suite: ', function() {
             return sessionsManager.getSessionByChannelEvent(messageEvent).then(function(session) {
                 return agent.sendTextMessageToApiAi("This is a test.", session.sessionId).then(function(apiAiresponse) {
                     expect(apiAiresponse).to.exist;
-                    expect(apiAiresponse.result.resolvedQuery).to.equal("This is a test.");
+                    expect(apiAiresponse.result.resolvedQuery).to.equal("Thisis a test.");
                 });
             })
         })
