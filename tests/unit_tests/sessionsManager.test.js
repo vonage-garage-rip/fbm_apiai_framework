@@ -7,6 +7,9 @@ const expect = require("chai").expect;
 const assert = require('assert');
 const apiAi = require('../../apiai');
 const firebaseAdmin = require('./dependencies/firebase');
+const nexmoCh = require('./../../channels/nexmo/nexmohook');
+const wpCh = require('./../../channels/facebook/wphook');
+const fbmCh = require('./../../channels/facebook/fbmhook');
 
 
 describe('*****SessionsManager Test Suite: ', function() {
@@ -30,8 +33,15 @@ describe('*****SessionsManager Test Suite: ', function() {
     });
 
     describe('Function: initializeChannels() ', function() {
+
         it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
-            // sessionsManager.handleInboundChannelPostback();
+            var channels = sessionsManager.initializeChannels(fbmCh, wpCh, nexmoCh);
+
+            expect(channels.length).to.equal(3);
+            for(let channel of channels){
+              expect(channel).to.exist;
+              expect(channel.handleInboundEvent).to.exist;
+            }
         });
     });
 });

@@ -62,7 +62,8 @@ const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
 		nexmoChannel = nexmoCh
 		nexmoChannel.resumeQueue(process.env.NEXMO_THROUGHPUT)
 	}
-    
+ 
+ return [fbmChannel, wpChannel, nexmoCh];
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
