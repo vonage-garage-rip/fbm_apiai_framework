@@ -51,34 +51,39 @@ describe('*****SessionsManager Test Suite: ', function() {
 
     describe('Function: inboundFacebookWorkplaceEvent() ', function() {
 
-        it('should handle inbound facebook workplace GET events', function() {
-            sessionsManager.inboundFacebookWorkplaceEvent(inboundWorkplaceGETEvent, httpResponse);
+        it('should handle TRUTHY inbound facebook workplace GET events', function() {
+            var truthyEvent = inboundWorkplaceGETEvent;
+            
+            sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
 
-            expect(true).to.be.true
+            expect(httpResponse.statusCode).to.equal(200);
         });
 
-        it('should handle inbound facebook workplace POST events', function() {
-            sessionsManager.inboundFacebookWorkplaceEvent(inboundWorkplacePOSTEvent, httpResponse);
-
-            expect(true).to.be.true
-        });
-    });
-
-    describe('Function: inbound FacebookMessengerEvent() ', function() {
-
-        it('should handle inbound facebook messenger events', function() {
-            // sessionsManager.inboundFacebookMessengerEvent(req, res);
-
-            expect(true).to.be.true
+        it('should handle FALSY inbound facebook workplace GET events', function() {
+            inboundWorkplaceGETEvent.query['hub.mode'] = "test_false_scenario";
+            var falsyEvent = inboundWorkplaceGETEvent;
+            
+            sessionsManager.inboundFacebookWorkplaceEvent(falsyEvent, httpResponse);
+            
+            expect(httpResponse.statusCode).to.equal(403);
         });
     });
 
-    describe('Function: inbound NexmoEvent() ', function() {
+    // describe('Function: inbound FacebookMessengerEvent() ', function() {
 
-        it('should handle inbound Nexmo messenger events', function() {
-            // sessionsManager.inboundNexmoEvent(req, res);
+    //     it('should handle inbound facebook messenger events', function() {
+    //         // sessionsManager.inboundFacebookMessengerEvent(req, res);
 
-            expect(true).to.be.true
-        });
-    });
+    //         expect(true).to.be.true
+    //     });
+    // });
+
+    // describe('Function: inbound NexmoEvent() ', function() {
+
+    //     it('should handle inbound Nexmo messenger events', function() {
+    //         // sessionsManager.inboundNexmoEvent(req, res);
+
+    //         expect(true).to.be.true
+    //     });
+    // });
 });
