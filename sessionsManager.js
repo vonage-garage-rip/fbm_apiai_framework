@@ -51,6 +51,10 @@ const initializeDb = dbReference => {
 	db = dbReference /// TODO should be an interface
 }
 
+const returnDb = () =>{
+	return db;
+}
+
 const initializeChannels = (fbmCh, wpCh, nexmoCh) => {
 	fbmChannel = fbmCh
 	wpChannel = wpCh
@@ -333,3 +337,4 @@ module.exports.getSessionContext = getSessionContext;
 module.exports.initializeDb = initializeDb;
 module.exports.initializeChannels = initializeChannels;
 module.exports.removeSessionBySource = removeSessionBySource
+module.exports.returnDb = returnDb;

@@ -6,7 +6,7 @@ const apiai = require("../../apiai.js");
 //Dependencies
 const messageEvent = require('./dependencies/messageEvent');
 const apiaiMsg = require('./dependencies/apiAiResponse');
-const firebaseAdmin = require('./dependencies/firebase')
+const firebaseAdmin = require('./dependencies/firebase');
 const expect = require("chai").expect;
 const assert = require('assert');
 
@@ -14,10 +14,12 @@ describe('*****ApiAi Test Suite: ', function() {
     var agent;
 
     before(() => {
+        // runs before each test in this block
         sessionsManager.initializeDb(firebaseAdmin);
     });
 
     beforeEach(() => {
+        // runs for each test before each test in this block
         agent = apiai.getAgent(process.env.APIAI_TOKEN);
     });
 
