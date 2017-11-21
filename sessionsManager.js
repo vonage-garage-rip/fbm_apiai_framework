@@ -323,9 +323,5 @@ module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
 module.exports.setDB = setDB;
 module.exports.setChannel = setChannel;
 module.exports.removeSessionBySource = removeSessionBySource
-<<<<<<< HEAD
 module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
-=======
-module.exports.updateSession = updateSession
->>>>>>> a8bbac97ccd4406fadbbf73aa22f63b8fb40bf5f
