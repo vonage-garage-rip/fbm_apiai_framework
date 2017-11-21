@@ -10,6 +10,10 @@ const sessionsManager = require('../../sessionsManager');
 const MESSENGER_VERIFY_TOKEN = process.env.MESSENGER_VERIFY_TOKEN;
 const MESSENGER_PAGE_ACCESS_TOKEN = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
+var startChannel= () => {
+	console.log("Facebook Messenger Channel started")
+}
+
 var sendMessage = function (messageObj, session) {
 	console.log("MESSAGE: ", messageObj);
 
@@ -100,6 +104,8 @@ const receivedMessage = (messagingEvent) => {
 		let inboundMessage = {
 			channel: sessionsManager.CHANNELS.FB_MESSENGER,
 			source: messagingEvent.sender.id,
+			sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
+			from: messagingEvent.sender.id,
 			to: messagingEvent.recipient.id,
 			text: messagingEvent.message.text,
 			quick_reply: messagingEvent.message.quick_reply
@@ -130,7 +136,9 @@ const receivedPostback = (messagingEvent) => {
 	let payload = messagingEvent.postback.payload;
 	let inboundPostbackMessage = {
 		channel: sessionsManager.CHANNELS.FB_MESSENGER,
+		sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
 		source: messagingEvent.sender.id,
+		from: messagingEvent.sender.id,
 		to: messagingEvent.recipient.id,
 		payload: payload
 	};
@@ -177,11 +185,11 @@ const receivedAccountLink = (event) => {
 	}
 }
 
-const getUserProfile = userId => {
+const getUserProfile = (userId) => {
 	return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
 }
 
 module.exports.handleInboundEvent = handleInboundEvent;
 module.exports.sendMessage = sendMessage;
 module.exports.getUserProfile = getUserProfile;
-
+module.exports.startChannel = startChannel

@@ -12,16 +12,8 @@ class ApiAi {
 		var self = this
 		return new Promise((resolve, reject) => {
 			let session = sessionsManager.getSessionBySessionId(sessionId);
-			let userProfileContext = {
-				"name": "user-profile",
-				"parameters": {
-					"full_name": session.profile.first_name + " " + session.profile.last_name,
-					"first_name": session.profile.first_name,
-					"last_visit": session.lastInboundMessage.format()
-				},
-				"lifespan": 5
-			};
-			var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: [userProfileContext], timezone: session.profile.timezone});
+
+			var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: session.apiaiContexts});
 
 			request.on('response', function(response) {
 				console.log("sendTextMessageToApiAi: response=" + JSON.stringify(response));
@@ -40,24 +32,15 @@ class ApiAi {
 		var self = this
 		return new Promise( (resolve, reject) => {
 			let session = sessionsManager.getSessionBySessionId(sessionId);
-			let userProfileContext = {
-				"name": "user-profile",
-				"parameters": {
-					"full_name": session.profile.first_name + " " + session.profile.last_name,
-					"first_name": session.profile.first_name,
-					"last_visit": session.lastInboundMessage.format(),
-				},
-				"lifespan": 5
-			};
+			
 			let eventArg = {
 				"name": event.type,
 				"data": event.data, 
 			};
-            console.log("eventArg: ", eventArg);
-			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: [userProfileContext]});
 
+			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts});
 			request.on('response', function(response) {
-				console.log("sendEventToApiAi: response=" + JSON.stringify(response));
+				console.log("sendEventToApiAi: received response");
 				return resolve(response);
 			});
 
