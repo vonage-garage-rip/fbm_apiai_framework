@@ -28,7 +28,7 @@ class ApiAi {
 		});
 	}
 
-	sendEventToApiAi(event, sessionId) {
+	sendEventToApiAi(event, sessionId) { 
 		var self = this
 		return new Promise( (resolve, reject) => {
 			let session = sessionsManager.getSessionBySessionId(sessionId);
@@ -39,13 +39,13 @@ class ApiAi {
 			};
 
 			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts});
-
 			request.on('response', function(response) {
 				console.log("sendEventToApiAi: received response");
 				return resolve(response);
 			});
 
 			request.on('error', function(error) {
+                console.log(error);
 				return reject(error);
 			});
 

@@ -90,6 +90,7 @@ const getChannel = (channelType) => {
 
 const getApiAiAgent = (channelType) => {
 	return channels[channelType].apiaiAgent
+
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
