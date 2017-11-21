@@ -6,25 +6,23 @@ const apiai = require("../../apiai.js");
 //Dependencies
 const channelTest = require('./dependencies/inboundEvents/channelTest');
 const apiaiMsg = require('./dependencies/apiAiResponse');
-const firebaseAdmin = require('./dependencies/firebase');
+const firebase = require('./../../DB/firebase');
 const expect = require("chai").expect;
 const assert = require('assert');
+const workplace = require("./../../channels/facebook/wphook")
 
 describe('*****ApiAi Test Suite: ', function() {
     var agent;
 
     before(() => {
-        // runs before each test in this block
-        sessionsManager.initializeDb(firebaseAdmin);
-    });
-
-    beforeEach(() => {
         // runs for each test before each test in this block
-        agent = apiai.getAgent(process.env.APIAI_TOKEN);
+        sessionsManager.setChannel(channelTest.channel, workplace, process.env.APIAI_TOKEN);
     });
 
-    describe('Function: getAgent() ', function() {
+    describe('Function: getApiAiAgent() ', function() {
         it('should get return an apiai agent', function() {
+            var agent = sessionsManager.getApiAiAgent(channelTest.channel);
+
             expect(agent.app.hostname).to.equal('api.api.ai');
         });
     });

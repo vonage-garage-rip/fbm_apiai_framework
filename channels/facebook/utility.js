@@ -370,7 +370,7 @@ function getUserProfile(userId, fields, accessToken) {
 				return resolve(json);
 			})
 			.catch(err => {
-				console.log("facebook/utility getUserProfile caught an error: " + err);
+				console.error("facebook/utility getUserProfile caught an error: " + err);
 				return reject(err);
 			})    
 	})

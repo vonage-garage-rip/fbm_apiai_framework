@@ -6,7 +6,7 @@ const sessionsManager = require("../../sessionsManager.js");
 const expect = require("chai").expect;
 const assert = require('assert');
 const apiAi = require('../../apiai');
-const firebaseAdmin = require('./dependencies/firebase');
+const firebase = require('./../../DB/firebase');
 const wpCh = require('./../../channels/facebook/wphook');
 const fbmCh = require('./../../channels/facebook/fbmhook');
 const httpResponse = require('./dependencies/httpResponse');
@@ -21,11 +21,6 @@ const inboundWorkplaceSecurityPOSTEvent = require('./dependencies/inboundEvents/
 
 describe('*****SessionsManager Test Suite: ', function() {
     var agent
-
-    before(() => {
-        // runs before each test in this block
-        sessionsManager.initializeDb(firebaseAdmin);
-    });
 
     beforeEach(() => {
         // runs before each test in this block
