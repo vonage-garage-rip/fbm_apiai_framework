@@ -189,7 +189,12 @@ const getUserProfile = (userId) => {
 	return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
 }
 
+const sendProfileApiBatch = (profile, path) => {
+	utility.sendProfileApiBatch(profile, path, MESSENGER_PAGE_ACCESS_TOKEN)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent;
 module.exports.sendMessage = sendMessage;
 module.exports.getUserProfile = getUserProfile;
 module.exports.startChannel = startChannel
+module.exports.sendProfileApiBatch = sendProfileApiBatch

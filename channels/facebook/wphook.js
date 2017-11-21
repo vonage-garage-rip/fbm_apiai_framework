@@ -19,6 +19,8 @@ const rpn = require('request-promise-native')
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
 const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 
+var community
+
 var startChannel= () => {
 	console.log("Facebook Workplace Channel started")
 }
@@ -256,8 +258,19 @@ const getUserProfile = userId => {
 	return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
+const sendProfileApiBatch = (profile, path) => {
+	utility.sendProfileApiBatch(profile, path, WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+
+const getCommunity = () => {
+	if ( community ) { return Promise.resolve(community)}
+	return utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
 module.exports.startChannel = startChannel
+module.exports.sendProfileApiBatch = sendProfileApiBatch
+module.exports.getCommunity = getCommunity
