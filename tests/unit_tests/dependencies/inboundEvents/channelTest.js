@@ -1,6 +1,5 @@
 module.exports = {
     channel: 'FB_WORKPLACE',
-    from: "100017121012665",
     payload: "get started",
     source: "100017121012665",
     sourceType: "prospect",

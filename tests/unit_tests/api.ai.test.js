@@ -17,12 +17,12 @@ describe('*****ApiAi Test Suite: ', function() {
     before(() => {
         // runs for each test before each test in this block
         sessionsManager.setChannel(channelTest.channel, workplace, process.env.APIAI_TOKEN);
+        agent = sessionsManager.getApiAiAgent(channelTest.channel);
+        sessionsManager.setDB(firebase);
     });
 
     describe('Function: getApiAiAgent() ', function() {
         it('should get return an apiai agent', function() {
-            var agent = sessionsManager.getApiAiAgent(channelTest.channel);
-
             expect(agent.app.hostname).to.equal('api.api.ai');
         });
     });
