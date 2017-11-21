@@ -70,6 +70,10 @@ const setDB = (db) => {
 	getAllActiveSessions();
 }
 
+const getDB = () => {
+	return sessionsDb
+}
+
 const updateSession = (session, newPropertiesObj) => {
 	Object.assign(session, newPropertiesObj)
 	sessionsDb.updateSession(session.sessionId, newPropertiesObj)
@@ -77,17 +81,14 @@ const updateSession = (session, newPropertiesObj) => {
 
 
 const setChannel = (channelType, channel, apiaiToken) => {
-	console.log("HERE 5")
 	channels[channelType] = {
 		channel: channel,
 		apiaiAgent: apiaiModule.getAgent(apiaiToken)
 	}
-	console.log("HERE 6")
 	channel.startChannel();
 }
 
 const getChannel = (channelType) => {
-	console.log("HERE 4: ", channelType, channels);
 	return channels[channelType].channel
 }
 
@@ -154,9 +155,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				data: {},
 				apiaiContexts: []
 			}
-			console.log("HERE 1")
 			userChannelToSessions[messagingEvent.source] = mappedChatSession;
-			console.log("HERE 2")
 			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
 			.then(json => {
 				console.log("'from' profile:" + JSON.stringify(json));
@@ -164,7 +163,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				return mappedChatSession;
 			})
 			.then(session => {
-				console.log("HERE 3")
 				sessionsDb.saveSession(session)
 				return resolve(session)
 			})
@@ -325,3 +323,4 @@ module.exports.setChannel = setChannel;
 module.exports.removeSessionBySource = removeSessionBySource
 module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
+module.exports.getDB = getDB

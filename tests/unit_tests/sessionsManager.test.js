@@ -16,7 +16,8 @@ const inboundWorkplacePagePOSTEvent = require('./dependencies/inboundEvents/work
 const inboundWorkplaceUserPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
 const inboundWorkplaceGroupPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
 const inboundWorkplaceSecurityPOSTEvent = require('./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST');
-
+const channelTest = require('./dependencies/inboundEvents/channelTest');
+const workplace = require("./../../channels/facebook/wphook")
 
 
 describe('*****SessionsManager Test Suite: ', function() {
@@ -24,15 +25,16 @@ describe('*****SessionsManager Test Suite: ', function() {
 
     beforeEach(() => {
         // runs before each test in this block
-        agent = apiAi.getAgent(process.env.APIAI_TOKEN);
+        sessionsManager.setChannel(channelTest.channel, workplace, process.env.APIAI_TOKEN);
+        sessionsManager.setDB(firebase);
     });
 
-    // describe('Function: initializeDB() ', function() {
-    //     it('should have an initialized DB', function() {
-    //         var db = sessionsManager.returnDb();
-    //         expect(db).to.exist;
-    //     });
-    // });
+    describe('Function: initializeDB() ', function() {
+        it('should have an initialized DB', function() {
+            var db = sessionsManager.getDB();
+            expect(db).to.exist;
+        });
+    });
 
     // describe('Function: initializeChannels() ', function() {
 
