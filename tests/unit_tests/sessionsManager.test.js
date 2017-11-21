@@ -73,28 +73,19 @@ describe('*****SessionsManager Test Suite: ', function() {
 
         it('should handle TRUTHY inbound facebook workplace Page POST events', function() {
             var truthyEvent = inboundWorkplacePagePOSTEvent;
+            //pageEntry.changes
+            
+            sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
+
+            expect(httpResponse.statusCode).to.equal(200);
+        });
+
+        it('should handle TRUTHY inbound facebook workplace Page POST events', function() {
+            var truthyEvent = inboundWorkplacePagePOSTEvent;
 
             sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
 
             expect(httpResponse.statusCode).to.equal(200);
         });
     });
-
-    // describe('Function: inbound FacebookMessengerEvent() ', function() {
-
-    //     it('should handle inbound facebook messenger events', function() {
-    //         // sessionsManager.inboundFacebookMessengerEvent(req, res);
-
-    //         expect(true).to.be.true
-    //     });
-    // });
-
-    // describe('Function: inbound NexmoEvent() ', function() {
-
-    //     it('should handle inbound Nexmo messenger events', function() {
-    //         // sessionsManager.inboundNexmoEvent(req, res);
-
-    //         expect(true).to.be.true
-    //     });
-    // });
 });
