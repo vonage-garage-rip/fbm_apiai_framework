@@ -26,7 +26,8 @@ describe('*****SessionsManager Test Suite: ', function() {
     beforeEach(() => {
         // runs before each test in this block
         sessionsManager.setChannel(channelTest.channel, workplace, process.env.APIAI_TOKEN);
-        sessionsManager.setDB(firebase);
+        const firebaseDatabase = require('../../DB/firebase').firebaseDatabase
+        sessionsManager.setDB(firebaseDatabase);
     });
 
     describe('Function: initializeDB() ', function() {
@@ -36,18 +37,18 @@ describe('*****SessionsManager Test Suite: ', function() {
         });
     });
 
-    // describe('Function: initializeChannels() ', function() {
+    describe('Function: initializeChannels() ', function() {
 
-    //     it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
-    //         var channels = sessionsManager.initializeChannels(fbmCh, wpCh, nexmoCh);
+        // it('should get session, sendTextMessageToApiAi, then handleApiaiResponse ', function() {
+        //     var channels = sessionsManager.initializeChannels(fbmCh, wpCh, nexmoCh);
 
-    //         expect(channels.length).to.equal(3);
-    //         for (let channel of channels) {
-    //             expect(channel).to.exist;
-    //             expect(channel.handleInboundEvent).to.exist;
-    //         }
-    //     });
-    // });
+        //     expect(channels.length).to.equal(3);
+        //     for (let channel of channels) {
+        //         expect(channel).to.exist;
+        //         expect(channel.handleInboundEvent).to.exist;
+        //     }
+        // });
+    });
 
     // describe('Function: inboundFacebookWorkplaceEvent() ', function() {
 
@@ -75,23 +76,23 @@ describe('*****SessionsManager Test Suite: ', function() {
 
     //         expect(httpResponse.statusCode).to.equal(200);
     //     });
-    // });
 
-        it('should handle TRUTHY inbound facebook workplace Page POST events', function() {
-            var truthyEvent = inboundWorkplacePagePOSTEvent;
+    //     it('should handle TRUTHY inbound facebook workplace Page POST events', function() {
+    //         var truthyEvent = inboundWorkplacePagePOSTEvent;
 
-            sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
-
-    //         expect(true).to.be.true
-    //     });
-    // });
-
-    // describe('Function: inbound NexmoEvent() ', function() {
-
-    //     it('should handle inbound Nexmo messenger events', function() {
-    //         // sessionsManager.inboundNexmoEvent(req, res);
+    //         sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse);
 
     //         expect(true).to.be.true
     //     });
+
     // });
+
+    describe('Function: inbound NexmoEvent() ', function() {
+
+        it('should handle inbound Nexmo messenger events', function() {
+            // sessionsManager.inboundNexmoEvent(req, res);
+
+            expect(true).to.be.true
+        });
+    });
 });
