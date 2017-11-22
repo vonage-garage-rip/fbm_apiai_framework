@@ -18,7 +18,7 @@ describe('*****ApiAi Test Suite: ', function() {
         // runs for each test before each test in this block
         sessionsManager.setChannel(channelTest.channel, workplace, process.env.APIAI_TOKEN);
         agent = sessionsManager.getApiAiAgent(channelTest.channel);
-        const firebaseDatabase = require('../..//DB/firebase').firebaseDatabase
+        const firebaseDatabase = require('../../DB/firebase').firebaseDatabase
         sessionsManager.setDB(firebaseDatabase);
     });
 
