@@ -19,6 +19,12 @@ const rpn = require('request-promise-native')
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
 const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 
+var community
+
+var startChannel= () => {
+	console.log("Facebook Workplace Channel started")
+}
+
 var handleInboundEvent = function (req, res) {
 	if (req.method == 'GET') {
 		req.appSecret = WORKPLACE_VERIFY_TOKEN
@@ -49,6 +55,7 @@ var handleInboundEvent = function (req, res) {
  */
 const handlePostRequest = (req, res) => {
 	try {
+		console.log("handlePostRequest started")
 		var data = req.body;
 		// On Workplace, webhooks can be sent for page, group, user and
 		// workplace_security objects
@@ -68,14 +75,16 @@ const handlePostRequest = (req, res) => {
 		default:
 			console.log('Unhandled Webhook Object', data.object);
 		}
-	} catch (e) {
+	} catch (error) {
 		// Write out any exceptions for now
-		console.error(e);
+		console.error("handlePostRequest caught an error: " + error);
 	} finally {
 		// Always respond with a 200 OK for handled webhooks, to avoid retries
 		// from Facebook
 		/// TODO we should find a way to return this quicker rather than waiting for handling to complete
-		res.sendStatus(200);
+		let send200Result = res.sendStatus(200);
+		console.log("handlePostRequest finished. call to res.sendStatus(200) returned ", send200Result)
+		
 	}
 }
 
@@ -249,7 +258,19 @@ const getUserProfile = userId => {
 	return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
+const sendProfileApiBatch = (profile, path) => {
+	utility.sendProfileApiBatch(profile, path, WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+
+const getCommunity = () => {
+	if ( community ) { return Promise.resolve(community)}
+	return utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
+module.exports.startChannel = startChannel
+module.exports.sendProfileApiBatch = sendProfileApiBatch
+module.exports.getCommunity = getCommunity
