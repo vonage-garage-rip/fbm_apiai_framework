@@ -33,7 +33,7 @@ describe('*****FBMHook Test Suite: ', function () {
 
 
 
-    describe('Function: sendMessage() ', function () {
+    describe('Function: getUserProfile() ', function () {
 
         const mockProfileResponse =  {
             "first_name": "Tony",
@@ -45,8 +45,6 @@ describe('*****FBMHook Test Suite: ', function () {
             "gender":"m",
             "is_payment_enabled":true
           }
-
-        
 
         it('should get User profile', function() {
             nock('https://graph.facebook.com:443/v2.10/1234')
@@ -87,5 +85,45 @@ describe('*****FBMHook Test Suite: ', function () {
             })
         })
     });
+
+    describe('Function sendMessage() ', function() {
+
+        it ('sends a text message', function () {
+            var messageObjTextMock = {
+                type:sessionsManager.MESSAGE_TYPES.TEXT,
+                speech:"Test 1234"
+            }
+            var sessionMock = {
+                source:"recipient_id"
+            }
+
+            var mockTextMessageResponse = {
+                message_id:"123",
+                recipient_id:"recipient_id"
+            }
+            nock('https://graph.facebook.com:443/v2.10/me/messages')
+            .post('')            
+            .query({access_token:"undefined"})
+            .reply(200, mockTextMessageResponse)
+            .log(function (out) {
+                console.log(out)
+            })
+
+            fbmCh.sendMessage(messageObjTextMock, sessionMock)
+            .then(function (result) {
+                console.log("result", result);
+                expect(result['recipient_id']).to.equal(mockTextMessageResponse['recipient_id'])
+            })
+            .catch(function () {
+
+            })
+        })
+
+        it ('sends a QUICK_REPLY message', function () {
+
+        })
+      
+
+    })
 
 });
