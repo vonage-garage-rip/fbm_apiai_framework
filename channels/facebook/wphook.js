@@ -7,16 +7,13 @@
  *
  */
 
-const sessionsManager = require('../../sessionsManager');
+"use strict"
 
-/* jshint node: true, devel: true */
-'use strict';
-const utility = require('./utility');
-
-const rpn = require('request-promise-native')
+const sessionsManager = require("../../sessionsManager")
+const utility = require("./utility")
 
 // Arbitrary value used to validate a workplace webhook
-const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN;
+const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN
 const WORKPLACE_PAGE_ACCESS_TOKEN = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 
 var community
@@ -26,11 +23,11 @@ var startChannel= () => {
 }
 
 var handleInboundEvent = function (req, res) {
-	if (req.method == 'GET') {
+	if (req.method == "GET") {
 		req.appSecret = WORKPLACE_VERIFY_TOKEN
 		utility.verifySubscription(req, res)
 	}
-	else if (req.method === 'POST') {
+	else if (req.method === "POST") {
 		handlePostRequest(req, res)
 	}
 }
@@ -56,33 +53,33 @@ var handleInboundEvent = function (req, res) {
 const handlePostRequest = (req, res) => {
 	try {
 		console.log("handlePostRequest started")
-		var data = req.body;
+		var data = req.body
 		// On Workplace, webhooks can be sent for page, group, user and
 		// workplace_security objects
 		switch (data.object) {
-		case 'page':
-			processPageEvents(data);
-			break;
-		case 'group':
-			processGroupEvents(data);
-			break;
-		case 'user':
-			processUserEvents(data);
-			break;
-		case 'workplace_security':
-			processWorkplaceSecurityEvents(data);
-			break;
+		case "page":
+			processPageEvents(data)
+			break
+		case "group":
+			processGroupEvents(data)
+			break
+		case "user":
+			processUserEvents(data)
+			break
+		case "workplace_security":
+			processWorkplaceSecurityEvents(data)
+			break
 		default:
-			console.log('Unhandled Webhook Object', data.object);
+			console.log("Unhandled Webhook Object", data.object)
 		}
 	} catch (error) {
 		// Write out any exceptions for now
-		console.error("handlePostRequest caught an error: " + error);
+		console.error("handlePostRequest caught an error: " + error)
 	} finally {
 		// Always respond with a 200 OK for handled webhooks, to avoid retries
 		// from Facebook
 		/// TODO we should find a way to return this quicker rather than waiting for handling to complete
-		let send200Result = res.sendStatus(200);
+		let send200Result = res.sendStatus(200)
 		console.log("handlePostRequest finished. call to res.sendStatus(200) returned status code", send200Result.statusCode)
 		
 	}
@@ -92,48 +89,48 @@ function processPageEvents(data) {
 	// Iterate over each entry
 	// There may be multiple if batched
 	data.entry.forEach(pageEntry => {
-		var pageID = pageEntry.id;
+		var pageID = pageEntry.id
 		//var timeOfEvent = pageEntry.time;
 
 		// Iterate over each messaging event
 		if (pageEntry.messaging) {
 			pageEntry.messaging.forEach(messagingEvent => {
 				if (messagingEvent.message) {
-					receivedMessage(messagingEvent, pageID);
+					receivedMessage(messagingEvent, pageID)
 				} else if (messagingEvent.delivery) {
-					utility.receivedDeliveryConfirmation(messagingEvent);
+					utility.receivedDeliveryConfirmation(messagingEvent)
 				} else if (messagingEvent.postback) {
-					receivedPostback(messagingEvent);
+					receivedPostback(messagingEvent)
 				} else if (messagingEvent.read) {
-					utility.receivedMessageRead(messagingEvent);
+					utility.receivedMessageRead(messagingEvent)
 				} else {
-					console.log("Webhook received unknown messagingEvent: ", messagingEvent);
+					console.log("Webhook received unknown messagingEvent: ", messagingEvent)
 				}
-			});
+			})
 		} else if (pageEntry.changes) {
 			pageEntry.changes.forEach(function (change) {
-				console.log('Page Change', pageID, change);
+				console.log("Page Change", pageID, change)
 				let inboundMessage = {
 					channel: sessionsManager.CHANNELS.FB_WORKPLACE,
 					sourceType: sessionsManager.SOURCE_TYPE.POST,
 					source: change.value.post_id,
 					from: change.value.sender_id, 
 					to: pageID,
-					text: change.value.message.substring(change.value.message.indexOf(' ') + 1)
-				};
+					text: change.value.message.substring(change.value.message.indexOf(" ") + 1)
+				}
 				sessionsManager.handleInboundChannelMessage(inboundMessage)
-			});
+			})
 		}
-	});
+	})
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
 	if (messagingEvent.message.is_echo) {
-		console.log("Messageing Event Echo: ", messagingEvent);
-		return;
+		console.log("Messageing Event Echo: ", messagingEvent)
+		return
 	}
 	if (messagingEvent.message.text) {
-		console.log('facebook.webhook.receivedMessage. incoming text message: ' + messagingEvent.message.text + ". From " + messagingEvent.sender.id);
+		console.log("facebook.webhook.receivedMessage. incoming text message: " + messagingEvent.message.text + ". From " + messagingEvent.sender.id)
 		let inboundMessage = {
 			channel: sessionsManager.CHANNELS.FB_WORKPLACE,
 			sourceType: messagingEvent.thread ? sessionsManager.SOURCE_TYPE.GROUP_CHAT : sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
@@ -141,17 +138,17 @@ const receivedMessage = (messagingEvent, pageID) => {
 			from: messagingEvent.sender.id,
 			to: pageID,
 			text: messagingEvent.message.text
-		};
+		}
 
-		sessionsManager.handleInboundChannelMessage(inboundMessage);
+		sessionsManager.handleInboundChannelMessage(inboundMessage)
 	}
 	else if (messagingEvent.message.attachments) {
-		console.log("facebook.webhook.receivedMessage. incoming attachments");
+		console.log("facebook.webhook.receivedMessage. incoming attachments")
 		messagingEvent.message.attachments.forEach(function (attachment) {
 			switch (attachment.type) {
 			default:
-				console.log("facebook.webhook.receivedMessage. attachment " + attachment.type + " unhandled");
-				break;
+				console.log("facebook.webhook.receivedMessage. attachment " + attachment.type + " unhandled")
+				break
 			}
 		})
 	}
@@ -165,7 +162,7 @@ const receivedMessage = (messagingEvent, pageID) => {
  * 
  */
 const receivedPostback = (messagingEvent) => {
-	let payload = messagingEvent.postback.payload;
+	let payload = messagingEvent.postback.payload
 
 	let inboundPostbackMessage = {
 		channel: sessionsManager.CHANNELS.FB_WORKPLACE,
@@ -174,37 +171,37 @@ const receivedPostback = (messagingEvent) => {
 		from: messagingEvent.sender.id,
 		to: messagingEvent.recipient.id,
 		payload: payload
-	};
+	}
 
 	/// TODO: promisfy this to send the 200 response back as quickly as possible
-	sessionsManager.handleInboundChannelPostback(inboundPostbackMessage);
+	sessionsManager.handleInboundChannelPostback(inboundPostbackMessage)
 }
 
 function processGroupEvents(data) {
 	data.entry.forEach(function (entry) {
-		let group_id = entry.id;
+		let group_id = entry.id
 		entry.changes.forEach(function (change) {
-			console.log('Group Change', group_id, change);
-		});
-	});
+			console.log("Group Change", group_id, change)
+		})
+	})
 }
 
 function processUserEvents(data) {
 	data.entry.forEach(function (entry) {
-		let group_id = entry.id;
+		let group_id = entry.id
 		entry.changes.forEach(function (change) {
-			console.log('User Change', group_id, change);
-		});
-	});
+			console.log("User Change", group_id, change)
+		})
+	})
 }
 
 function processWorkplaceSecurityEvents(data) {
 	data.entry.forEach(function (entry) {
-		let group_id = entry.id;
+		let group_id = entry.id
 		entry.changes.forEach(function (change) {
-			console.log('Workplace Security Change', group_id, change);
-		});
-	});
+			console.log("Workplace Security Change", group_id, change)
+		})
+	})
 }
 
 function sendMessage(messageObj, session) {
@@ -212,32 +209,32 @@ function sendMessage(messageObj, session) {
 	if (session.sourceType) {
 		switch (session.sourceType) {
 		case sessionsManager.SOURCE_TYPE.POST:
-			sendCommentToPost(session.source, messageObj.speech); // post ID
-			break;
+			sendCommentToPost(session.source, messageObj.speech) // post ID
+			break
 		case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-			sendTextMessageToExistingGroup(session.source, messageObj.speech); // thread ID
-			break;
+			sendTextMessageToExistingGroup(session.source, messageObj.speech) // thread ID
+			break
 		case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
 
 			//HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
 			switch (messageObj.type) {
 			case sessionsManager.MESSAGE_TYPES.TEXT:
-				utility.sendTextMessage(session.source, messageObj.speech, WORKPLACE_PAGE_ACCESS_TOKEN);
-				break;
+				utility.sendTextMessage(session.source, messageObj.speech, WORKPLACE_PAGE_ACCESS_TOKEN)
+				break
 			case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, WORKPLACE_PAGE_ACCESS_TOKEN);
-				break;
+				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, WORKPLACE_PAGE_ACCESS_TOKEN)
+				break
 			case sessionsManager.MESSAGE_TYPES.IMAGE:
-				utility.sendImageMessage(session.source, messageObj.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN);
-				break;
+				utility.sendImageMessage(session.source, messageObj.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN)
+				break
 			case sessionsManager.MESSAGE_TYPES.CARD:
-				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, WORKPLACE_PAGE_ACCESS_TOKEN);
-				break;
+				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, WORKPLACE_PAGE_ACCESS_TOKEN)
+				break
 			case sessionsManager.MESSAGE_TYPES.CUSTOME:
-				utility.sendCustomMessage(session.source, messageObj.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN);
-				break;
+				utility.sendCustomMessage(session.source, messageObj.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN)
+				break
 			}
-			break;
+			break
 		}
 	}
 }
@@ -269,10 +266,10 @@ const getCommunity = () => {
 		}
 		else {
 			utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
-			.then(communityResult => {
-				community = communityResult
-				resolve(community)
-			})
+				.then(communityResult => {
+					community = communityResult
+					resolve(community)
+				})
 		}
 	})
 }

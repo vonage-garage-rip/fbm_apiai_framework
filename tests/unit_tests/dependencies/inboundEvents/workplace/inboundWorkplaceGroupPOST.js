@@ -1,6 +1,6 @@
 module.exports = {
-    method: 'POST',
-    body: {
-        object: 'group'
-    }
+	method: "POST",
+	body: {
+		object: "group"
+	}
 }
