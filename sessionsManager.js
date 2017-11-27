@@ -75,6 +75,11 @@ const updateSession = (session, newPropertiesObj) => {
 	sessionsDb.updateSession(session.sessionId, newPropertiesObj)
 }
 
+const updateSessionData = (session, data) => {
+	Object.assign(session.data, data)
+	sessionsDb.updateSession(session.sessionId, session.data)
+}
+
 
 const setChannel = (channelType, channel, apiaiToken) => {
 	channels[channelType] = {

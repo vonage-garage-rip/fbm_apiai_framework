@@ -83,7 +83,7 @@ const handlePostRequest = (req, res) => {
 		// from Facebook
 		/// TODO we should find a way to return this quicker rather than waiting for handling to complete
 		let send200Result = res.sendStatus(200);
-		console.log("handlePostRequest finished. call to res.sendStatus(200) returned ", send200Result)
+		console.log("handlePostRequest finished. call to res.sendStatus(200) returned status code", send200Result.statusCode)
 		
 	}
 }
@@ -263,8 +263,18 @@ const sendProfileApiBatch = (profile, path) => {
 }
 
 const getCommunity = () => {
-	if ( community ) { return Promise.resolve(community)}
-	return utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+	return new Promise( resolve => {
+		if ( community ) { 
+			return Promise.resolve(community)
+		}
+		else {
+			utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+			.then(communityResult => {
+				community = communityResult
+				resolve(community)
+			})
+		}
+	})
 }
 
 module.exports.handleInboundEvent = handleInboundEvent

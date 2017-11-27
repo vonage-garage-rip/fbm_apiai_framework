@@ -451,8 +451,9 @@ var getCommunity = (accessToken) => {
 
 var getMembers = (community_id, next = null, limit, accessToken) => {
 	return new Promise( resolve => {
+		let fields = 'title, department, name, location, locale, email, primary_phone'
 		var options = {      
-			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id+'/members?limit='+limit+ '&fields=title, department, name, location, locale' +'&access_token=' + accessToken,
+			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id + '/members?limit=' + limit + '&fields=' + fields +'&access_token=' + accessToken,
 			headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
 		};
 
