@@ -19,20 +19,15 @@ var sendMessage = function (messageObj, session) {
 
 	switch (messageObj.type) {
 	case sessionsManager.MESSAGE_TYPES.TEXT:
-		utility.sendTextMessage(session.source, messageObj.speech, MESSENGER_PAGE_ACCESS_TOKEN);
-		break;
+		return utility.sendTextMessage(session.source, messageObj.speech, MESSENGER_PAGE_ACCESS_TOKEN);
 	case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-		utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, MESSENGER_PAGE_ACCESS_TOKEN);
-		break;
+		return utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, MESSENGER_PAGE_ACCESS_TOKEN);
 	case sessionsManager.MESSAGE_TYPES.IMAGE:
-		utility.sendImageMessage(session.source, messageObj.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
-		break;
+		return utility.sendImageMessage(session.source, messageObj.imageUrl, MESSENGER_PAGE_ACCESS_TOKEN);
 	case sessionsManager.MESSAGE_TYPES.CARD:
-		utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
-		break;
+		return utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, MESSENGER_PAGE_ACCESS_TOKEN);
 	case sessionsManager.MESSAGE_TYPES.CUSTOME:
-		utility.sendCustomMessage(session.source, messageObj.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
-		break;
+		return utility.sendCustomMessage(session.source, messageObj.payload.facebook, MESSENGER_PAGE_ACCESS_TOKEN);
 	}
 };
 

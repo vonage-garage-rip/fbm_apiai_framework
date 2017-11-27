@@ -28,10 +28,13 @@ const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
 		.then( parsedBody => {
 			// POST succeeded...
 			console.log("sendProfileApiBatch returned: " + parsedBody);
+			return parsedBody
 		})
 		.catch( err => {
 			// POST failed...
 			console.log("sendProfileApiBatch returned error: " + err);
+			throw new Error(err);
+			
 		});
 }
 
@@ -148,7 +151,7 @@ function sendTextMessage(recipientId, text, accessToken) {
 		}
 	};
 
-	callMessageAPI(messageData, accessToken);
+	return callMessageAPI(messageData, accessToken);
 }
 
 function sendButtonMessage(recipientId, text, buttons, accessToken) {
@@ -331,21 +334,23 @@ function sendTextMessageToExistingGroup(message, threadId, accessToken)
 }
 
 function callMessageAPI(messageData, accessToken) {
-	var options = {
-		method: 'POST',
-		uri: FACEBOOK_GRAPH_URL + 'me/messages?access_token=' + accessToken ,
-		headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
-		body: messageData,
-		json: true
-	};
+	return new Promise( (resolve, reject) => {
+		var options = {
+			method: 'POST',
+			uri: FACEBOOK_GRAPH_URL + 'me/messages?access_token=' + accessToken ,
+			headers: { "Content-Type": "application/json", 'Accept': 'application/json' },
+			body: messageData,
+			json: true
+		};
 
-	rpn(options)
-		.then( json => {
-			var recipientId = json.recipient_id;
-			var messageId = json.message_id;
-		})
-		.catch(err => {
-			console.error("Failed calling Send API", err); /// show status code, status message and error
+		rpn(options)
+			.then( json => {
+				return resolve(json)
+			})
+			.catch(err => {
+				console.error("Failed calling Send API", err); /// show status code, status message and error
+				return reject(err)
+			})
 		})
 }
 
