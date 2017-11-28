@@ -1,45 +1,41 @@
 //Loads all .env variables into PROCESS.ENV
 require("dotenv").config()
 //Main Target File TO TEST
-const sessionsManager = require("../../sessionsManager.js")
+const sessionsManager = require("../../sessionsManager")
+const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
+
 //Dependencies
 const expect = require("chai").expect
-const assert = require("assert")
-const apiAi = require("../../apiai")
-const firebaseAdmin = require("./dependencies/firebase")
-const wpCh = require("./../../channels/facebook/wphook")
-const fbmCh = require("./../../channels/facebook/fbmhook")
+const wpChannel = require("./../../channels/facebook/wphook")
+const fbmChannel = require("./../../channels/facebook/fbmhook")
 const httpResponse = require("./dependencies/httpResponse")
-const nexmoCh = require("./../../channels/nexmo/nexmohook")
+const nexmoChannel = require("./../../channels/nexmo/nexmohook")
 const inboundWorkplaceGETEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplaceGET")
 const inboundWorkplacePagePOSTEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST")
-const inboundWorkplaceUserPOSTEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST")
-const inboundWorkplaceGroupPOSTEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST")
-const inboundWorkplaceSecurityPOSTEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST")
-
-
 
 describe("*****SessionsManager Test Suite: ", function() {
-	var agent
 
 	before(() => {
 		// runs before each test in this block
-		sessionsManager.initializeDb(firebaseAdmin)
+		sessionsManager.setDB(firebaseDatabase)
+		sessionsManager.setChannel(sessionsManager.CHANNELS.FB_WORKPLACE, wpChannel, process.env.APIAI_TOKEN)
+		sessionsManager.setChannel(sessionsManager.CHANNELS.FB_MESSENGER, fbmChannel, process.env.APIAI_TOKEN)
+		sessionsManager.setChannel(sessionsManager.CHANNELS.NEXMO, nexmoChannel, process.env.APIAI_TOKEN)
 	})
 
-	beforeEach(() => {
+	/* beforeEach(() => {
 		// runs before each test in this block
 		agent = apiAi.getAgent(process.env.APIAI_TOKEN)
-	})
+	}) */
 
-	describe("Function: initializeDB() ", function() {
+	/* describe("Function: initializeDB() ", function() {
 		it("should have an initialized DB", function() {
 			var db = sessionsManager.returnDb()
 			expect(db).to.exist
 		})
-	})
+	}) */
 
-	describe("Function: initializeChannels() ", function() {
+	/* describe("Function: initializeChannels() ", function() {
 
 		it("should get session, sendTextMessageToApiAi, then handleApiaiResponse ", function() {
 			var channels = sessionsManager.initializeChannels(fbmCh, wpCh, nexmoCh)
@@ -50,14 +46,12 @@ describe("*****SessionsManager Test Suite: ", function() {
 				expect(channel.handleInboundEvent).to.exist
 			}
 		})
-	})
+	}) */
 
 	describe("Function: inboundFacebookWorkplaceEvent() ", function() {
 
 		it("should handle TRUTHY inbound facebook workplace GET events", function() {
-			var truthyEvent = inboundWorkplaceGETEvent
-
-			sessionsManager.inboundFacebookWorkplaceEvent(truthyEvent, httpResponse)
+			sessionsManager.inboundFacebookWorkplaceEvent(inboundWorkplaceGETEvent, httpResponse)
 
 			expect(httpResponse.statusCode).to.equal(200)
 		})
