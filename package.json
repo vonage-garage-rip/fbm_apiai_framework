@@ -5,9 +5,10 @@
   "scripts": {
     "test": "mocha --recursive --exit tests/unit_tests/"
   },
-  "pre-push": [
-    "test"
-  ],
+  "pre-push": {
+    "run": "test",
+    "silent": false
+  },
   "author": {
     "name": "Zach Efrati",
     "email": "tzahi.efrati@gmail.com",
