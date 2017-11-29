@@ -1,32 +1,30 @@
 {
-  "name": "automatic-integration",
+  "name": "fbm_apiai_framework",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "Framework for Facebook Messenger, Dialogflow applications. Developed by the VonageGarge Team.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --recursive --exit tests/unit_tests/"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/VonageGarage/automatic-integration.git"
+  "author": {
+    "name": "Zach Efrati",
+    "email": "tzahi.efrati@gmail.com",
+    "url": "https://www.linkedin.com/in/efrati/"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/VonageGarage/automatic-integration/issues"
-  },
-  "homepage": "https://github.com/VonageGarage/automatic-integration#readme",
-  "dependencies": {
+  "license": "",
+  "devDependencies": {
     "apiai": "^4.0.3",
     "body-parser": "^1.18.2",
-    "express": "^4.16.0",
-    "express-session": "^1.15.6",
-    "firebase-admin": "^5.3.0",
+    "chai": "^4.1.2",
+    "dotenv": "^4.0.0",
+    "env": "0.0.2",
+    "firebase-admin": "^5.5.0",
     "log-timestamp": "^0.1.2",
-    "moment": "^2.18.1",
-    "node-fetch": "^1.7.3",
-    "require-all": "^2.2.0",
-    "simple-oauth2": "^1.3.0",
+    "mocha": "^4.0.1",
+    "moment": "^2.19.2",
+    "nexmo": "^2.0.2",
+    "prepush": "^3.1.11",
+    "request-promise-native": "^1.0.5",
     "uuid": "^3.1.0"
-  }
+  },
+  "dependencies": {}
 }
