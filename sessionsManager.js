@@ -160,7 +160,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			}
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession
-
 			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
 				.then(json => {
 					console.log("'from' profile:" + JSON.stringify(json))
