@@ -1,4 +1,4 @@
-"use strict";
+"use strict"
 
 const
 	bodyParser = require("body-parser"),
@@ -124,7 +124,7 @@ function receivedDeliveryConfirmation(event) {
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read
  * 
  */
-function receivedMessageRead(event) {
+/* function receivedMessageRead(event) {
 	var senderID = event.sender.id
 	var recipientID = event.recipient.id
 
@@ -132,9 +132,9 @@ function receivedMessageRead(event) {
 	var watermark = event.read.watermark
 	var sequenceNumber = event.read.seq
 
-	/*console.log("Received message read event for watermark %d and sequence " +
-    "number %d", watermark, sequenceNumber);*/
-}
+	//console.log("Received message read event for watermark %d and sequence " +
+    //"number %d", watermark, sequenceNumber);
+} */
 
 function sendTextMessage(recipientId, text, accessToken) {
 	var messageData = {
@@ -150,7 +150,7 @@ function sendTextMessage(recipientId, text, accessToken) {
 	callMessageAPI(messageData, accessToken)
 }
 
-function sendButtonMessage(recipientId, text, buttons, accessToken) {
+/* function sendButtonMessage(recipientId, text, buttons, accessToken) {
 	var messageData = {
 		recipient: {
 			id: recipientId
@@ -168,7 +168,7 @@ function sendButtonMessage(recipientId, text, buttons, accessToken) {
 	}
 
 	callMessageAPI(messageData, accessToken)
-}
+} */
 
 function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, accessToken) {
 	let element = {
@@ -251,7 +251,7 @@ function sendImageMessage(recipientId, url, accessToken) {
 	callMessageAPI(messageData, accessToken)
 }
 
-function sendReadReceipt(recipientId, accessToken) {
+/* function sendReadReceipt(recipientId, accessToken) {
 	console.log("Sending a read receipt to mark message as seen")
 
 	var messageData = {
@@ -262,9 +262,9 @@ function sendReadReceipt(recipientId, accessToken) {
 	}
 
 	callMessageAPI(messageData, accessToken)
-}
+} 
 
-function sendTypingOn(recipientId, accessToken) {
+ function sendTypingOn(recipientId, accessToken) {
 	console.log("Turning typing indicator on")
 
 	var messageData = {
@@ -288,7 +288,7 @@ function sendTypingOff(recipientId, accessToken) {
 	}
 
 	callMessageAPI(messageData, accessToken)
-}
+} */
 
 /*
  * Send a message with the account linking call-to-action
@@ -317,7 +317,7 @@ function sendAccountLinking(recipientId, accessToken) {
 	callMessageAPI(messageData, accessToken)
 }
 
-function sendTextMessageToExistingGroup(message, threadId, accessToken)
+/* function sendTextMessageToExistingGroup(message, threadId, accessToken)
 {
 	var messageData = {
 		recipient: {
@@ -327,7 +327,7 @@ function sendTextMessageToExistingGroup(message, threadId, accessToken)
 	}
 
 	callMessageAPI(messageData, accessToken)
-}
+} */
 
 function callMessageAPI(messageData, accessToken) {
 	var options = {
@@ -339,10 +339,10 @@ function callMessageAPI(messageData, accessToken) {
 	}
 
 	rpn(options)
-		.then( json => {
+		/* .then( json => {
 			var recipientId = json.recipient_id
 			var messageId = json.message_id
-		})
+		}) */
 		.catch(err => {
 			console.error("Failed calling Send API", err) /// show status code, status message and error
 		})
@@ -470,5 +470,7 @@ var getMembers = (community_id, next = null, limit, accessToken) => {
 module.exports = {
 	PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
-	verifyWithChannelAppSecretHandler, verifySubscription, receivedDeliveryConfirmation, receivedMessageRead, getCommunity, getMembers
+	verifyWithChannelAppSecretHandler, verifySubscription, 
+	receivedDeliveryConfirmation, receivedAuthentication, 
+	getCommunity, getMembers
 }

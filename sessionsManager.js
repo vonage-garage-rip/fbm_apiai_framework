@@ -67,7 +67,7 @@ const getAllActiveSessions = () => {
 
 const setDB = (db) => {
 	sessionsDb = new SessionsDbClass(db)
-	getAllActiveSessions();
+	getAllActiveSessions()
 }
 
 const getDB = () => {
@@ -84,7 +84,7 @@ const setChannel = (channelType, channel, apiaiToken) => {
 		channel: channel,
 		apiaiAgent: apiaiModule.getAgent(apiaiToken)
 	}
-	channel.startChannel();
+	channel.startChannel()
 }
 
 const getChannel = (channelType) => {
@@ -158,13 +158,9 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				data: messagingEvent.data || {},
 				apiaiContexts: []
 			}
-<<<<<<< HEAD
-			userChannelToSessions[messagingEvent.source] = mappedChatSession;
-=======
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession
 
->>>>>>> feature/refactor_II
 			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
 				.then(json => {
 					console.log("'from' profile:" + JSON.stringify(json))
