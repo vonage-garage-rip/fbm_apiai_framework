@@ -1,6 +1,6 @@
 module.exports = {
-    method: 'POST',
-    body: {
-        object: 'workplace_security'
-    }
+	method: "POST",
+	body: {
+		object: "workplace_security"
+	}
 }

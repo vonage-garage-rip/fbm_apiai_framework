@@ -1,18 +1,18 @@
-module.exports = {};
+module.exports = {}
 
-const actionsManager = require('./actions/manager')
+const actionsManager = require("./actions/manager")
 
-const moment = require('moment');
+const moment = require("moment")
 
 const EVENTS = {
 	GET_STARTED_PAYLOAD: "GET_STARTED_PAYLOAD",
 	ACCOUNT_LINKED: "ACCOUNT_LINKED"
-};
-
+}
+var sessionsDb
 module.exports.EVENTS = EVENTS
 
-require('log-timestamp');
-const uuidv4 = require('uuid/v4');
+require("log-timestamp")
+const uuidv4 = require("uuid/v4")
 
 const MESSAGE_TYPES = {
 	TEXT: 0,
@@ -23,7 +23,7 @@ const MESSAGE_TYPES = {
 	AUDIO: 5,
 	VIDEO: 6,
 	CAROUSEL: 7
-};
+}
 
 const CHANNELS = {
 	FB_MESSENGER: "FB_MESSENGER",
@@ -37,32 +37,32 @@ const SOURCE_TYPE = {
 	ONE_ON_ONE_CHAT: "ONE_ON_ONE_CHAT"
 }
 
-const apiaiModule  = require('./apiai')
+const apiaiModule  = require("./apiai")
 var channels = {}
 
 /// TODO clean sessions that were not active for a certain duration
-var chatSessions = {};
-var userChannelToSessions = {}; // channels/integrations from user are pointing to chat sessions
-var SessionsDbClass = require('./DB/sessionsDB')
+var chatSessions = {}
+var userChannelToSessions = {} // channels/integrations from user are pointing to chat sessions
+var SessionsDbClass = require("./DB/sessionsDB")
 
 const getAllActiveSessions = () => {
 	sessionsDb.getAllActiveSessions()
-	.then(activeSessions => {
-		for ( const sessionID in activeSessions) {
-			let session = activeSessions[sessionID]
+		.then(activeSessions => {
+			for ( const sessionID in activeSessions) {
+				let session = activeSessions[sessionID]
 			
-			// Firebase don't save empty arrays/objects so we create them here if needed
-			if ( !session.profile ) { session.profile = {} }
-			if ( !session.data ) { session.data = {} }
-			if ( !session.apiaiContexts ) { apiaiContexts = [] }
+				// Firebase don't save empty arrays/objects so we create them here if needed
+				if ( !session.profile ) { session.profile = {} }
+				if ( !session.data ) { session.data = {} }
+				if ( !session.apiaiContexts ) { session.apiaiContexts = [] }
 			
-			chatSessions[sessionID] = session
-			userChannelToSessions[session.source] = session;
-		}
-	})
-	.catch(error => {
-		console.error("sessionsManager.getAllActiveSessions caught an error: " + error)
-	})
+				chatSessions[sessionID] = session
+				userChannelToSessions[session.source] = session
+			}
+		})
+		.catch(error => {
+			console.error("sessionsManager.getAllActiveSessions caught an error: " + error)
+		})
 }
 
 const setDB = (db) => {
@@ -78,7 +78,6 @@ const updateSession = (session, newPropertiesObj) => {
 	Object.assign(session, newPropertiesObj)
 	sessionsDb.updateSession(session.sessionId, newPropertiesObj)
 }
-
 
 const setChannel = (channelType, channel, apiaiToken) => {
 	channels[channelType] = {
@@ -97,19 +96,19 @@ const getApiAiAgent = (channelType) => {
 }
 
 const inboundFacebookMessengerEvent = (req, res) => {
-	getChannel(CHANNELS.FB_MESSENGER).handleInboundEvent(req, res);
+	getChannel(CHANNELS.FB_MESSENGER).handleInboundEvent(req, res)
 }
 
 const inboundFacebookWorkplaceEvent = (req, res) => {
-	getChannel(CHANNELS.FB_WORKPLACE).handleInboundEvent(req, res);
+	getChannel(CHANNELS.FB_WORKPLACE).handleInboundEvent(req, res)
 }
 
 const inboundNexmoEvent = (req, res) => {
-	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res);
+	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res)
 }
 
 const getSessionBySessionId = sessionId => {
-	return chatSessions[sessionId];
+	return chatSessions[sessionId]
 }
 
 /*
@@ -131,17 +130,21 @@ var getSessionByChannelEvent = (messagingEvent) => {
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
 		if (mappedChatSession) {
 			console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
-			mappedChatSession.lastInboundMessage = moment().format('MMMM Do YYYY, h:mm:ss a');
+			mappedChatSession.lastInboundMessage = moment().format("MMMM Do YYYY, h:mm:ss a")
+			
 			if ( messagingEvent.from ) {
-				mappedChatSession.from = messagingEvent.from
-				updateSession(mappedChatSession, {from: mappedChatSession.from})
+				updateSession(mappedChatSession, {from: messagingEvent.from})
 			}
-			return resolve(mappedChatSession);
+			if ( messagingEvent.data ) {
+				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
+				updateSession(mappedChatSession, {data: mergedData})
+			}
+			return resolve(mappedChatSession)
 		}
 		else {
 			// Set new session 
 			console.log("getSessionByChannelEvent did not found source: %s.", messagingEvent.source)
-			let sessionId = uuidv4();
+			let sessionId = uuidv4()
 
 			mappedChatSession = chatSessions[sessionId] = {
 				channelType: messagingEvent.channel,
@@ -150,26 +153,32 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				sourceType: messagingEvent.sourceType || null,
 				source: messagingEvent.source || null, 
 				from: messagingEvent.from || null,
-				lastInboundMessage: moment().format('MMMM Do YYYY, h:mm:ss a'),
+				lastInboundMessage: moment().format("MMMM Do YYYY, h:mm:ss a"),
 				externalIntegrations: {},
-				data: {},
+				data: messagingEvent.data || {},
 				apiaiContexts: []
 			}
+<<<<<<< HEAD
 			userChannelToSessions[messagingEvent.source] = mappedChatSession;
+=======
+
+			userChannelToSessions[messagingEvent.source] = mappedChatSession
+
+>>>>>>> feature/refactor_II
 			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
-			.then(json => {
-				console.log("'from' profile:" + JSON.stringify(json));
-				mappedChatSession.profile = json;
-				return mappedChatSession;
-			})
-			.then(session => {
-				sessionsDb.saveSession(session)
-				return resolve(session)
-			})
-			.catch(error => {
-				console.error("calling get user profile caught an error: " + error);
-				reject(error);
-			})
+				.then(json => {
+					console.log("'from' profile:" + JSON.stringify(json))
+					mappedChatSession.profile = json
+					return mappedChatSession
+				})
+				.then(session => {
+					sessionsDb.saveSession(session)
+					return resolve(session)
+				})
+				.catch(error => {
+					console.error("calling get user profile caught an error: " + error)
+					reject(error)
+				})
 		}
 	})
 }
@@ -183,9 +192,9 @@ var removeSessionBySource = (source) => {
 			delete userChannelToSessions[source]
 			delete chatSessions[session.sessionId]
 			sessionsDb.removeSession(session.sessionId)
-			.then(sessionId => {
-				resolve(sessionId)
-			})
+				.then(sessionId => {
+					resolve(sessionId)
+				})
 		}
 		else {
 			console.log("removeSessionBySource: no session was found for source: " + source)
@@ -205,22 +214,22 @@ var handleResponseWithMessages = (messages, session) => {
 			case CHANNELS.FB_MESSENGER:
 			case CHANNELS.FB_WORKPLACE:
 				if (!messageObj.platform || messageObj.platform=="facebook") {            
-					channel.sendMessage(messageObj, session);
+					channel.sendMessage(messageObj, session)
 				}
-				break;
+				break
 			case CHANNELS.NEXMO:
 				if (!messageObj.platform) {
 					channel.sendMessage(messageObj, session)
 				}
-				break;
+				break
 			}
-		}, 1460 * index);
+		}, 1460 * index)
 	})
 }
 
 const handleApiaiResponse = (apiairesponse) => {
 	if (apiairesponse) {
-		console.log("HANDLE APIAI RESPONSE", apiairesponse);
+		console.log("HANDLE APIAI RESPONSE", apiairesponse)
 		let actionName = apiairesponse.result.action
 		if ( actionName && actionName!=="input.unknown" ) {
 			actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId(apiairesponse.sessionId))
@@ -228,8 +237,8 @@ const handleApiaiResponse = (apiairesponse) => {
         
 		let messages = apiairesponse.result.fulfillment.messages ? apiairesponse.result.fulfillment.messages : [apiairesponse.result.fulfillment.speech]
 		var filteredMessages = messages.filter(function (message) {
-			return message.speech != "" ;
-		});
+			return message.speech != "" 
+		})
 		if (filteredMessages.length == 0) {
 			console.warn("handleApiaiResponse: No message to send")
 			return
@@ -241,32 +250,32 @@ const handleApiaiResponse = (apiairesponse) => {
 const handleInboundChannelMessage = (message) => {
 	getSessionByChannelEvent(message)
 		.then((session) => {
-			console.log("session", session, "sessionsManager.handleInboundChannelMessage: " + JSON.stringify(message));
+			console.log("session", session, "sessionsManager.handleInboundChannelMessage: " + JSON.stringify(message))
 			if (message.quick_reply) {
-				return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId);
+				return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.quick_reply.payload), session.sessionId)
 			}
-			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(message.text, session.sessionId);
+			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(message.text, session.sessionId)
 		})
 		.then(apiairesponse => {
-			handleApiaiResponse(apiairesponse);
+			handleApiaiResponse(apiairesponse)
 		})
 		.catch(err => {
-			console.error("sessionsManager.handleInboundChannelMessage caught an error: " + err);
-		});
+			console.error("sessionsManager.handleInboundChannelMessage caught an error: " + err)
+		})
 }
 
 const handleInboundChannelPostback = (message) => {
 	getSessionByChannelEvent(message)
 		.then(session => {
-			console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + message);
-			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.payload), session.sessionId);
+			console.log("session", session, "sessionsManager.handleInboundChannelPostback: " + message)
+			return getApiAiAgent(session.channelType).sendTextMessageToApiAi(unescape(message.payload), session.sessionId)
 		})
 		.then(apiairesponse => {
-			handleApiaiResponse(apiairesponse);
+			handleApiaiResponse(apiairesponse)
 		})
 		.catch(err => {
-			console.error("sessionsManager.handleInboundChannelPostback caught an error: " + err);
-		});
+			console.error("sessionsManager.handleInboundChannelPostback caught an error: " + err)
+		})
 }
 
 const handleEventByUserChannelId = (userChannelId, event) => {
@@ -280,7 +289,7 @@ const handleEventByUserChannelId = (userChannelId, event) => {
 }
 
 const handleEventBySessionId = (sessionId, event) => {
-	let session = getSessionBySessionId(sessionId);
+	let session = getSessionBySessionId(sessionId)
 	handleEvent(session, event)
 }
 
@@ -289,37 +298,37 @@ const handleEvent = (session, event) => {
 	case EVENTS.GET_STARTED_PAYLOAD:
 		getApiAiAgent(session.channelType).sendEventToApiAi(event, session.sessionId)
 			.then(apiairesponse => {
-				handleApiaiResponse(apiairesponse);
-			});
-		break;
+				handleApiaiResponse(apiairesponse)
+			})
+		break
 	case EVENTS.ACCOUNT_LINKED:
 		session.externalIntegrations[event.data.integrationName] = {"User_ID": event.data.userId}
 		userChannelToSessions[event.data.userId] = session /// do we need that?
 		actionsManager.handleAction("accountLinked", event.data, session)
-		break;
+		break
 	default:
 		///TODO: REFACTOR. HANDLE PROPRIETARY EVENTS
 		getApiAiAgent(session.channelType).sendEventToApiAi(event, session.sessionId)
 			.then(apiairesponse => {
-				handleApiaiResponse(apiairesponse);
-			});
+				handleApiaiResponse(apiairesponse)
+			})
 	}
 }
 
-module.exports.handleInboundChannelPostback = handleInboundChannelPostback;
-module.exports.handleInboundChannelMessage = handleInboundChannelMessage;
-module.exports.getSessionBySessionId = getSessionBySessionId;
-module.exports.getSessionByChannelEvent = getSessionByChannelEvent;
-module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent;
-module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent;
-module.exports.inboundNexmoEvent = inboundNexmoEvent;
-module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
-module.exports.SOURCE_TYPE = SOURCE_TYPE;
-module.exports.CHANNELS = CHANNELS;
-module.exports.handleEventBySessionId = handleEventBySessionId;
-module.exports.handleEventByUserChannelId = handleEventByUserChannelId;
-module.exports.setDB = setDB;
-module.exports.setChannel = setChannel;
+module.exports.handleInboundChannelPostback = handleInboundChannelPostback
+module.exports.handleInboundChannelMessage = handleInboundChannelMessage
+module.exports.getSessionBySessionId = getSessionBySessionId
+module.exports.getSessionByChannelEvent = getSessionByChannelEvent
+module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent
+module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent
+module.exports.inboundNexmoEvent = inboundNexmoEvent
+module.exports.MESSAGE_TYPES = MESSAGE_TYPES
+module.exports.SOURCE_TYPE = SOURCE_TYPE
+module.exports.CHANNELS = CHANNELS
+module.exports.handleEventBySessionId = handleEventBySessionId
+module.exports.handleEventByUserChannelId = handleEventByUserChannelId
+module.exports.setDB = setDB
+module.exports.setChannel = setChannel
 module.exports.removeSessionBySource = removeSessionBySource
 module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
