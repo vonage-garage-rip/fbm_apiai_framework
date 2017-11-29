@@ -158,13 +158,8 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				data: messagingEvent.data || {},
 				apiaiContexts: []
 			}
-<<<<<<< HEAD
-			userChannelToSessions[messagingEvent.source] = mappedChatSession;
-=======
 
 			userChannelToSessions[messagingEvent.source] = mappedChatSession
-
->>>>>>> feature/refactor_II
 			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
 				.then(json => {
 					console.log("'from' profile:" + JSON.stringify(json))

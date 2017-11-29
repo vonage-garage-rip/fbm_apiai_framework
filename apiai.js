@@ -38,20 +38,11 @@ class ApiAi {
 				"data": event.data, 
 			}
 
-<<<<<<< HEAD
-			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts});
-
-			request.on('response', function(response) {
-				console.log("sendEventToApiAi: received response");
-				return resolve(response);
-			});
-=======
 			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts})
 			request.on("response", function(response) {
 				console.log("sendEventToApiAi: received response")
 				return resolve(response)
 			})
->>>>>>> feature/refactor_II
 
 			request.on("error", function(error) {
 				console.log(error)
