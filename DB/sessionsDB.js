@@ -4,7 +4,7 @@ class SessionsDB {
 
 	constructor (db) {
 		this.db = db
-	}
+	} 
     
 	getAllActiveSessions() {
 		let self = this
