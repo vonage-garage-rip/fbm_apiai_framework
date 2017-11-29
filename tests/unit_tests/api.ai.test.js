@@ -1,5 +1,5 @@
 //Loads all .env variables into PROCESS.ENV
-require("dotenv").config({path: "../.env"})
+require("dotenv").config()
 //Main Target File TO TEST
 const sessionsManager = require("../../sessionsManager")
 const apiai = require("../../apiai.js")
