@@ -5,10 +5,9 @@
   "scripts": {
     "test": "mocha --recursive --exit tests/unit_tests/"
   },
-  "pre-push": {
-    "run": "test",
-    "silent": false
-  },
+  "prepush": [
+    "npm test"
+  ],
   "author": {
     "name": "Zach Efrati",
     "email": "tzahi.efrati@gmail.com",
@@ -26,7 +25,7 @@
     "mocha": "^4.0.1",
     "moment": "^2.19.2",
     "nexmo": "^2.0.2",
-    "pre-push": "^0.1.1",
+    "prepush": "^3.1.11",
     "request-promise-native": "^1.0.5",
     "uuid": "^3.1.0",
     "winston": "^2.4.0"
