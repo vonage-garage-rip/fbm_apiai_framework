@@ -8,6 +8,10 @@ const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
 const channelTest = require("./dependencies/inboundEvents/wpChannelTest")
 const workplaceChannel = require("./../../channels/facebook/wphook")
 const expect = require("chai").expect
+const describe = require("mocha").describe
+const before = require("mocha").before
+const beforeEach = require("mocha").beforeEach
+const it = require("mocha").it
 
 describe("*****ApiAi Test Suite: ", function() {
 	var agent

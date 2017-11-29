@@ -13,6 +13,10 @@ const nexmoChannel = require("./../../channels/nexmo/nexmohook")
 const inboundWorkplaceGETEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplaceGET")
 const inboundWorkplacePagePOSTEvent = require("./dependencies/inboundEvents/workplace/inboundWorkplacePagePOST")
 
+const describe = require("mocha").describe
+const before = require("mocha").before
+const it = require("mocha").it
+
 describe("*****SessionsManager Test Suite: ", function() {
 
 	before(() => {
