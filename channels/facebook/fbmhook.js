@@ -72,8 +72,8 @@ const handlePostRequest = (req, res) => {
 						utility.receivedDeliveryConfirmation(messagingEvent)
 					} else if (messagingEvent.postback) {
 						receivedPostback(messagingEvent)
-					/* } else if (messagingEvent.read) {
-						utility.receivedMessageRead(messagingEvent) */
+					} else if (messagingEvent.read) {
+						utility.receivedMessageRead(messagingEvent)
 					} else if (messagingEvent.account_linking) {
 						receivedAccountLink(messagingEvent)
 					} else {

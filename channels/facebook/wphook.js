@@ -101,8 +101,8 @@ function processPageEvents(data) {
 					utility.receivedDeliveryConfirmation(messagingEvent)
 				} else if (messagingEvent.postback) {
 					receivedPostback(messagingEvent)
-				/* } else if (messagingEvent.read) {
-					utility.receivedMessageRead(messagingEvent) */
+				} else if (messagingEvent.read) {
+					utility.receivedMessageRead(messagingEvent)
 				} else {
 					console.log("Webhook received unknown messagingEvent: ", messagingEvent)
 				}
