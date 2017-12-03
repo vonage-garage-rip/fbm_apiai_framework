@@ -15,7 +15,7 @@ var startChannel= () => {
 }
 
 var sendMessage = function (messageObj, session) {
-	console.log("MESSAGE: ", messageObj)
+	console.log("fbmhook.sendMessage. MESSAGE: ", messageObj)
 
 	switch (messageObj.type) {
 	case sessionsManager.MESSAGE_TYPES.TEXT:
