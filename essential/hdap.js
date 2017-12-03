@@ -196,7 +196,7 @@ const oAuthClient = (tokenData) => {
 //2
 const generateAuthURL = () => {
 	return process.env.IDP_URL +"/oauth2/authorize?response_type=code&client_id=" +
-           process.env.API_MGR_KEY + "&redirect_uri="+ process.env.SERVER_URL + "/api" + "&scope=openid"
+           process.env.API_MGR_KEY + "&redirect_uri="+ process.env.ESSENTIAL_CALLBACK_URL + "&scope=openid"
 }
 
 //3
