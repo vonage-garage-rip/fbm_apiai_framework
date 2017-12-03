@@ -1,10 +1,10 @@
 
-const actionsManager = require("../fbm_apiai_framework/actions/manager")
+const actionsManager = require("../../actions/manager")
 const hdap = require("../hdap.js")
-var notifications = require(".././notifications.js")
+var notifications = require("../notifications.js")
 var nonVerifiedSessions = []
 
-const sessionsManager = require("../fbm_apiai_framework/sessionsManager")
+const sessionsManager = require("../../sessionsManager")
 
 const LOGIN_SUCCESSFUL_EVENT = "LOGIN_SUCCESSFUL"
 const LOGIN_URL_CREATED_EVENT = "LOGIN_URL_CREATED"

@@ -8,4 +8,3 @@ exports.formatPhoneNumber = (number) => {
 	var phoneNumber = phoneUtil.parse(number, "US")
 	return phoneUtil.format(phoneNumber, PNF.INTERNATIONAL)
 }
-  

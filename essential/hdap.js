@@ -1,8 +1,8 @@
 var request = require("request")
 
-const sessionsManager = require("./fbm_apiai_framework/sessionsManager")
-const firebaseDatabase = require("./fbm_apiai_framework/DB/firebase").firebaseDatabase
-const appDB = require("./DB/appDB").getDB(firebaseDatabase)
+const sessionsManager = require("../sessionsManager")
+const firebaseDatabase = require("../DB/firebase").firebaseDatabase
+const essentialDB = require("../DB/essentialDB").getDB(firebaseDatabase)
 
 let notifications = require("./notifications")
 
@@ -154,8 +154,9 @@ const connect = (session, code) => {
 				/// assuming only one extension per user
 				let essentialUserId = tokenData.settings.basicInfo.accountId + "_" + tokenData.settings.extensions[0].extension 
 				sessionsManager.updateSession(session, { data: { essentialUserId: essentialUserId }})
-				tokenData.wpUserID = session.source
-				appDB.updateUser(essentialUserId, tokenData)
+				tokenData.source = session.source
+				tokenData.id = essentialUserId
+				essentialDB.updateUser(essentialUserId, tokenData)
 				return resolve(essentialUserId)
 			})
 	}) 
@@ -231,7 +232,7 @@ const oAuthUser = tokenData => {
 
 const getUser = (essentialUserId, logout = false) => {
 	return new Promise( (resolve, reject) => {
-		appDB.getEssentialsUser(essentialUserId, logout)
+		essentialDB.getEssentialsUser(essentialUserId, logout)
 			.then( user => {
 				resolve(user)
 			})
@@ -246,7 +247,7 @@ const getUser = (essentialUserId, logout = false) => {
 							return oAuthClient(tokenData)
 						})
 						.then( tokenData => {
-							return appDB.updateUser(essentialUserId, tokenData)
+							return essentialDB.updateUser(essentialUserId, tokenData)
 						})
 						.then ( tokenData => {
 							resolve(tokenData)

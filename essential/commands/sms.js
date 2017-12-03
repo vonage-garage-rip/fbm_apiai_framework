@@ -1,4 +1,4 @@
-const actionsManager = require("../fbm_apiai_framework/actions/manager")
+const actionsManager = require("../../actions/manager")
 const loginActionHandler = require("./login")
 const hdap = require("../hdap.js")
 

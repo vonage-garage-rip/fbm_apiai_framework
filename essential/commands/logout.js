@@ -1,7 +1,7 @@
-const actionsManager = require("../fbm_apiai_framework/actions/manager")
-const sessionsManager = require("../fbm_apiai_framework/sessionsManager")
-const firebaseDatabase = require("../fbm_apiai_framework/DB/firebase").firebaseDatabase
-const appDB = require("../DB/appDB").getDB(firebaseDatabase)
+const actionsManager = require("../../actions/manager")
+const sessionsManager = require("../../sessionsManager")
+const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
+const essentialDB = require("../../DB/essentialDB").getDB(firebaseDatabase)
 const hdap = require("../hdap.js")
 var notifications = require(".././notifications.js")
 
@@ -26,7 +26,7 @@ function logout(session) {
 			return hdap.revokeToken(user)
 		})
 		.then( () => {
-			appDB.removeUser(senderID)
+			essentialDB.removeUser(senderID)
 		})
 		.then( () => {
 			sessionsManager.handleEventBySessionId(session.sessionId, {type: LOGOUT_SUCCESSFUL_EVENT})
