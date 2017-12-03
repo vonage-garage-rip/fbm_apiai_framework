@@ -1,9 +1,9 @@
 var request = require("request")
-const firebaseDatabase = require("./fbm_apiai_framework/DB/firebase").firebaseDatabase
-const appDB = require("./DB/appDB").getDB(firebaseDatabase)
+const firebaseDatabase = require("../DB/firebase").firebaseDatabase
+const essentialDB = require("../DB/essentialDB").getDB(firebaseDatabase)
 var utils = require("./utils.js")
+const actionsManager = require("../actions/manager")
 
-const loginAction = require("./actions/login.js")
 const moment = require("moment")
 
 const NOTIFICATION_EVENTS = {
@@ -15,10 +15,8 @@ const NOTIFICATION_EVENTS = {
 	TERMINATED: "Terminated",
 	DISCONNECTED: "Disconnected"
 }
-const sessionsManager = require("./fbm_apiai_framework/sessionsManager")
 
 var pusher_connections = []
-var duplicateEvent = false
 var last_timestamp
 var last_callid
 var last_event
@@ -113,20 +111,12 @@ function connectPusherInternal(tokenData) {
 			pusher.connection.on("error", error => {
 				//connection to 
 				console.log("PUSER  error", error)
-				console.log("try to re-connect")
-				// this will attempt to find the essential user,
-				// refresh token if it's not valid anymore,
-				// disconnect and then reconnect to pusher
-				let account_ext = tokenData.account_id + "_" + tokenData.settings.extensions[0].extension
-				let messageEvent = {
-					source: tokenData.wpUserID,
-					channel: sessionsManager.CHANNELS.FB_WORKPLACE,
-					sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
-					data: { essentialUserId: account_ext}
-				}
-				sessionsManager.getSessionByChannelEvent(messageEvent)
-					.then( session => {
-						loginAction.getStarted(session)
+				let account_ext = tokenData.account_id + "_" + tokenData.settings.extensions[0].extension				
+				essentialDB.getEssentialsUser(account_ext)
+					.then( essentialUser => {
+						let eventName = "pusherError"
+						let eventData = 
+						actionsManager.handleEssentialEvent(eventName, essentialUser, eventData)
 					})
 			})
 
@@ -155,32 +145,12 @@ function connectPusherInternal(tokenData) {
 			last_callid = callid
 			last_event = event
 
-			if ( notification.direction=="outbound" || [NOTIFICATION_EVENTS.START_RINGING, NOTIFICATION_EVENTS.RINGING, NOTIFICATION_EVENTS.ANSWERED].indexOf(notification.event) == -1 ) {
-				event = "Generic"
-			}
-
 			let account_ext = notification.accountNumber + "_" + (notification.local.extension || notification.remote.extension)
-			appDB.getEssentialsUser(account_ext)
+			essentialDB.getEssentialsUser(account_ext)
 				.then( essentialUser => {
-					
-					let messageEvent = {
-						source: essentialUser.wpUserID,
-						channel: sessionsManager.CHANNELS.FB_WORKPLACE,
-						sourceType: sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT,
-						data: { essentialUserId: account_ext}
-					}
-
-					let lastCallData = parseNotificationData(notification)
-					messageEvent.data.lastCall = lastCallData
-          
-					sessionsManager.getSessionByChannelEvent(messageEvent)
-						.then( session => {
-							let notificationEvent = {
-								type: notification.direction + "EssentialCall" + event.replace(" ",""),
-								data: lastCallData
-							}
-							sessionsManager.handleEventBySessionId(session.sessionId, notificationEvent)
-						})
+					let eventName = notification.direction + "EssentialCall" + event.replace(" ","")
+					let eventData = parseNotificationData(notification)
+					actionsManager.handleEssentialEvent(eventName, essentialUser, eventData)
 				})
 		}
 
