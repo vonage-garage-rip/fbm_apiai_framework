@@ -1,16 +1,15 @@
-const actionsManager = require("../../actions/manager")
 const hdap = require("../hdap.js")
 
-const callbackAction = (apiresponse, session) => {
-	var callData = session.data.lastCall
-    
-	hdap.getUser(session.data.essentialUserId)
+const initiateCallback = (essentialUserId, from, to) => {
+	hdap.getUser(essentialUserId)
 		.then( user => {
-			return hdap.callback(user, callData.remoteNumber, callData.localNumber)
+			return hdap.callback(user, to, from)
 		})
 		.catch( error => {
-			console.error(error)
+			console.error("essential command initiateCallback caught an error: " + error)
 		})
 }
-actionsManager.registerAction("action_callback", callbackAction)
+
+module.exports.initiateCallback = initiateCallback
+
 
