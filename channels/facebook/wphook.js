@@ -248,7 +248,7 @@ function sendCommentToPost(postId, message) {
 }
 
 function sendTextMessageToExistingGroup(threadId, message) {
-	return utility.sendTextMessageToExistingGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+	return utility.sendNewPostToGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
 const getUserProfile = userId => {
