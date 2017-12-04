@@ -15,12 +15,12 @@ class ApiAi {
 
 			var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: session.apiaiContexts})
 
-			request.on("response", function(response) {
+			request.on("response", response => {
 				console.log("sendTextMessageToApiAi: response=" + JSON.stringify(response))
 				return resolve(response)
 			})
 
-			request.on("error", function(error) {
+			request.on("error", error => {
 				return reject(error)
 			})
 
@@ -39,12 +39,12 @@ class ApiAi {
 			}
 
 			var request = self.app.eventRequest(eventArg, {sessionId: sessionId, contexts: session.apiaiContexts})
-			request.on("response", function(response) {
+			request.on("response", response => {
 				console.log("sendEventToApiAi: received response")
 				return resolve(response)
 			})
 
-			request.on("error", function(error) {
+			request.on("error", error => {
 				console.log(error)
 				return reject(error)
 			})
