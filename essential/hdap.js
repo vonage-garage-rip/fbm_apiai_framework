@@ -159,6 +159,9 @@ const connect = (session, code) => {
 				essentialDB.updateUser(essentialUserId, tokenData)
 				return resolve(essentialUserId)
 			})
+			.catch(error => {
+				console.log("hdap.connect caught an error: " + error)
+			})
 	}) 
 }
 //1
@@ -211,7 +214,7 @@ const oAuthUser = tokenData => {
 			},
 			form: { 
 				grant_type: "authorization_code",
-				redirect_uri: process.env.SERVER_URL + "/api",
+				redirect_uri: process.env.ESSENTIAL_CALLBACK_URL,
 				code: tokenData.code 
 			},
 			rejectUnauthorized:false
