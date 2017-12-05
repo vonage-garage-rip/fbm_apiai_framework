@@ -34,6 +34,9 @@ exports.connectPusher = (tokenData) => {
 			.then( () => {   
 				resolve(connectPusherInternal(tokenData))
 			})
+			.catch(error => {
+				console.log("connectPusher caught an error: " + error)
+			})
 	})
 }
 
