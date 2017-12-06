@@ -1,19 +1,13 @@
-
-const actionsManager = require("../../actions/manager")
 const hdap = require("../hdap.js")
 var notifications = require("../notifications.js")
 var nonVerifiedSessions = []
 
 const sessionsManager = require("../../sessionsManager")
 
-const LOGIN_SUCCESSFUL_EVENT = "LOGIN_SUCCESSFUL"
-const LOGIN_URL_CREATED_EVENT = "LOGIN_URL_CREATED"
+const LOGIN_SUCCESSFUL_EVENT = "LOGIN_SUCCESSFUL_EVENT"
+const LOGIN_URL_CREATED_EVENT = "LOGIN_URL_CREATED_EVENT"
 const LOGIN_ERROR_EVENT = "LOGIN_ERROR_EVENT"
 
-const loginAction = (apiresponse, session) => {
-	console.log("loginAction called")
-	getStarted(session)
-}
 
 const loginError = session => {
 	nonVerifiedSessions.push(session)
@@ -73,8 +67,6 @@ function verifyCode(session, code) {
 			})
 	})
 }
-
-actionsManager.registerAction("action_login", loginAction)
 
 exports.verifyCode = verifyCode
 exports.getStarted = getStarted

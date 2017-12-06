@@ -118,7 +118,7 @@ function connectPusherInternal(tokenData) {
 				essentialDB.getEssentialsUser(account_ext)
 					.then( essentialUser => {
 						let eventName = "pusherError"
-						let eventData = 
+						let eventData = error.data
 						actionsManager.handleEssentialEvent(eventName, essentialUser, eventData)
 					})
 			})
