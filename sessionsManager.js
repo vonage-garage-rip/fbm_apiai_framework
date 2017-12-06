@@ -104,6 +104,7 @@ const inboundFacebookWorkplaceEvent = (req, res) => {
 }
 
 const inboundNexmoEvent = (req, res) => {
+	console.log("Inboundnexmoevent", getChannel(CHANNELS.NEXMO))
 	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res)
 }
 

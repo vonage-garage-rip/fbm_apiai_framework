@@ -26,5 +26,8 @@
     "request-promise-native": "^1.0.5",
     "uuid": "^3.1.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "firebase-admin": "^5.5.1",
+    "request": "^2.83.0"
+  }
 }

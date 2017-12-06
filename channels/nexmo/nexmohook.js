@@ -1,17 +1,18 @@
 const uuidv4 = require("uuid/v4")
 var Nexmo = require("nexmo")
 var sessionsManager = require("../../sessionsManager")
+var request = require("request");
 
 class NexmoChannel {
-  
-	constructor () {
+
+	constructor() {
 		let nexmoDebug = process.env.NEXMO_DEBUG ? (process.env.NEXMO_DEBUG == "true") : false
 		/// see if you can use HTTP 1/1 for persistent conncection
 		this.nexmo = new Nexmo({
 			apiKey: process.env.NEXMO_API_KEY,
 			apiSecret: process.env.NEXMO_API_SECRET
 		},
-		{debug: nexmoDebug}
+			{ debug: nexmoDebug }
 		)
 		this.messagesQueue = []
 		this.dispatchMessages = this.dispatchMessages.bind(this)
@@ -27,18 +28,39 @@ class NexmoChannel {
 	}
 
 	getUserProfile(userId) {
-		return Promise.resolve({userId})
+		return Promise.resolve({ userId })
 	}
 
 	sendMessage(messageObj, session) {
-		this.messagesQueue.push({
-			/// Should we add sessionID ? other identifying parameters?q
-			id: uuidv4(),
-			message: messageObj.speech,
-			to: session.source,
-			from: process.env.NEXMO_NUMBER,
-			sendAttempts: 0
-		})
+		// this.messagesQueue.push({
+		// 	/// Should we add sessionID ? other identifying parameters?q
+		// 	id: uuidv4(),
+		// 	message: messageObj.speech,
+		// 	to: session.source,
+		// 	from: process.env.NEXMO_NUMBER,
+		// 	sendAttempts: 0
+		// })
+
+		var options = {
+			method: 'POST',
+			url: 'https://rest.nexmo.com/sms/json',
+			qs:
+			{
+				api_key: process.env.NEXMO_API_KEY,
+				api_secret: process.env.NEXMO_API_SECRET,
+				from: process.env.NEXMO_NUMBER,
+				to: session.source,
+				text: messageObj.speech
+			},
+			headers: { 'cache-control': 'no-cache' }
+		};
+
+		request(options, function (error, response, body) {
+			if (error) throw new Error(error);
+
+			console.log(body);
+		});
+
 	}
 
 	dispatchMessages() {
@@ -52,7 +74,7 @@ class NexmoChannel {
 			if (err) {
 				console.error("dispatchMessages error: " + err)
 				// https://developer.nexmo.com/api/sms#error-codes
-				if ( err.status==1 && messageObj.sendAttempts<4 ) {
+				if (err.status == 1 && messageObj.sendAttempts < 4) {
 					console.log("err with message " + messageObj.id + ". pushing messgae to retriesArray. retry #" + messageObj.sendAttempts)
 					backoff = Math.max(backoff, messageObj.sendAttempts)
 					retriesArray.push(messageObj)
@@ -60,31 +82,31 @@ class NexmoChannel {
 			}
 			else {
 				console.log("dispatchMessages: for message %s, %d message(s) returned with the following status: %s", messageObj.id,
-					responseData["message-count"], responseData.messages.map(message => "Nexmo msgID=" + message["message-id"]+", status=" + message.status+" ").toString())
-				let velocityErrorMessages = responseData.messages.filter(message => message.status===1)
-				if ( velocityErrorMessages.length>0 ) {
+					responseData["message-count"], responseData.messages.map(message => "Nexmo msgID=" + message["message-id"] + ", status=" + message.status + " ").toString())
+				let velocityErrorMessages = responseData.messages.filter(message => message.status === 1)
+				if (velocityErrorMessages.length > 0) {
 					console.log("error in responseData. pushing message " + messageObj.id + " to retriesArray. retry #" + messageObj.sendAttempts)
 					backoff = Math.max(backoff, messageObj.sendAttempts)
 					retriesArray.push(messageObj)
 				}
 			}
 
-			if ( messageResponses===maxMessagesToSend ) {
+			if (messageResponses === maxMessagesToSend) {
 				this.messagesQueue = retriesArray.concat(this.messagesQueue.slice(maxMessagesToSend))
-				this.resumeQueue(2**backoff*process.env.NEXMO_THROUGHPUT) // add jitter
+				this.resumeQueue(2 ** backoff * process.env.NEXMO_THROUGHPUT) // add jitter
 			}
 		}
 
-		if ( maxMessagesToSend===0 ) {
+		if (maxMessagesToSend === 0) {
 			this.resumeQueue(process.env.NEXMO_THROUGHPUT)
 		}
 
-		for (var index=0 ; index < maxMessagesToSend ; index++) {
+		for (var index = 0; index < maxMessagesToSend; index++) {
 			let messageObj = this.messagesQueue[index]
 
 			/// add simulation of sent messages with 0.2 probability of velocity errors
 			messageObj.sendAttempts++
-			console.log("Sending message (" + messageObj.id + ") '" + messageObj.message.substring(0,20).replace(/\n/g, " ") +"' to " + messageObj.to + ", attempt number " + messageObj.sendAttempts)
+			console.log("Sending message (" + messageObj.id + ") '" + messageObj.message.substring(0, 20).replace(/\n/g, " ") + "' to " + messageObj.to + ", attempt number " + messageObj.sendAttempts)
 			this.nexmo.message.sendSms(messageObj.from, messageObj.to, messageObj.message, handleNexmoResponse.bind(this, messageObj))
 		}
 	}
