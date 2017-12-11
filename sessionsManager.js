@@ -206,7 +206,7 @@ var handleResponseWithMessages = (messages, session) => {
 		setTimeout( () => {
 			let channel = getChannel(session.channelType)
 			switch (session.channelType) {
-			// filtering by platofmr property but this will add unneccessary delays
+			// filtering by platform property but this will add unneccessary delays
 			case CHANNELS.FB_MESSENGER:
 			case CHANNELS.FB_WORKPLACE:
 				if (!messageObj.platform || messageObj.platform=="facebook") {            
