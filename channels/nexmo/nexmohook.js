@@ -40,27 +40,27 @@ class NexmoChannel {
 		// 	from: process.env.NEXMO_NUMBER,
 		// 	sendAttempts: 0
 		// })
-
 		var options = {
 			method: 'POST',
 			url: 'https://rest.nexmo.com/sms/json',
 			qs:
-			{
-				api_key: process.env.NEXMO_API_KEY,
-				api_secret: process.env.NEXMO_API_SECRET,
-				from: process.env.NEXMO_NUMBER,
-				to: session.source,
-				text: messageObj.speech
-			},
+				{
+					api_key: process.env.NEXMO_API_KEY,
+					api_secret: process.env.NEXMO_API_SECRET,
+					from: process.env.NEXMO_NUMBER,
+					to: session.source,
+					text: messageObj.speech
+				},
 			headers: { 'cache-control': 'no-cache' }
 		};
 
-		request(options, function (error, response, body) {
-			if (error) throw new Error(error);
+		setTimeout(() => {
+			request(options, function (error, response, body) {
+				if (error) throw new Error(error);
 
-			console.log(body);
-		});
-
+				console.log(body);
+			});
+		}, 1100);
 	}
 
 	dispatchMessages() {
