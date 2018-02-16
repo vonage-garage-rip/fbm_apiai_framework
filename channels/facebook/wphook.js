@@ -252,7 +252,7 @@ function sendTextMessageToExistingGroup(threadId, message) {
 }
 
 const getUserProfile = userId => {
-	return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
+	return utility.getUserProfile(userId, "first_name, last_name, email", WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
 const sendProfileApiBatch = (profile, path) => {
