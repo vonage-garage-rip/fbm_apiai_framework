@@ -255,8 +255,8 @@ const getUserProfile = userId => {
 	return utility.getUserProfile(userId, "first_name, last_name, email", WORKPLACE_PAGE_ACCESS_TOKEN)
 }
 
-const sendProfileApiBatch = (profile, path) => {
-	utility.sendProfileApiBatch(profile, path, WORKPLACE_PAGE_ACCESS_TOKEN)
+const sendProfileApiBatch = (profile, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	utility.sendProfileApiBatch(profile, path, accessToken)
 }
 
 const getCommunity = () => {
@@ -274,6 +274,14 @@ const getCommunity = () => {
 	})
 }
 
+const webhookSubscribe = () => {
+	utility.webhookSubscribe()
+}
+
+const generateProof = (accessToken) => {
+	return utility.generateProof(accessToken)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
@@ -281,3 +289,5 @@ module.exports.getUserProfile = getUserProfile
 module.exports.startChannel = startChannel
 module.exports.sendProfileApiBatch = sendProfileApiBatch
 module.exports.getCommunity = getCommunity
+module.exports.webhookSubscribe = webhookSubscribe
+module.exports.generateProof = generateProof

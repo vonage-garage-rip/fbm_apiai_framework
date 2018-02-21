@@ -3,7 +3,9 @@
 const
 	bodyParser = require("body-parser"),
 	crypto = require("crypto"),
-	rpn = require("request-promise-native")
+	rpn = require("request-promise-native"),
+	moment = require("moment")
+
 
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL
 
@@ -16,18 +18,18 @@ const PROFILE_API = {
 }
 
 const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
+
 	var options = {
 		method: "POST",
-		uri:FACEBOOK_GRAPH_URL +path+"?access_token=" + accessToken,
+		uri:FACEBOOK_GRAPH_URL+path+"?"+generateProof(accessToken),
 		headers: { "Content-Type": "application/json" },
 		body: propertyBody,
 		json: true // Automatically stringifies the body to JSON
 	}
-
 	rpn(options)
 		.then( parsedBody => {
 			// POST succeeded...
-			console.log("sendProfileApiBatch returned: " + parsedBody)
+			console.log("sendProfileApiBatch returned: ",parsedBody)
 		})
 		.catch( err => {
 			// POST failed...
@@ -464,6 +466,36 @@ var getMembers = (community_id, next = null, limit, accessToken) => {
 			})
 	})
 }
+var webhookSubscribe = () => {
+	return new Promise( (resolve, reject) => {
+		let access_token = process.env.MESSENGER_APP_ID+"|"+process.env.MESSENGER_APP_SECRET
+		let fields = "mention,message_deliveries,messages,messaging_postbacks,message_reads"
+		var options = {
+			method:"POST",      
+			uri: FACEBOOK_GRAPH_URL + 'app/subscriptions?' + "object=page" + "&fields=" + fields + "&access_token=" + access_token + "&include_values=true" + "&verify_token="+process.env.WORKPLACE_VERIFY_TOKEN +"&callback_url=" + process.env.CALLBACK_URL,
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then( json => {
+				console.log("webhookSubscribe",json)
+				return resolve(JSON.parse(json))
+			})
+			.catch(err => {
+				console.error("webhookSubscribe got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+}
+
+var generateProof = (accessToken) => {
+	const appsecretTime = moment().unix() - 5;
+	const appsecretProof = crypto
+		.createHmac('sha256', process.env.MESSENGER_APP_SECRET)
+		.update(accessToken + '|' + appsecretTime)
+		.digest('hex');
+	return 'access_token=' + accessToken + '&appsecret_proof=' + appsecretProof + '&appsecret_time=' + appsecretTime
+}
 
 
 module.exports = {
@@ -471,5 +503,5 @@ module.exports = {
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, getMembers
+	getCommunity, webhookSubscribe, getMembers, generateProof
 }
