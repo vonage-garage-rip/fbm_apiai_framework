@@ -333,7 +333,7 @@ function sendAccountLinking(recipientId, accessToken) {
 function callMessageAPI(messageData, accessToken) {
 	var options = {
 		method: "POST",
-		uri: FACEBOOK_GRAPH_URL + "me/messages?access_token=" + accessToken ,
+		uri: FACEBOOK_GRAPH_URL + "me/messages?"+generateProof(accessToken) ,
 		headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		body: messageData,
 		json: true
@@ -358,9 +358,10 @@ function getUserProfile(userId, fields, accessToken) {
 		if ( !userId ) {
 			return resolve({})
 		}
+
 		var options = {
 			method: "GET",
-			uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&access_token=" + accessToken ,
+			uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&"+generateProof(accessToken) ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 			json: true
 		}
@@ -380,7 +381,7 @@ var sendNewPostToGroup = (groupId, message, accessToken) => {
 	return new Promise(resolve => {
 		var options = {
 			method: "POST",
-			uri: FACEBOOK_GRAPH_URL + groupId + "/feed?access_token=" + accessToken + "&message=" + message ,
+			uri: FACEBOOK_GRAPH_URL + groupId + "/feed?" + generateProof(accessToken)+"&message=" + message ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 		rpn(options)
@@ -399,7 +400,7 @@ var sendCommentToPost = (postId, message, accessToken) => {
 	return new Promise(resolve => {
 		var options = {
 			method: "POST",
-			uri: FACEBOOK_GRAPH_URL + postId + "/comments?access_token=" + accessToken + "&message=" + message ,
+			uri: FACEBOOK_GRAPH_URL + postId + "/comments?"+generateProof(accessToken)+ "&message=" + message ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
@@ -435,7 +436,7 @@ var verifySubscription = (req, res) => {
 var getCommunity = (accessToken) => {
 	return new Promise( resolve => {
 		var options = {
-			uri: FACEBOOK_GRAPH_URL + "/community?access_token=" + accessToken,
+			uri: FACEBOOK_GRAPH_URL + "/community?"+generateProof(accessToken),
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
@@ -453,7 +454,7 @@ var getMembers = (community_id, next = null, limit, accessToken) => {
 	return new Promise( resolve => {
 		let fields = "title, department, name, location, locale, email, primary_phone"
 		var options = {      
-			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id + "/members?limit=" + limit + "&fields=" + fields +"&access_token=" + accessToken,
+			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id + "/members?limit=" + limit + "&fields=" + fields +"&" + generateProof(accessToken),
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
@@ -541,8 +542,17 @@ var getCompany = (accessToken) => {
 	})
 
 }
-
+/**
+ * 
+ * For Production installs of Application, 
+ * FB reqires sending the access_token as well as hash of the key/secret
+ * This is ONLY used in production apps
+ * see https://developers.facebook.com/docs/workplace/integrations/third-party
+ */
 var generateProof = (accessToken) => {
+	if (process.env.DEV_INTERGRATION) {
+		return 'access_token=' + accessToken 
+	}
 	const appsecretTime = moment().unix() - 5;
 	const appsecretProof = crypto
 		.createHmac('sha256', process.env.MESSENGER_APP_SECRET)

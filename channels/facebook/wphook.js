@@ -175,6 +175,10 @@ const receivedMessage = (messagingEvent, pageID) => {
 			text: messagingEvent.message.text
 		}
 
+		if (!process.env.DEV_INTERGRATION) {
+			inboundMessage.community = messagingEvent.sender.community
+		}
+
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
 	}
 	else if (messagingEvent.message.attachments) {
@@ -205,7 +209,11 @@ const receivedPostback = (messagingEvent) => {
 		source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id,
 		from: messagingEvent.sender.id,
 		to: messagingEvent.recipient.id,
-		payload: payload
+		payload: payload,
+		
+	}
+	if (!process.env.DEV_INTERGRATION) {
+		inboundPostbackMessage.community = messagingEvent.sender.community
 	}
 
 	/// TODO: promisfy this to send the 200 response back as quickly as possible
@@ -241,32 +249,37 @@ function processWorkplaceSecurityEvents(data) {
 
 function sendMessage(messageObj, session) {
 
+	var accessToken = WORKPLACE_PAGE_ACCESS_TOKEN
+	if (session.communityAccessToken) {
+		accessToken = session.communityAccessToken
+	}
+
 	if (session.sourceType) {
 		switch (session.sourceType) {
 		case sessionsManager.SOURCE_TYPE.POST:
-			sendCommentToPost(session.source, messageObj.speech) // post ID
+			sendCommentToPost(session.source, messageObj.speech, accessToken) // post ID
 			break
 		case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-			sendTextMessageToExistingGroup(session.source, messageObj.speech) // thread ID
+			sendTextMessageToExistingGroup(session.source, messageObj.speech, accessToken) // thread ID
 			break
 		case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
 
 			//HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
 			switch (messageObj.type) {
 			case sessionsManager.MESSAGE_TYPES.TEXT:
-				utility.sendTextMessage(session.source, messageObj.speech, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendTextMessage(session.source, messageObj.speech, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.IMAGE:
-				utility.sendImageMessage(session.source, messageObj.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendImageMessage(session.source, messageObj.imageUrl, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.CARD:
-				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.CUSTOME:
-				utility.sendCustomMessage(session.source, messageObj.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendCustomMessage(session.source, messageObj.payload.facebook, accessToken)
 				break
 			}
 			break
@@ -274,33 +287,33 @@ function sendMessage(messageObj, session) {
 	}
 }
 
-function sendNewPostToGroup(groupId, message) {
-	return utility.sendNewPostToGroup(groupId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendNewPostToGroup(groupId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN ) {
+	return utility.sendNewPostToGroup(groupId, message, accessToken)
 }
 
-function sendCommentToPost(postId, message) {
-	return utility.sendCommentToPost(postId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendCommentToPost(postId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN ) {
+	return utility.sendCommentToPost(postId, message, access_token)
 }
 
-function sendTextMessageToExistingGroup(threadId, message) {
-	return utility.sendNewPostToGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendTextMessageToExistingGroup(threadId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) {
+	return utility.sendNewPostToGroup(threadId, message, accessToken)
 }
 
-const getUserProfile = userId => {
-	return utility.getUserProfile(userId, "first_name, last_name, email", WORKPLACE_PAGE_ACCESS_TOKEN)
+const getUserProfile = (userId, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return utility.getUserProfile(userId, "first_name, last_name, email", accessToken)
 }
 
 const sendProfileApiBatch = (profile, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	utility.sendProfileApiBatch(profile, path, accessToken)
 }
 
-const getCommunity = () => {
+const getCommunity = (accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	return new Promise( resolve => {
 		if ( community ) { 
 			return Promise.resolve(community)
 		}
 		else {
-			utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+			utility.getCommunity(accessToken)
 				.then(communityResult => {
 					community = communityResult
 					resolve(community)

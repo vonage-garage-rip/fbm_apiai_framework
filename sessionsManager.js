@@ -9,6 +9,8 @@ const EVENTS = {
 	ACCOUNT_LINKED: "ACCOUNT_LINKED"
 }
 var sessionsDb
+var tokensDb
+
 module.exports.EVENTS = EVENTS
 
 require("log-timestamp")
@@ -44,6 +46,7 @@ var channels = {}
 var chatSessions = {}
 var userChannelToSessions = {} // channels/integrations from user are pointing to chat sessions
 var SessionsDbClass = require("./DB/sessionsDB")
+var TokensDbClass = require("./DB/tokenDB")
 
 const getAllActiveSessions = () => {
 	sessionsDb.getAllActiveSessions()
@@ -67,6 +70,7 @@ const getAllActiveSessions = () => {
 
 const setDB = (db) => {
 	sessionsDb = new SessionsDbClass(db)
+	tokensDb = new TokensDbClass(db)
 	getAllActiveSessions()
 }
 
@@ -109,6 +113,10 @@ const inboundNexmoEvent = (req, res) => {
 
 const inboundFacebookWorkplaceInstallEvent = (req, res) => {
 	return getChannel(CHANNELS.FB_WORKPLACE).handleInboundInstallEvent(req, res)
+}
+
+const inboundFacebookWorkplaceUninstallEvent = (req, res) => {
+	return getChannel(CHANNELS.FB_WORKPLACE).handleInboundUninstallEvent(req, res)
 }
 
 const getSessionBySessionId = sessionId => {
@@ -163,21 +171,34 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				apiaiContexts: []
 			}
 
-			userChannelToSessions[messagingEvent.source] = mappedChatSession
-			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
-				.then(json => {
-					console.log("'from' profile:" + JSON.stringify(json))
-					mappedChatSession.profile = json
-					return mappedChatSession
-				})
-				.then(session => {
-					sessionsDb.saveSession(session)
-					return resolve(session)
-				})
-				.catch(error => {
-					console.error("calling get user profile caught an error: " + error)
-					reject(error)
-				})
+			if (messagingEvent.community ) {
+				messagingEvent.community = messagingEvent.community
+			}
+
+			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community.id : null 
+			tokensDb.getAccessToken(communityId )
+			.then(json => {
+				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
+				if (json) {
+					access_token = json.access_token
+					mappedChatSession.communityAccessToken = json.access_token
+				} 
+				userChannelToSessions[messagingEvent.source] = mappedChatSession
+				return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
+			})
+			.then(json => {
+				console.log("'from' profile:" + JSON.stringify(json))
+				mappedChatSession.profile = json
+				return mappedChatSession
+			})
+			.then(session => {
+				sessionsDb.saveSession(session)
+				return resolve(session)
+			})
+			.catch(error => {
+				console.error("calling get user profile caught an error: " + error)
+				reject(error)
+			})
 		}
 	})
 }
@@ -321,6 +342,8 @@ module.exports.getSessionByChannelEvent = getSessionByChannelEvent
 module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent
 module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent
 module.exports.inboundFacebookWorkplaceInstallEvent = inboundFacebookWorkplaceInstallEvent
+module.exports.inboundFacebookWorkplaceUninstallEvent = inboundFacebookWorkplaceUninstallEvent
+
 module.exports.inboundNexmoEvent = inboundNexmoEvent
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES
 module.exports.SOURCE_TYPE = SOURCE_TYPE
