@@ -11,6 +11,10 @@
 
 const sessionsManager = require("../../sessionsManager")
 const utility = require("./utility")
+const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
+const tokenDBClass = require("../../DB/tokenDB")
+var tokenDB = new tokenDBClass(firebaseDatabase)
+
 
 // Arbitrary value used to validate a workplace webhook
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN
@@ -30,6 +34,10 @@ var handleInboundEvent = function (req, res) {
 	else if (req.method === "POST") {
 		handlePostRequest(req, res)
 	}
+}
+
+var handleInboundInstallEvent = function (req, res) {
+	return handleInstallEvent(req, res)
 }
 /*
  * All callbacks for webhooks are POST-ed. They will be sent to the same
@@ -122,6 +130,33 @@ function processPageEvents(data) {
 			})
 		}
 	})
+}
+
+const handleInstallEvent = (req, res) => {
+	return new Promise((resolve, reject) => {
+		if (!req.query.code) {
+			console.error('No code received.')
+			reject()
+			return
+		}
+		var _json;
+		utility.getAccessToken(req.query.code)
+			.then((accessToken) => {
+				return utility.getCompany(accessToken)
+			}).then((json) => {
+				return tokenDB.saveAccessToken(json)
+			}).then((json) => {
+				_json = json
+				const profile = require('../../../profile').profile
+				return sendProfileApiBatch(profile, "me/messenger_profile", json['access_token']) 
+			}).then(() => {
+				resolve(_json)
+			}).catch(error => {
+				reject(error)
+			})
+	});
+	
+
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
@@ -283,6 +318,7 @@ const generateProof = (accessToken) => {
 }
 
 module.exports.handleInboundEvent = handleInboundEvent
+module.exports.handleInboundInstallEvent = handleInboundInstallEvent
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile

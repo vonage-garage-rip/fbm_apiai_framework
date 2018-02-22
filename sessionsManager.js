@@ -107,6 +107,10 @@ const inboundNexmoEvent = (req, res) => {
 	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res)
 }
 
+const inboundFacebookWorkplaceInstallEvent = (req, res) => {
+	return getChannel(CHANNELS.FB_WORKPLACE).handleInboundInstallEvent(req, res)
+}
+
 const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId]
 }
@@ -316,6 +320,7 @@ module.exports.getSessionBySessionId = getSessionBySessionId
 module.exports.getSessionByChannelEvent = getSessionByChannelEvent
 module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent
 module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent
+module.exports.inboundFacebookWorkplaceInstallEvent = inboundFacebookWorkplaceInstallEvent
 module.exports.inboundNexmoEvent = inboundNexmoEvent
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES
 module.exports.SOURCE_TYPE = SOURCE_TYPE

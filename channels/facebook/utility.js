@@ -488,6 +488,60 @@ var webhookSubscribe = () => {
 	})
 }
 
+var getAccessToken = (code) => {
+
+	return new Promise((resolve, reject) => {
+		const clientID = process.env.MESSENGER_APP_ID
+		const clientSecret = process.env.MESSENGER_APP_SECRET
+		const redirectURL = process.env.REDIRECT_URL
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + 'oauth/access_token?' + 'client_id=' + clientID + "&client_secret=" + clientSecret + "&redirect_uri=" + redirectURL + "&code=" + code,
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getAccessToken", json)
+				var access_token = json['access_token']
+				return resolve(access_token)
+			})
+			.catch(err => {
+				console.error("getAccessToken got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+
+}
+
+var getCompany = (accessToken) => {
+
+	return new Promise((resolve, reject) => {
+		const clientID = process.env.MESSENGER_APP_ID
+		const clientSecret = process.env.MESSENGER_APP_SECRET
+		const redirectURL = process.env.REDIRECT_URL
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + 'company?' + "fields=name&" + generateProof(accessToken),
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getCompany", json)
+				json['access_token'] = accessToken
+				return resolve(json)
+			})
+			.catch(err => {
+				console.error("getCompany got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+
+}
+
 var generateProof = (accessToken) => {
 	const appsecretTime = moment().unix() - 5;
 	const appsecretProof = crypto
@@ -503,5 +557,5 @@ module.exports = {
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, webhookSubscribe, getMembers, generateProof
+	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, generateProof
 }
