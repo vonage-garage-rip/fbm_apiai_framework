@@ -9,21 +9,9 @@ class TokenDB {
     saveAccessToken(companyData) {
 		let self = this
 		return new Promise(resolve => {
-			var usersRef = self.db.ref(TOKENS_DB_NAME).child(companyData['id'])
-			usersRef.once("value")
-				.then(snapshot => {
-					var value = snapshot.val()
-					if (value) {
-						usersRef.update(companyData)
-						usersRef.once("value", snapshot => {
-							resolve(snapshot.val())
-						})
-	
-					} else {
-						self.db.ref(TOKENS_DB_NAME).child(companyData['id']).set(companyData)
-						resolve(companyData)
-					}
-				})
+			var companyRef = self.db.ref(TOKENS_DB_NAME).child(companyData['id'])
+			companyRef.set(companyData)
+			resolve(companyData)
 		})
 	
 	}
