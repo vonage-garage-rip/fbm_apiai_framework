@@ -37,6 +37,26 @@ const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
 		})
 }
 
+const getProfileApiBatch = (keys, path = "me", accessToken) => {
+	return new Promise(function (resolve, reject) {
+		var options = {
+			method: "GET",
+			uri:FACEBOOK_GRAPH_URL+path+"?fields="+keys+"&"+generateProof(accessToken),
+
+		}
+		rpn(options)
+			.then( json => {
+				console.log("getProfileApiBatch returned: ",json)
+				resolve(JSON.parse(json))
+			})
+			.catch( err => {
+				console.log("getProfileApiBatch returned error: " + err)
+				reject(err)
+			})
+		})
+
+}
+
 /*
  * Verify that the callback came from Facebook. Using the App Secret from 
  * the App Dashboard, we can verify the signature that is sent with each 
@@ -563,7 +583,7 @@ var generateProof = (accessToken) => {
 
 
 module.exports = {
-	PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+	PROFILE_API, sendProfileApiBatch, getProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,

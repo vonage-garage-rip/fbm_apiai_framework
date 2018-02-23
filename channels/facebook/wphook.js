@@ -306,6 +306,10 @@ const getUserProfile = (userId, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 const sendProfileApiBatch = (profile, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	utility.sendProfileApiBatch(profile, path, accessToken)
 }
+const getProfileApiBatch = (keys, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return utility.getProfileApiBatch(keys, path, accessToken)
+}
+
 
 const getCommunity = (accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	return new Promise( resolve => {
@@ -337,6 +341,8 @@ module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
 module.exports.startChannel = startChannel
 module.exports.sendProfileApiBatch = sendProfileApiBatch
+module.exports.getProfileApiBatch = getProfileApiBatch
+
 module.exports.getCommunity = getCommunity
 module.exports.webhookSubscribe = webhookSubscribe
 module.exports.generateProof = generateProof
