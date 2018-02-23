@@ -175,7 +175,7 @@ const receivedMessage = (messagingEvent, pageID) => {
 			text: messagingEvent.message.text
 		}
 
-		if (!process.env.DEV_INTERGRATION) {
+		if (process.env.WP_PRODUCTION) {
 			inboundMessage.community = messagingEvent.sender.community
 		}
 
@@ -212,7 +212,7 @@ const receivedPostback = (messagingEvent) => {
 		payload: payload,
 		
 	}
-	if (!process.env.DEV_INTERGRATION) {
+	if (process.env.WP_PRODUCTION) {
 		inboundPostbackMessage.community = messagingEvent.sender.community
 	}
 

@@ -570,7 +570,7 @@ var getCompany = (accessToken) => {
  * see https://developers.facebook.com/docs/workplace/integrations/third-party
  */
 var generateProof = (accessToken) => {
-	if (process.env.DEV_INTERGRATION) {
+	if (!process.env.WP_PRODUCTION) {
 		return 'access_token=' + accessToken 
 	}
 	const appsecretTime = moment().unix() - 5;
