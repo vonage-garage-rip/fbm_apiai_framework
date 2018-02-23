@@ -39,6 +39,10 @@ var handleInboundEvent = function (req, res) {
 var handleInboundInstallEvent = function (req, res) {
 	return handleInstallEvent(req, res)
 }
+var handleInboundUninstallEvent = function (req, res) {
+	return handleUninstallEvent(req, res)
+}
+
 /*
  * All callbacks for webhooks are POST-ed. They will be sent to the same
  * webhook. Be sure to subscribe your app to your page to receive callbacks.
@@ -155,8 +159,10 @@ const handleInstallEvent = (req, res) => {
 				reject(error)
 			})
 	});
-	
+}
 
+const handleUninstallEvent = (req, res) => {
+	//TODO wating on implmention from FB
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
@@ -336,6 +342,8 @@ const generateProof = (accessToken) => {
 
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.handleInboundInstallEvent = handleInboundInstallEvent
+module.exports.handleInboundUninstallEvent = handleInboundUninstallEvent
+
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
