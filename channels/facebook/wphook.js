@@ -138,12 +138,17 @@ function processPageEvents(data) {
 
 const handleInstallEvent = (req, res) => {
 	return new Promise((resolve, reject) => {
-		if (!req.query.code) {
+		
+		if (!req.query.code && !req.params['code']) {
 			console.error('No code received.')
 			reject()
 			return
 		}
 		var _json;
+		var code = req.query.code
+		if (req.params['code']) {
+			code = req.params['code'].replace("code=", "")
+		}
 		utility.getAccessToken(req.query.code)
 			.then((accessToken) => {
 				return utility.getCompany(accessToken)
