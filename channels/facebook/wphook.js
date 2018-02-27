@@ -298,7 +298,7 @@ function sendNewPostToGroup(groupId, message, accessToken = WORKPLACE_PAGE_ACCES
 }
 
 function sendCommentToPost(postId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN ) {
-	return utility.sendCommentToPost(postId, message, access_token)
+	return utility.sendCommentToPost(postId, message, accessToken)
 }
 
 function sendTextMessageToExistingGroup(threadId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) {
