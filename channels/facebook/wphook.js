@@ -126,10 +126,17 @@ function processPageEvents(data) {
 					channel: sessionsManager.CHANNELS.FB_WORKPLACE,
 					sourceType: sessionsManager.SOURCE_TYPE.POST,
 					source: change.value.post_id,
-					from: change.value.sender_id, 
+					from: change.value.sender_id || change.value.from.id, 
 					to: pageID,
 					text: change.value.message.substring(change.value.message.indexOf(" ") + 1)
 				}
+
+				if (process.env.WP_PRODUCTION) {
+					inboundMessage.community = change.value.community
+					console.log("inboundMessage.community ", inboundMessage.community);
+
+				}
+
 				sessionsManager.handleInboundChannelMessage(inboundMessage)
 			})
 		}
@@ -155,6 +162,7 @@ const handleInstallEvent = (req, res) => {
 			}).then((json) => {
 				return tokenDB.saveAccessToken(json)
 			}).then((json) => {
+				console.log("saving access token", json['access_token'])
 				_json = json
 				const profile = require('../../../profile').profile
 				return sendProfileApiBatch(profile, "me/messenger_profile", json['access_token']) 
@@ -187,6 +195,8 @@ const receivedMessage = (messagingEvent, pageID) => {
 		}
 
 		if (process.env.WP_PRODUCTION) {
+			console.log("inboundMessage.community ", inboundMessage.community);
+
 			inboundMessage.community = messagingEvent.sender.community
 		}
 
@@ -224,6 +234,7 @@ const receivedPostback = (messagingEvent) => {
 		
 	}
 	if (process.env.WP_PRODUCTION) {
+		console.log("inboundPostbackMessage.community ", inboundPostbackMessage.community);
 		inboundPostbackMessage.community = messagingEvent.sender.community
 	}
 

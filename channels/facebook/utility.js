@@ -573,11 +573,12 @@ var generateProof = (accessToken) => {
 	if (!process.env.WP_PRODUCTION) {
 		return 'access_token=' + accessToken 
 	}
-	const appsecretTime = moment().unix() - 5;
-	const appsecretProof = crypto
-		.createHmac('sha256', process.env.MESSENGER_APP_SECRET)
-		.update(accessToken + '|' + appsecretTime)
-		.digest('hex');
+	
+	const appsecretTime = Math.floor(Date.now() / 1000) - 10;
+    const appsecretProof = crypto
+        .createHmac('sha256', process.env.MESSENGER_APP_SECRET)
+        .update(accessToken + '|' + appsecretTime)
+        .digest('hex');
 	return 'access_token=' + accessToken + '&appsecret_proof=' + appsecretProof + '&appsecret_time=' + appsecretTime
 }
 
