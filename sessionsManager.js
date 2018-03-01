@@ -334,6 +334,46 @@ const handleEvent = (session, event) => {
 			})
 	}
 }
+/**
+ * This allows Dialogflow events to be sent to different sources
+ * @param {*} session //orginal session
+ * @param {*} eventFunction  //function to call to act on new session
+ * @param {*} sourceType //source to post message to
+ * @param {*} channel //channel to post message to
+ */
+const postEventToSource = (sourceType, session, eventFunction, channel) => {
+	return new Promise(resolve => {
+        createSessionByEvent(session, sourceType, channel)
+            .then(session => {
+					return new Promise(resolve => {
+						if (eventFunction) {
+							console.log("calling function ", eventFunction)
+							eventFunction(session)
+							setTimeout(() => {
+								resolve(session)
+							}, 3000)
+						} else {
+							console.error("No function to call")
+							resolve(session)
+						}
+					})   
+            }).then((session) => {
+                return removeSessionBySource(session.source)
+            }).then(() => {
+                resolve()
+            })
+    })
+}
+
+const createSessionByEvent = (session, sourceType, channel)  => {
+    const messagingEvent = {
+        source: session.from,
+        sourceType: sourceType,
+        channel: channel,
+        profile: session.profile
+    }
+    return getSessionByChannelEvent(messagingEvent)
+}
 
 module.exports.handleInboundChannelPostback = handleInboundChannelPostback
 module.exports.handleInboundChannelMessage = handleInboundChannelMessage
@@ -343,7 +383,7 @@ module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent
 module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent
 module.exports.inboundFacebookWorkplaceInstallEvent = inboundFacebookWorkplaceInstallEvent
 module.exports.inboundFacebookWorkplaceUninstallEvent = inboundFacebookWorkplaceUninstallEvent
-
+module.exports.postEventToSource = postEventToSource
 module.exports.inboundNexmoEvent = inboundNexmoEvent
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES
 module.exports.SOURCE_TYPE = SOURCE_TYPE
