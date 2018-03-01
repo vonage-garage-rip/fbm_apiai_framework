@@ -367,7 +367,8 @@ const postEventToSource = (sourceType, session, eventFunction, channel) => {
 
 const createSessionByEvent = (session, sourceType, channel)  => {
     const messagingEvent = {
-        source: session.from,
+		source: session.from,
+		from: session.from,
         sourceType: sourceType,
         channel: channel,
         profile: session.profile
