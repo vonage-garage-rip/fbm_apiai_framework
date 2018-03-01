@@ -159,6 +159,7 @@ function receivedMessageRead(event) {
 
 function sendTextMessage(recipientId, text, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -200,6 +201,7 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, acc
 	if (buttons && buttons.length > 0) element.buttons = buttons
 
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -219,6 +221,7 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, acc
 
 function sendCustomMessage(recipientId, messageObject, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -230,6 +233,7 @@ function sendCustomMessage(recipientId, messageObject, accessToken) {
 
 function sendQuickReply(recipientId, title, quickReplies, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -255,6 +259,7 @@ function sendQuickReply(recipientId, title, quickReplies, accessToken) {
 
 function sendImageMessage(recipientId, url, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -317,6 +322,7 @@ function sendTypingOff(recipientId, accessToken) {
  */
 function sendAccountLinking(recipientId, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
