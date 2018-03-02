@@ -460,7 +460,7 @@ var verifySubscription = (req, res) => {
 }
 
 var getCommunity = (accessToken) => {
-	return new Promise( resolve => {
+	return new Promise( (resolve, reject) => {
 		var options = {
 			uri: FACEBOOK_GRAPH_URL + "/community?"+generateProof(accessToken),
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -468,10 +468,11 @@ var getCommunity = (accessToken) => {
 
 		rpn(options)
 			.then( json => {
-				return resolve(JSON.parse(json))
+				resolve(JSON.parse(json))
 			})
-			.catch(err => {
-				console.error("getCommunity got an error:", err) /// show status code, status message and error
+			.catch(error => {
+				console.error("getCommunity got an error:", error) /// show status code, status message and error
+				reject(error)
 			})
 	})
 }

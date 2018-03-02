@@ -336,10 +336,10 @@ const getProfileApiBatch = (keys, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKE
 const getCommunity = (accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	return new Promise( resolve => {
 		if ( community ) { 
-			return Promise.resolve(community)
+			resolve(community)
 		}
 		else {
-			utility.getCommunity(accessToken)
+			return utility.getCommunity(accessToken)
 				.then(communityResult => {
 					community = communityResult
 					resolve(community)
