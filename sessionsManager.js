@@ -340,15 +340,17 @@ const handleEvent = (session, event) => {
  * @param {*} eventFunction  //function to call to act on new session
  * @param {*} sourceType //source to post message to
  * @param {*} channel //channel to post message to
+ * @param {*} args //optional parameters that are passed into eventFunction
+
  */
-const postEventToSource = (sourceType, session, eventFunction, channel) => {
+const postEventToSource = (sourceType, session, eventFunction, args=null, channel) => {
 	return new Promise(resolve => {
         createSessionByEvent(session, sourceType, channel)
             .then(session => {
 					return new Promise(resolve => {
 						if (eventFunction) {
 							console.log("calling function ", eventFunction)
-							eventFunction(session)
+							eventFunction(session, args)
 							setTimeout(() => {
 								resolve(session)
 							}, 3000)
