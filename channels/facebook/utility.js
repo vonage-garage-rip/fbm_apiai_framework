@@ -158,6 +158,7 @@ function receivedMessageRead(event) {
 }
 
 function sendTextMessage(recipientId, text, accessToken) {
+	console.log("**sendTextMessage **")
 	var messageData = {
 		messaging_type:"RESPONSE",
 		recipient: {
