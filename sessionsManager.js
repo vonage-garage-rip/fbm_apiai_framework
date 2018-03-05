@@ -172,17 +172,19 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			}
 
 			if (messagingEvent.community ) {
-				messagingEvent.community = messagingEvent.community
+				mappedChatSession.community = messagingEvent.community
 			}
 
 			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community.id : null 
-			tokensDb.getAccessToken(communityId )
+			tokensDb.getAccessToken(communityId)
 			.then(json => {
+				console.log('tokensDb.getAccessToken json', json)
 				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 				if (json) {
 					access_token = json.access_token
 					mappedChatSession.communityAccessToken = json.access_token
 				} 
+				console.log("mappedChatSession", mappedChatSession)
 				userChannelToSessions[messagingEvent.source] = mappedChatSession
 				return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
 			})
