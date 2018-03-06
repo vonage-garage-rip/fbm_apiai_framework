@@ -178,7 +178,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community.id : null 
 			tokensDb.getAccessToken(communityId)
 			.then(json => {
-				console.log('tokensDb.getAccessToken json', json)
 				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 				if (json) {
 					access_token = json.access_token
