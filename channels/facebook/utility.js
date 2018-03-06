@@ -194,6 +194,8 @@ function sendTextMessage(recipientId, text, accessToken) {
 } */
 
 function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, accessToken) {
+	console.log("**sendGenericMessage **")
+
 	let element = {
 		title: title,
 		image_url: imageUrl,
@@ -221,6 +223,7 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, acc
 }
 
 function sendCustomMessage(recipientId, messageObject, accessToken) {
+	console.log("**sendCustomMessage **")
 	var messageData = {
 		messaging_type:"RESPONSE",
 		recipient: {
@@ -233,6 +236,8 @@ function sendCustomMessage(recipientId, messageObject, accessToken) {
 }
 
 function sendQuickReply(recipientId, title, quickReplies, accessToken) {
+	console.log("**sendQuickReply **")
+
 	var messageData = {
 		messaging_type:"RESPONSE",
 		recipient: {
@@ -392,6 +397,7 @@ function getUserProfile(userId, fields, accessToken) {
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 			json: true
 		}
+		console.log('getUserProfile options',options)
   
 		rpn(options)
 			.then( json => {
