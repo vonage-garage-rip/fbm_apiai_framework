@@ -362,7 +362,8 @@ const postEventToSource = (sourceType, session, eventFunction, args=null, channe
 						}
 					})   
             }).then((session) => {
-                return removeSessionBySource(session.source)
+				resolve()
+                // return removeSessionBySource(session.source)
             }).then(() => {
                 resolve()
             })
