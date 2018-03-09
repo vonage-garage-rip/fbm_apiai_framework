@@ -272,7 +272,7 @@ function processWorkplaceSecurityEvents(data) {
 function sendMessage(messageObj, session) {
 
 	var accessToken = WORKPLACE_PAGE_ACCESS_TOKEN
-	if (session.communityAccessToken) {
+	if (process.env.WP_PRODUCTION && session.communityAccessToken) {
 		accessToken = session.communityAccessToken
 	}
 
