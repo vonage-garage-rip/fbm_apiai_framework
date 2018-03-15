@@ -179,6 +179,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			tokensDb.getAccessToken(communityId)
 			.then(json => {
 				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
+				console.log("USING WORKPLACE_PAGE_ACCESS_TOKEN", access_token)
 				if (json) {
 					access_token = json.access_token
 					mappedChatSession.communityAccessToken = json.access_token
