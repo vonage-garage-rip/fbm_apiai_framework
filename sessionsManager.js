@@ -124,7 +124,9 @@ const getSessionBySessionId = sessionId => {
 }
 
 const clearChatSessions = () => {
-	chatSessions = []
+	chatSessions = {}
+	channels = {}
+	userChannelToSessions = {}
 }
 
 /*
