@@ -123,6 +123,10 @@ const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId]
 }
 
+const clearChatSessions = () => {
+	chatSessions = []
+}
+
 /*
  * Return new or existing chat session Object.
  * 
@@ -402,3 +406,4 @@ module.exports.removeSessionBySource = removeSessionBySource
 module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
 module.exports.getDB = getDB
+module.exports.clearChatSessions = clearChatSessions
