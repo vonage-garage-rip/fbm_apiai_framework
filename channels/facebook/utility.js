@@ -569,6 +569,27 @@ var getCompany = (accessToken) => {
 	})
 
 }
+
+var getGroupInfo = (groupId, accessToken) => {
+	return new Promise((resolve, reject) => {
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + groupId + "?"+generateProof(accessToken),
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getGroupInfo", json)
+				return resolve(json)
+			})
+			.catch(err => {
+				console.error("getGroupInfo got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+}
 /**
  * 
  * For Production installs of Application, 
@@ -595,5 +616,5 @@ module.exports = {
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, generateProof
+	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, generateProof
 }

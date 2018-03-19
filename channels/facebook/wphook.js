@@ -347,6 +347,14 @@ const getCommunity = (accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 		}
 	})
 }
+const getGroupInfo = (groupId, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return new Promise( resolve => {
+	utility.getGroupInfo(groupId, accessToken)
+		.then(groupInfo => {
+			resolve(groupInfo)
+		})
+	})
+}
 
 const webhookSubscribe = () => {
 	utility.webhookSubscribe()
@@ -368,5 +376,6 @@ module.exports.sendProfileApiBatch = sendProfileApiBatch
 module.exports.getProfileApiBatch = getProfileApiBatch
 
 module.exports.getCommunity = getCommunity
+module.exports.getGroupInfo = getGroupInfo
 module.exports.webhookSubscribe = webhookSubscribe
 module.exports.generateProof = generateProof
