@@ -184,7 +184,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			}
 
 			if (messagingEvent.community ) {
-				mappedChatSession.community = messagingEvent.community.toString()
+				mappedChatSession.community = String(messagingEvent.community)
 			}
 
 			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community : null 
