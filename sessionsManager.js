@@ -186,8 +186,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
 				console.log("USING WORKPLACE_PAGE_ACCESS_TOKEN", access_token)
 				if (json) {
-					access_token = json.access_token
-					mappedChatSession.communityAccessToken = json.access_token
+					mappedChatSession.community = json
 				} 
 				console.log("mappedChatSession", mappedChatSession)
 				userChannelToSessions[messagingEvent.source] = mappedChatSession
