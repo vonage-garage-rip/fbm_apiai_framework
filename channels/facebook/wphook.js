@@ -132,7 +132,7 @@ function processPageEvents(data) {
 				}
 
 				if (process.env.WP_PRODUCTION) {
-					inboundMessage.community = change.value.community
+					inboundMessage.community = change.value.community.id
 					console.log("inboundMessage.community ", inboundMessage.community);
 
 				}
@@ -197,7 +197,7 @@ const receivedMessage = (messagingEvent, pageID) => {
 		if (process.env.WP_PRODUCTION) {
 			console.log("inboundMessage.community ", inboundMessage.community);
 
-			inboundMessage.community = messagingEvent.sender.community
+			inboundMessage.community = messagingEvent.sender.community.id
 		}
 
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
@@ -235,7 +235,7 @@ const receivedPostback = (messagingEvent) => {
 	}
 	if (process.env.WP_PRODUCTION) {
 		console.log("inboundPostbackMessage.community ", inboundPostbackMessage.community);
-		inboundPostbackMessage.community = messagingEvent.sender.community
+		inboundPostbackMessage.community = messagingEvent.sender.community.id
 	}
 
 	/// TODO: promisfy this to send the 200 response back as quickly as possible

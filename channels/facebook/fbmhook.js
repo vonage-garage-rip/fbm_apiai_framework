@@ -112,7 +112,7 @@ const receivedMessage = (messagingEvent) => {
 		}
 
 		if (messagingEvent.sender.community ) {
-			messagingEvent.community = messagingEvent.sender.community
+			messagingEvent.community = messagingEvent.sender.community.id
 		}
 
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
