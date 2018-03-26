@@ -124,6 +124,7 @@ const getSessionBySessionId = sessionId => {
 }
 
 const clearChatSessions = () => {
+	console.log("**Removing non-saved chat sessions")
 	chatSessions = {}
 	userChannelToSessions = {}
 }
