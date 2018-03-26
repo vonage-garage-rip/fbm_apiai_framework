@@ -124,7 +124,7 @@ const getSessionBySessionId = sessionId => {
 }
 
 const clearChatSessions = (communityId) => {
-	console.log("**Removing chat sessions for community")
+	console.log("**Removing chat sessions for community", communityId)
 	chatSessions = {}
 	userChannelToSessions = {}
 
@@ -184,7 +184,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			}
 
 			if (messagingEvent.community ) {
-				mappedChatSession.community = messagingEvent.community
+				mappedChatSession.community = messagingEvent.community.toString()
 			}
 
 			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community : null 
