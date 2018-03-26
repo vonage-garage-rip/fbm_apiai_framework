@@ -61,13 +61,13 @@ class SessionsDB {
             .on("value", function(response) {
 				var value = response.val();
 				console.log("removeSessionByCommunity", value)
-                    if (value) {
-						for (var i = 0; i <Object.values(value).length; i++ ) {
-							var objRef =  self.db.ref(ACTIVE_SESSIONS).child(Object.keys(value)[i])
-							objRef.remove()
-						}
+				if (value) {
+					for (var i = 0; i <Object.values(value).length; i++ ) {
+						var objRef =  self.db.ref(ACTIVE_SESSIONS).child(Object.keys(value)[i])
+						objRef.remove()
 					}
-                    resolve(null)
+				}
+				resolve(null)
             })
         });
 	}
