@@ -598,11 +598,12 @@ var parseSignedRequest = (request) => {
 		SignedRequest.secret = process.env.MESSENGER_APP_SECRET;
 		var signedRequest = new SignedRequest(request);
 		signedRequest.parse(function (errors, request) {
+			
 			console.log(request.isValid());
 			console.log(request.data)
 			console.log(errors)
 
-			if (request.isValid()) {
+			if (request.data) {
 				resolve(request.data)
 			} else {
 				var error = new Error(errors.join(","))

@@ -123,10 +123,12 @@ const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId]
 }
 
-const clearChatSessions = () => {
-	console.log("**Removing non-saved chat sessions")
+const clearChatSessions = (communityId) => {
+	console.log("**Removing chat sessions for community")
 	chatSessions = {}
 	userChannelToSessions = {}
+	sessionsDb.removeSessionsByCommunity(communityId)
+
 }
 
 /*
@@ -410,3 +412,4 @@ module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
 module.exports.getDB = getDB
 module.exports.clearChatSessions = clearChatSessions
+
