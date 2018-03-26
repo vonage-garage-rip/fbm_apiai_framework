@@ -34,7 +34,19 @@ class TokenDB {
 		})
 	}
 
+	removeAccessToken(communityId) {
+		let self = this
+		return new Promise( resolve => {    
+			var ref = self.db.ref(ACTIVE_SESSIONS)
+			var tokenRef = self.db.ref(TOKENS_DB_NAME).child(communityId)
+			tokenRef.remove()
+			resolve(communityId)
+		})
+	}
+
+
 }
+
 
 //var sessionsDB = new SessionsDB()
 module.exports = TokenDB
