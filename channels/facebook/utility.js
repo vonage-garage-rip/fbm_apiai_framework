@@ -590,6 +590,27 @@ var getGroupInfo = (groupId, accessToken) => {
 			})
 	})
 }
+
+var parseSignedRequest = (request) => {
+	return new Promise((resolve, reject) => {
+		var SignedRequest = require('facebook-signed-request');
+		console.log("signedRequest", request)
+		SignedRequest.secret = process.env.MESSENGER_APP_SECRET;
+		var signedRequest = new SignedRequest(request);
+		signedRequest.parse(function (errors, request) {
+			console.log(request.isValid());
+			console.log(request.data)
+			console.log(errors)
+
+			if (request.isValid()) {
+				resolve(request.data)
+			} else {
+				var error = new Error(errors.join(","))
+				reject(error)
+			}
+		});
+	});
+}
 /**
  * 
  * For Production installs of Application, 
@@ -616,5 +637,5 @@ module.exports = {
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, generateProof
+	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, parseSignedRequest, generateProof
 }

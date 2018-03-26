@@ -364,6 +364,10 @@ const generateProof = (accessToken) => {
 	return utility.generateProof(accessToken)
 }
 
+const parseSignedRequest = (signedRequest) => {
+	return utility.parseSignedRequest(signedRequest)
+}
+
 module.exports.handleInboundEvent = handleInboundEvent
 module.exports.handleInboundInstallEvent = handleInboundInstallEvent
 module.exports.handleInboundUninstallEvent = handleInboundUninstallEvent
@@ -379,3 +383,4 @@ module.exports.getCommunity = getCommunity
 module.exports.getGroupInfo = getGroupInfo
 module.exports.webhookSubscribe = webhookSubscribe
 module.exports.generateProof = generateProof
+module.exports.parseSignedRequest = parseSignedRequest
