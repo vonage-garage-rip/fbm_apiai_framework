@@ -128,13 +128,16 @@ const getSessionBySessionId = sessionId => {
 
 const clearChatSessions = (communityId) => {
 	console.log("**Removing chat sessions for community", communityId)
-	chatSessions = {}
-	userChannelToSessions = {}
 
-	// sessionsDb.removeSessionsByCommunity(communityId)
-	// .then(() => {
-	// 	return tokensDb.removeAccessToken(communityId)
-	// })
+
+	sessionsDb.removeSessionsByCommunity(communityId)
+	.then(() => {
+		return tokensDb.removeAccessToken(communityId)
+	}).then(() => {
+		chatSessions = {}
+		userChannelToSessions = {}
+		getAllActiveSessions()
+	})
 
 }
 
