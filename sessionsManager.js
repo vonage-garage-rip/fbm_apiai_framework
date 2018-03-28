@@ -416,4 +416,4 @@ module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
 module.exports.getDB = getDB
 module.exports.clearChatSessions = clearChatSessions
-
+module.exports.getAllActiveSessions = getAllActiveSessions
