@@ -58,7 +58,7 @@ class SessionsDB {
 		let self = this
         return new Promise(function (resolve, reject) {
 			var meetingsRef = self.db.ref(ACTIVE_SESSIONS).orderByChild('community').equalTo(communityId)
-            .on("value", function(response) {
+            .once("value", function(response) {
 				var value = response.val();
 				console.log("removeSessionByCommunity", value)
 				if (value) {
