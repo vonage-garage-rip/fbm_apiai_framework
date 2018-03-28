@@ -62,6 +62,9 @@ const getAllActiveSessions = () => {
 				chatSessions[sessionID] = session
 				userChannelToSessions[session.source] = session
 			}
+			console.log("chatSessions", chatSessions);
+			console.log("userChannelToSessions", userChannelToSessions);
+
 		})
 		.catch(error => {
 			console.error("sessionsManager.getAllActiveSessions caught an error: " + error)
@@ -128,10 +131,10 @@ const clearChatSessions = (communityId) => {
 	chatSessions = {}
 	userChannelToSessions = {}
 
-	sessionsDb.removeSessionsByCommunity(communityId)
-	.then(() => {
-		return tokensDb.removeAccessToken(communityId)
-	})
+	// sessionsDb.removeSessionsByCommunity(communityId)
+	// .then(() => {
+	// 	return tokensDb.removeAccessToken(communityId)
+	// })
 
 }
 
