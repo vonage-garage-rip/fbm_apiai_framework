@@ -134,8 +134,23 @@ const clearChatSessions = (communityId) => {
 	.then(() => {
 		return tokensDb.removeAccessToken(communityId)
 	}).then(() => {
-		chatSessions = {}
-		userChannelToSessions = {}
+
+		//remove sessions from userChannelToSessions/chatSessions 
+		//when app is un-installed 
+		for (const session in userChannelToSessions) {
+			if (userChannelToSessions[session].community == communityId) {
+				console.log("removing session from  userChannelToSessions")
+				delete userChannelToSessions[session]
+			}
+		}
+	
+		for (const session in chatSessions) {
+			if (chatSessions[session].community == communityId) {
+				console.log("removing session from chatSessions")
+				delete chatSessions[session]
+			}
+		}
+		
 		getAllActiveSessions()
 	})
 
