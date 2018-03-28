@@ -163,13 +163,16 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			mappedChatSession.lastInboundMessage = moment().format("MMMM Do YYYY, h:mm:ss a")
 			
 			if ( messagingEvent.from ) {
-				updateSession(mappedChatSession, {from: messagingEvent.from})
+				mappedChatSession.from = messagingEvent.from 
 			}
 			if ( messagingEvent.data ) {
 				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
-				updateSession(mappedChatSession, {data: mergedData})
+				mappedChatSession.data = mergedData
 			}
-			return resolve(mappedChatSession)
+			sessionsDb.saveSession(mappedChatSession)
+			.then(() => {
+				return resolve(mappedChatSession)
+			})
 		}
 		else {
 			// Set new session 
