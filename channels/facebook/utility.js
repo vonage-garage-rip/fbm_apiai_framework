@@ -9,7 +9,7 @@ const
 
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL
 
-const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.10/"
+const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.12/"
 
 const PROFILE_API = {
 	PERSISTENT_MENU: "persistent_menu",
