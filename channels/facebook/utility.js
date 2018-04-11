@@ -603,12 +603,13 @@ var parseSignedRequest = (request) => {
 			console.log(request.data)
 			console.log(errors)
 
-			if (request.data) {
-				resolve(request.data)
-			} else {
-				var error = new Error(errors.join(","))
-				reject(error)
-			}
+			// if (request.data) {
+			// 	resolve(request.data)
+			// } else {
+			// 	var error = new Error(errors.join(","))
+			// 	reject(error)
+			// }
+			resolve(request.data)
 		});
 	});
 }
