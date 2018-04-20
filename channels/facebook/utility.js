@@ -614,7 +614,7 @@ var parseSignedRequest = (request) => {
 			reject(new Error('Signed request is malformatted', request))
 		  }
 		  const [signature, payload] = parts.map(value => base64url.decode(value));
-		  const expectedSignature = crypto.createHmac('sha256', process.env.APP_SECRET)
+		  const expectedSignature = crypto.createHmac('sha256', process.env.MESSENGER_APP_SECRET)
 			.update(parts[1])
 			.digest('hex');
 		  if (expectedSignature !== signature) {
