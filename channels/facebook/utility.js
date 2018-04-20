@@ -621,7 +621,7 @@ var parseSignedRequest = (request) => {
 		  if (expectedSignature !== signature) {
 			reject(new Error(`Signed request does not match. Expected ${expectedSignature} but got ${signature}.`))
 		  } else {
-			  resolve(payload)
+			  resolve(JSON.parse(payload))
 		  }
 	});
 }
