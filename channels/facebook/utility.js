@@ -593,24 +593,35 @@ var getGroupInfo = (groupId, accessToken) => {
 
 var parseSignedRequest = (request) => {
 	return new Promise((resolve, reject) => {
-		var SignedRequest = require('facebook-signed-request');
-		console.log("signedRequest", request)
-		SignedRequest.secret = process.env.MESSENGER_APP_SECRET;
-		var signedRequest = new SignedRequest(request);
-		signedRequest.parse(function (errors, request) {
-			
-			console.log(request.isValid());
-			console.log(request.data)
-			console.log(errors)
 
-			// if (request.data) {
-			// 	resolve(request.data)
-			// } else {
-			// 	var error = new Error(errors.join(","))
-			// 	reject(error)
-			// }
-			resolve(request.data)
-		});
+		// var SignedRequest = require('facebook-signed-request');
+		console.log("signedRequest", request)
+		// SignedRequest.secret = process.env.MESSENGER_APP_SECRET;
+		// var signedRequest = new SignedRequest(request);
+		// signedRequest.parse(function (errors, request) {
+			
+		// 	console.log(request.isValid());
+		// 	console.log(request.data)
+		// 	console.log(errors)
+		// 	resolve(request.data)
+		// });
+
+		if (!request) {
+			reject(new Error('No signed request sent'))
+		  }
+		  const parts = request.split('.');
+		  if (parts.length !== 2) {
+			reject(new Error('Signed request is malformatted', request))
+		  }
+		  const [signature, payload] = parts.map(value => base64url.decode(value));
+		  const expectedSignature = crypto.createHmac('sha256', process.env.APP_SECRET)
+			.update(parts[1])
+			.digest('hex');
+		  if (expectedSignature !== signature) {
+			reject(new Error(`Signed request does not match. Expected ${expectedSignature} but got ${signature}.`))
+		  } else {
+			  resolve(payload)
+		  }
 	});
 }
 /**
