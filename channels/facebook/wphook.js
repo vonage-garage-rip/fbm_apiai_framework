@@ -234,8 +234,8 @@ const receivedPostback = (messagingEvent) => {
 		
 	}
 	if (process.env.WP_PRODUCTION) {
-		console.log("inboundPostbackMessage.community ", inboundPostbackMessage.community);
 		inboundPostbackMessage.community = messagingEvent.sender.community.id
+		console.log("inboundPostbackMessage.community ", inboundPostbackMessage.community);
 	}
 
 	/// TODO: promisfy this to send the 200 response back as quickly as possible
