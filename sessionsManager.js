@@ -173,12 +173,20 @@ var getSessionByChannelEvent = (messagingEvent) => {
 
 		console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
+		if (process.env.WP_PRODUCTION && !mappedChatSession.communityAccessToken) {
+			removeSessionBySource(messagingEvent.source)
+			mappedChatSession = null
+		}
+		
 		if (mappedChatSession) {
 			console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
 			mappedChatSession.lastInboundMessage = moment().format("MMMM Do YYYY, h:mm:ss a")
 			
 			if ( messagingEvent.from ) {
 				mappedChatSession.from = messagingEvent.from 
+			}
+			if ( messagingEvent.profile ) {
+				mappedChatSession.profile = messagingEvent.profile 
 			}
 			if ( messagingEvent.data ) {
 				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
@@ -228,10 +236,9 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			.then(json => {
 				console.log("'from' profile:" + JSON.stringify(json))
 				mappedChatSession.profile = json
-				return mappedChatSession
+				return sessionsDb.saveSession(mappedChatSession)
 			})
 			.then(session => {
-				sessionsDb.saveSession(session)
 				return resolve(session)
 			})
 			.catch(error => {
