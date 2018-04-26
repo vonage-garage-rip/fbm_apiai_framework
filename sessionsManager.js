@@ -174,7 +174,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 		console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
 		console.log("mappedChatSession ", mappedChatSession)
-		if (process.env.WP_PRODUCTION && (typeof mappedChatSession.communityAccessToken == "undefined")) {
+		if (process.env.WP_PRODUCTION && mappedChatSession != null && (typeof mappedChatSession.communityAccessToken == "undefined")) {
 			console.error("mappedChatSession does not contain communityAccessToken")
 			removeSessionBySource(messagingEvent.source)
 			mappedChatSession = null
