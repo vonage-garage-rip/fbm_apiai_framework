@@ -70,19 +70,15 @@ const handlePostRequest = (req, res) => {
 		// workplace_security objects
 		switch (data.object) {
 		case "page":
-			console.log("page event received", data)
 			processPageEvents(data)
 			break
 		case "group":
-			console.log("group event received", data)
 			processGroupEvents(data)
 			break
 		case "user":
-			console.log("user event received", data)
 			processUserEvents(data)
 			break
 		case "workplace_security":
-			console.log("workplace_security event received", data)
 			processWorkplaceSecurityEvents(data)
 			break
 		default:
@@ -111,6 +107,7 @@ function processPageEvents(data) {
 		// Iterate over each messaging event
 		if (pageEntry.messaging) {
 			pageEntry.messaging.forEach(messagingEvent => {
+				console.log("received event",messagingEvent)
 				if (messagingEvent.message) {
 					receivedMessage(messagingEvent, pageID)
 				} else if (messagingEvent.delivery) {
