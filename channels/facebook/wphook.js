@@ -180,6 +180,7 @@ const handleUninstallEvent = (req, res) => {
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
+	console.log("receivedMessage", receivedMessage)
 	if (messagingEvent.message.is_echo) {
 		console.log("Messageing Event Echo: ", messagingEvent)
 		return
@@ -196,9 +197,8 @@ const receivedMessage = (messagingEvent, pageID) => {
 		}
 
 		if (process.env.WP_PRODUCTION) {
-			console.log("inboundMessage.community ", inboundMessage.community);
-
 			inboundMessage.community = messagingEvent.sender.community.id
+			console.log("inboundMessage.community ", inboundMessage.community);
 		}
 
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
