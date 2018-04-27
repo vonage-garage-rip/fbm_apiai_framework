@@ -180,6 +180,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			console.error("mappedChatSession does not contain communityAccessToken")
 			removeSessionBySource(messagingEvent.source)
 			mappedChatSession = null
+			return reject(new Error("No communityAccessToken"))
 		}
 		
 		if (mappedChatSession) {
