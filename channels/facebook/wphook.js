@@ -180,7 +180,7 @@ const handleUninstallEvent = (req, res) => {
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
-	console.log("receivedMessage", receivedMessage)
+	console.log("receivedMessage", messagingEvent)
 	if (messagingEvent.message.is_echo) {
 		console.log("Messageing Event Echo: ", messagingEvent)
 		return
