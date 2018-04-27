@@ -172,7 +172,7 @@ const clearChatSessions = (communityId) => {
  */
 var getSessionByChannelEvent = (messagingEvent) => {
 	return new Promise( (resolve, reject) => {
-
+		console.log("getSessionByChannelEvent messagingEvent", messagingEvent)
 		console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
 		console.log("mappedChatSession ", mappedChatSession)
@@ -222,8 +222,10 @@ var getSessionByChannelEvent = (messagingEvent) => {
 			if (messagingEvent.community ) {
 				mappedChatSession.community = String(messagingEvent.community)
 			}
+			console.log("messagingEvent.community", messagingEvent.community)
 
 			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community : null 
+			console.log("getSessionByChannelEvent communityId:", communityId);
 			tokensDb.getAccessToken(communityId)
 			.then(json => {
 				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
@@ -233,7 +235,6 @@ var getSessionByChannelEvent = (messagingEvent) => {
 					mappedChatSession.communityAccessToken = json.access_token
 				} else {
 				}
-				console.log("mappedChatSession", mappedChatSession)
 				userChannelToSessions[messagingEvent.source] = mappedChatSession
 				return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
 			})
