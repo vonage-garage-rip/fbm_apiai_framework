@@ -197,10 +197,51 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
 				mappedChatSession.data = mergedData
 			}
-			sessionsDb.saveSession(mappedChatSession)
-			.then(() => {
-				return resolve(mappedChatSession)
-			})
+
+			if (process.env.WP_PRODUCTION && (typeof mappedChatSession.communityAccessToken == "undefined")) {
+				//need to verify that community id exists
+				//either in the session or from the Message Event
+				//If they neither has it, bail
+
+				var communityId = mappedChatSession.community
+				if  (typeof messagingEvent.community != "undefined") {
+					communityId = messagingEvent.community
+				}
+
+				if (communityId == null) {
+					//no community ID found
+					//we cant do anything a
+					//TODO: find way to prompt user
+					return reject(new Error("No Communituy Id"))
+				}
+
+				console.log("getSessionByChannelEvent communityId:", communityId);
+				tokensDb.getAccessToken(communityId)
+				.then(json => {
+					if (json) {
+						access_token = json.access_token
+						console.log("USING communityAccessToken", access_token)
+						mappedChatSession.communityAccessToken = json.access_token
+					} else {
+					}
+					userChannelToSessions[messagingEvent.source] = mappedChatSession
+					return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
+				})
+				.then(json => {
+					console.log("'from' profile:" + JSON.stringify(json))
+					mappedChatSession.profile = json
+					return sessionsDb.saveSession(mappedChatSession)
+				}).then(() => {
+					return resolve(mappedChatSession)
+				})
+
+			} else {
+				sessionsDb.saveSession(mappedChatSession)
+				.then(() => {
+					return resolve(mappedChatSession)
+				})
+			}
+			
 		}
 		else {
 			// Set new session 
