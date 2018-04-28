@@ -280,6 +280,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 					console.log("USING communityAccessToken", access_token)
 					mappedChatSession.communityAccessToken = json.access_token
 				} else {
+					return reject(new Error("Could not get profile"))
 				}
 				userChannelToSessions[messagingEvent.source] = mappedChatSession
 				return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
