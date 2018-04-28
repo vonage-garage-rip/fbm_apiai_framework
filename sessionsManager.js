@@ -176,11 +176,12 @@ var getSessionByChannelEvent = (messagingEvent) => {
 		console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
 		console.log("mappedChatSession ", mappedChatSession)
-		if (process.env.WP_PRODUCTION && mappedChatSession != null && (typeof mappedChatSession.communityAccessToken == "undefined")) {
-			console.error("mappedChatSession does not contain communityAccessToken")
-			removeSessionBySource(messagingEvent.source)
-			mappedChatSession = null
-		}
+		// if (process.env.WP_PRODUCTION && mappedChatSession != null && (typeof mappedChatSession.communityAccessToken == "undefined")) {
+		// 	console.error("mappedChatSession does not contain communityAccessToken")
+		// 	removeSessionBySource(messagingEvent.source)
+		// 	mappedChatSession = null
+		// 	return reject(new Error("No communityAccessToken"))
+		// }
 		
 		if (mappedChatSession) {
 			console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
