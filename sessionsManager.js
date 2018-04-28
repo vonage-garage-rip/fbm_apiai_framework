@@ -197,7 +197,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
 				mappedChatSession.data = mergedData
 			}
-
+			//TODO: do we need to check for profile as well??
 			if (process.env.WP_PRODUCTION && (typeof mappedChatSession.communityAccessToken == "undefined")) {
 				//need to verify that community id exists
 				//either in the session or from the Message Event
@@ -260,7 +260,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				profile: {},
 				sourceType: messagingEvent.sourceType || null,
 				source: messagingEvent.source || null, 
-				from: messagingEvent.from || null,
+				from: messagingEvent.from || source,
 				lastInboundMessage: moment().format("MMMM Do YYYY, h:mm:ss a"),
 				externalIntegrations: {},
 				data: messagingEvent.data || {},
