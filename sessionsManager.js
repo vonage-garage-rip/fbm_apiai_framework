@@ -202,6 +202,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				//need to verify that community id exists
 				//either in the session or from the Message Event
 				//If they neither has it, bail
+				console.log("mappedChatSession.communityAccessToken does not exist");
 
 				var communityId = mappedChatSession.community
 				if  (typeof messagingEvent.community != "undefined") {
@@ -212,10 +213,11 @@ var getSessionByChannelEvent = (messagingEvent) => {
 					//no community ID found
 					//we cant do anything a
 					//TODO: find way to prompt user
-					return reject(new Error("No Communituy Id"))
+					console.error("No Community Id")
+					return reject(new Error("No Community Id"))
 				}
 
-				console.log("getSessionByChannelEvent communityId:", communityId);
+				console.log("Got CommunityId", communityId)
 				tokensDb.getAccessToken(communityId)
 				.then(json => {
 					if (json) {
@@ -223,11 +225,14 @@ var getSessionByChannelEvent = (messagingEvent) => {
 						console.log("USING communityAccessToken", access_token)
 						mappedChatSession.communityAccessToken = json.access_token
 					} else {
+						console.error("Couldt not get communityAccessToken")
 					}
+					
 					userChannelToSessions[messagingEvent.source] = mappedChatSession
 					return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
 				})
 				.then(json => {
+					console.log("Added profile to existing mappedChatSession")
 					console.log("'from' profile:" + JSON.stringify(json))
 					mappedChatSession.profile = json
 					return sessionsDb.saveSession(mappedChatSession)
