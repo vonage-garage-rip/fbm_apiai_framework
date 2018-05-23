@@ -54,6 +54,24 @@ class SessionsDB {
 		})
 	}
 
+	removeSessionsByCommunity(communityId) {
+		let self = this
+        return new Promise(function (resolve, reject) {
+			var meetingsRef = self.db.ref(ACTIVE_SESSIONS).orderByChild('community').equalTo(communityId)
+            .once("value", function(response) {
+				var value = response.val();
+				console.log("removeSessionByCommunity", value)
+				if (value) {
+					for (var i = 0; i <Object.values(value).length; i++ ) {
+						var objRef =  self.db.ref(ACTIVE_SESSIONS).child(Object.keys(value)[i])
+						objRef.remove()
+					}
+				}
+				resolve(null)
+            })
+        });
+	}
+
 }
 
 //var sessionsDB = new SessionsDB()

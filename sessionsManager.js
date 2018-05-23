@@ -9,6 +9,8 @@ const EVENTS = {
 	ACCOUNT_LINKED: "ACCOUNT_LINKED"
 }
 var sessionsDb
+var tokensDb
+
 module.exports.EVENTS = EVENTS
 
 require("log-timestamp")
@@ -44,8 +46,11 @@ var channels = {}
 var chatSessions = {}
 var userChannelToSessions = {} // channels/integrations from user are pointing to chat sessions
 var SessionsDbClass = require("./DB/sessionsDB")
+var TokensDbClass = require("./DB/tokenDB")
 
 const getAllActiveSessions = () => {
+	console.log("userChannelToSessions", userChannelToSessions);
+	console.log("chatSessions", chatSessions);
 	sessionsDb.getAllActiveSessions()
 		.then(activeSessions => {
 			for ( const sessionID in activeSessions) {
@@ -59,6 +64,9 @@ const getAllActiveSessions = () => {
 				chatSessions[sessionID] = session
 				userChannelToSessions[session.source] = session
 			}
+			// console.log("chatSessions", chatSessions);
+			// console.log("userChannelToSessions", userChannelToSessions);
+
 		})
 		.catch(error => {
 			console.error("sessionsManager.getAllActiveSessions caught an error: " + error)
@@ -67,6 +75,7 @@ const getAllActiveSessions = () => {
 
 const setDB = (db) => {
 	sessionsDb = new SessionsDbClass(db)
+	tokensDb = new TokensDbClass(db)
 	getAllActiveSessions()
 }
 
@@ -107,8 +116,46 @@ const inboundNexmoEvent = (req, res) => {
 	getChannel(CHANNELS.NEXMO).handleInboundEvent(req, res)
 }
 
+const inboundFacebookWorkplaceInstallEvent = (req, res) => {
+	return getChannel(CHANNELS.FB_WORKPLACE).handleInboundInstallEvent(req, res)
+}
+
+const inboundFacebookWorkplaceUninstallEvent = (req, res) => {
+	return getChannel(CHANNELS.FB_WORKPLACE).handleInboundUninstallEvent(req, res)
+}
+
 const getSessionBySessionId = sessionId => {
 	return chatSessions[sessionId]
+}
+
+const clearChatSessions = (communityId) => {
+	console.log("**Removing chat sessions for community", communityId)
+
+
+	sessionsDb.removeSessionsByCommunity(communityId)
+	.then(() => {
+		return tokensDb.removeAccessToken(communityId)
+	}).then(() => {
+
+		//remove sessions from userChannelToSessions/chatSessions 
+		//when app is un-installed 
+		for (const session in userChannelToSessions) {
+			if (userChannelToSessions[session].community == communityId) {
+				console.log("removing session from  userChannelToSessions")
+				delete userChannelToSessions[session]
+			}
+		}
+	
+		for (const session in chatSessions) {
+			if (chatSessions[session].community == communityId) {
+				console.log("removing session from chatSessions")
+				delete chatSessions[session]
+			}
+		}
+		
+		getAllActiveSessions()
+	})
+
 }
 
 /*
@@ -125,21 +172,82 @@ const getSessionBySessionId = sessionId => {
  */
 var getSessionByChannelEvent = (messagingEvent) => {
 	return new Promise( (resolve, reject) => {
-
+		console.log("getSessionByChannelEvent messagingEvent", messagingEvent)
 		console.log("getSessionByChannelEvent looking for source: %s.", messagingEvent.source)
 		let mappedChatSession = userChannelToSessions[messagingEvent.source]
+		console.log("mappedChatSession ", mappedChatSession)
+		// if (process.env.WP_PRODUCTION && mappedChatSession != null && (typeof mappedChatSession.communityAccessToken == "undefined")) {
+		// 	console.error("mappedChatSession does not contain communityAccessToken")
+		// 	removeSessionBySource(messagingEvent.source)
+		// 	mappedChatSession = null
+		// 	return reject(new Error("No communityAccessToken"))
+		// }
+		
 		if (mappedChatSession) {
 			console.log("getSessionByChannelEvent found source: %s.",  messagingEvent.source)
 			mappedChatSession.lastInboundMessage = moment().format("MMMM Do YYYY, h:mm:ss a")
 			
 			if ( messagingEvent.from ) {
-				updateSession(mappedChatSession, {from: messagingEvent.from})
+				mappedChatSession.from = messagingEvent.from 
+			}
+			if ( messagingEvent.profile ) {
+				mappedChatSession.profile = messagingEvent.profile 
 			}
 			if ( messagingEvent.data ) {
 				let mergedData = Object.assign(mappedChatSession.data, messagingEvent.data)
-				updateSession(mappedChatSession, {data: mergedData})
+				mappedChatSession.data = mergedData
 			}
-			return resolve(mappedChatSession)
+			//TODO: do we need to check for profile as well??
+			if (process.env.WP_PRODUCTION && (typeof mappedChatSession.communityAccessToken == "undefined")) {
+				//need to verify that community id exists
+				//either in the session or from the Message Event
+				//If they neither has it, bail
+				console.log("mappedChatSession.communityAccessToken does not exist");
+
+				var communityId = mappedChatSession.community
+				if  (typeof messagingEvent.community != "undefined") {
+					communityId = messagingEvent.community
+				}
+
+				if (communityId == null) {
+					//no community ID found
+					//we cant do anything a
+					//TODO: find way to prompt user
+					console.error("No Community Id")
+					return reject(new Error("No Community Id"))
+				}
+
+				console.log("Got CommunityId", communityId)
+				tokensDb.getAccessToken(communityId)
+				.then(json => {
+					if (json) {
+						access_token = json.access_token
+						console.log("USING communityAccessToken", access_token)
+						mappedChatSession.communityAccessToken = json.access_token
+					} else {
+						console.error("Could not get communityAccessToken")
+						return reject(new Error("Could not get communityAccessToken"))
+					}
+					
+					userChannelToSessions[messagingEvent.source] = mappedChatSession
+					return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
+				})
+				.then(json => {
+					console.log("Added profile to existing mappedChatSession")
+					console.log("'from' profile:" + JSON.stringify(json))
+					mappedChatSession.profile = json
+					return sessionsDb.saveSession(mappedChatSession)
+				}).then(() => {
+					return resolve(mappedChatSession)
+				})
+
+			} else {
+				sessionsDb.saveSession(mappedChatSession)
+				.then(() => {
+					return resolve(mappedChatSession)
+				})
+			}
+			
 		}
 		else {
 			// Set new session 
@@ -152,28 +260,48 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				profile: {},
 				sourceType: messagingEvent.sourceType || null,
 				source: messagingEvent.source || null, 
-				from: messagingEvent.from || null,
+				from: messagingEvent.from || source,
 				lastInboundMessage: moment().format("MMMM Do YYYY, h:mm:ss a"),
 				externalIntegrations: {},
 				data: messagingEvent.data || {},
 				apiaiContexts: []
 			}
 
-			userChannelToSessions[messagingEvent.source] = mappedChatSession
-			getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from)
-				.then(json => {
-					console.log("'from' profile:" + JSON.stringify(json))
-					mappedChatSession.profile = json
-					return mappedChatSession
-				})
-				.then(session => {
-					sessionsDb.saveSession(session)
-					return resolve(session)
-				})
-				.catch(error => {
-					console.error("calling get user profile caught an error: " + error)
-					reject(error)
-				})
+			if (messagingEvent.community ) {
+				mappedChatSession.community = String(messagingEvent.community)
+			}
+			console.log("messagingEvent.community", messagingEvent.community)
+
+			var communityId = (typeof messagingEvent.community != "undefined") ? messagingEvent.community : null 
+			console.log("getSessionByChannelEvent communityId:", communityId);
+			tokensDb.getAccessToken(communityId)
+			.then(json => {
+				var access_token = process.env.WORKPLACE_PAGE_ACCESS_TOKEN
+				if (json) {
+					access_token = json.access_token
+					console.log("USING communityAccessToken", access_token)
+					mappedChatSession.communityAccessToken = json.access_token
+				} else {
+					if (process.env.WP_PRODUCTION) {
+						console.error("Could not get communityAccessToken")
+						return reject(new Error("Could not get communityAccessToken"))
+					}
+				}
+				userChannelToSessions[messagingEvent.source] = mappedChatSession
+				return getChannel(mappedChatSession.channelType).getUserProfile(mappedChatSession.from, access_token)
+			})
+			.then(json => {
+				console.log("'from' profile:" + JSON.stringify(json))
+				mappedChatSession.profile = json
+				return sessionsDb.saveSession(mappedChatSession)
+			})
+			.then(session => {
+				return resolve(session)
+			})
+			.catch(error => {
+				console.error("calling get user profile caught an error: " + error)
+				reject(error)
+			})
 		}
 	})
 }
@@ -309,6 +437,50 @@ const handleEvent = (session, event) => {
 			})
 	}
 }
+/**
+ * This allows Dialogflow events to be sent to different sources
+ * @param {*} session //orginal session
+ * @param {*} eventFunction  //function to call to act on new session
+ * @param {*} sourceType //source to post message to
+ * @param {*} channel //channel to post message to
+ * @param {*} args //optional parameters that are passed into eventFunction
+
+ */
+const postEventToSource = (sourceType, session, eventFunction, args=null, channel) => {
+	return new Promise(resolve => {
+        createSessionByEvent(session, sourceType, channel)
+            .then(session => {
+					return new Promise(resolve => {
+						if (eventFunction) {
+							console.log("calling function ", eventFunction)
+							eventFunction(session, args)
+							setTimeout(() => {
+								resolve(session)
+							}, 3000)
+						} else {
+							console.error("No function to call")
+							resolve(session)
+						}
+					})   
+            }).then((session) => {
+				resolve()
+                // return removeSessionBySource(session.source)
+            }).then(() => {
+                resolve()
+            })
+    })
+}
+
+const createSessionByEvent = (session, sourceType, channel)  => {
+    const messagingEvent = {
+		source: session.from,
+		from: session.from,
+        sourceType: sourceType,
+        channel: channel,
+        profile: session.profile
+    }
+    return getSessionByChannelEvent(messagingEvent)
+}
 
 module.exports.handleInboundChannelPostback = handleInboundChannelPostback
 module.exports.handleInboundChannelMessage = handleInboundChannelMessage
@@ -316,6 +488,9 @@ module.exports.getSessionBySessionId = getSessionBySessionId
 module.exports.getSessionByChannelEvent = getSessionByChannelEvent
 module.exports.inboundFacebookMessengerEvent = inboundFacebookMessengerEvent
 module.exports.inboundFacebookWorkplaceEvent = inboundFacebookWorkplaceEvent
+module.exports.inboundFacebookWorkplaceInstallEvent = inboundFacebookWorkplaceInstallEvent
+module.exports.inboundFacebookWorkplaceUninstallEvent = inboundFacebookWorkplaceUninstallEvent
+module.exports.postEventToSource = postEventToSource
 module.exports.inboundNexmoEvent = inboundNexmoEvent
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES
 module.exports.SOURCE_TYPE = SOURCE_TYPE
@@ -328,3 +503,5 @@ module.exports.removeSessionBySource = removeSessionBySource
 module.exports.updateSession = updateSession
 module.exports.getApiAiAgent = getApiAiAgent
 module.exports.getDB = getDB
+module.exports.clearChatSessions = clearChatSessions
+module.exports.getAllActiveSessions = getAllActiveSessions

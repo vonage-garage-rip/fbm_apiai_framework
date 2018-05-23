@@ -111,6 +111,10 @@ const receivedMessage = (messagingEvent) => {
 			quick_reply: messagingEvent.message.quick_reply
 		}
 
+		if (messagingEvent.sender.community ) {
+			messagingEvent.community = messagingEvent.sender.community.id
+		}
+
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
 	}
 	else if (messagingEvent.message.attachments) {
@@ -185,12 +189,12 @@ const receivedAccountLink = (event) => {
 	}
 }
 
-const getUserProfile = (userId) => {
-	return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", MESSENGER_PAGE_ACCESS_TOKEN)
+const getUserProfile = (userId, accessToken = MESSENGER_PAGE_ACCESS_TOKEN) => {
+	return utility.getUserProfile(userId, "first_name,last_name,profile_pic,locale,timezone,gender,is_payment_enabled", accessToken)
 }
 
-const sendProfileApiBatch = (profile, path) => {
-	utility.sendProfileApiBatch(profile, path, MESSENGER_PAGE_ACCESS_TOKEN)
+const sendProfileApiBatch = (profile, path, accessToken = MESSENGER_PAGE_ACCESS_TOKEN) => {
+	utility.sendProfileApiBatch(profile, path, accessToken)
 }
 
 module.exports.handleInboundEvent = handleInboundEvent

@@ -11,6 +11,10 @@
 
 const sessionsManager = require("../../sessionsManager")
 const utility = require("./utility")
+const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
+const tokenDBClass = require("../../DB/tokenDB")
+var tokenDB = new tokenDBClass(firebaseDatabase)
+
 
 // Arbitrary value used to validate a workplace webhook
 const WORKPLACE_VERIFY_TOKEN = process.env.WORKPLACE_VERIFY_TOKEN
@@ -31,6 +35,14 @@ var handleInboundEvent = function (req, res) {
 		handlePostRequest(req, res)
 	}
 }
+
+var handleInboundInstallEvent = function (req, res) {
+	return handleInstallEvent(req, res)
+}
+var handleInboundUninstallEvent = function (req, res) {
+	return handleUninstallEvent(req, res)
+}
+
 /*
  * All callbacks for webhooks are POST-ed. They will be sent to the same
  * webhook. Be sure to subscribe your app to your page to receive callbacks.
@@ -95,6 +107,7 @@ function processPageEvents(data) {
 		// Iterate over each messaging event
 		if (pageEntry.messaging) {
 			pageEntry.messaging.forEach(messagingEvent => {
+				console.log("received event",messagingEvent)
 				if (messagingEvent.message) {
 					receivedMessage(messagingEvent, pageID)
 				} else if (messagingEvent.delivery) {
@@ -114,17 +127,60 @@ function processPageEvents(data) {
 					channel: sessionsManager.CHANNELS.FB_WORKPLACE,
 					sourceType: sessionsManager.SOURCE_TYPE.POST,
 					source: change.value.post_id,
-					from: change.value.sender_id, 
+					from: change.value.sender_id || change.value.from.id, 
 					to: pageID,
 					text: change.value.message.substring(change.value.message.indexOf(" ") + 1)
 				}
+
+				if (process.env.WP_PRODUCTION) {
+					inboundMessage.community = change.value.community.id
+					console.log("inboundMessage.community ", inboundMessage.community);
+
+				}
+
 				sessionsManager.handleInboundChannelMessage(inboundMessage)
 			})
 		}
 	})
 }
 
+const handleInstallEvent = (req, res) => {
+	return new Promise((resolve, reject) => {
+		
+		if (!req.query.code && !req.params['code']) {
+			console.error('No code received.')
+			reject()
+			return
+		}
+		var _json;
+		var code = req.query.code
+		if (req.params['code']) {
+			code = req.params['code'].replace("code=", "")
+		}
+		utility.getAccessToken(req.query.code)
+			.then((accessToken) => {
+				return utility.getCompany(accessToken)
+			}).then((json) => {
+				return tokenDB.saveAccessToken(json)
+			}).then((json) => {
+				console.log("saving access token", json['access_token'])
+				_json = json
+				const profile = require('../../../profile').profile
+				return sendProfileApiBatch(profile, "me/messenger_profile", json['access_token']) 
+			}).then(() => {
+				resolve(_json)
+			}).catch(error => {
+				reject(error)
+			})
+	});
+}
+
+const handleUninstallEvent = (req, res) => {
+	//TODO wating on implmention from FB
+}
+
 const receivedMessage = (messagingEvent, pageID) => {
+	console.log("receivedMessage", messagingEvent)
 	if (messagingEvent.message.is_echo) {
 		console.log("Messageing Event Echo: ", messagingEvent)
 		return
@@ -138,6 +194,11 @@ const receivedMessage = (messagingEvent, pageID) => {
 			from: messagingEvent.sender.id,
 			to: pageID,
 			text: messagingEvent.message.text
+		}
+
+		if (process.env.WP_PRODUCTION) {
+			inboundMessage.community = messagingEvent.sender.community.id
+			console.log("inboundMessage.community ", inboundMessage.community);
 		}
 
 		sessionsManager.handleInboundChannelMessage(inboundMessage)
@@ -170,7 +231,12 @@ const receivedPostback = (messagingEvent) => {
 		source: messagingEvent.thread ? messagingEvent.thread.id : messagingEvent.sender.id,
 		from: messagingEvent.sender.id,
 		to: messagingEvent.recipient.id,
-		payload: payload
+		payload: payload,
+		
+	}
+	if (process.env.WP_PRODUCTION) {
+		inboundPostbackMessage.community = messagingEvent.sender.community.id
+		console.log("inboundPostbackMessage.community ", inboundPostbackMessage.community);
 	}
 
 	/// TODO: promisfy this to send the 200 response back as quickly as possible
@@ -206,32 +272,37 @@ function processWorkplaceSecurityEvents(data) {
 
 function sendMessage(messageObj, session) {
 
+	var accessToken = WORKPLACE_PAGE_ACCESS_TOKEN
+	if (process.env.WP_PRODUCTION && session.communityAccessToken) {
+		accessToken = session.communityAccessToken
+	}
+
 	if (session.sourceType) {
 		switch (session.sourceType) {
 		case sessionsManager.SOURCE_TYPE.POST:
-			sendCommentToPost(session.source, messageObj.speech) // post ID
+			sendCommentToPost(session.source, messageObj.speech, accessToken) // post ID
 			break
 		case sessionsManager.SOURCE_TYPE.GROUP_CHAT:
-			sendTextMessageToExistingGroup(session.source, messageObj.speech) // thread ID
+			sendTextMessageToExistingGroup(session.source, messageObj.speech, accessToken) // thread ID
 			break
 		case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
 
 			//HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
 			switch (messageObj.type) {
 			case sessionsManager.MESSAGE_TYPES.TEXT:
-				utility.sendTextMessage(session.source, messageObj.speech, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendTextMessage(session.source, messageObj.speech, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.IMAGE:
-				utility.sendImageMessage(session.source, messageObj.imageUrl, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendImageMessage(session.source, messageObj.imageUrl, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.CARD:
-				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendGenericMessage(session.source, messageObj.title, messageObj.subtitle, messageObj.imageUrl, messageObj.buttons, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.CUSTOME:
-				utility.sendCustomMessage(session.source, messageObj.payload.facebook, WORKPLACE_PAGE_ACCESS_TOKEN)
+				utility.sendCustomMessage(session.source, messageObj.payload.facebook, accessToken)
 				break
 			}
 			break
@@ -239,33 +310,37 @@ function sendMessage(messageObj, session) {
 	}
 }
 
-function sendNewPostToGroup(groupId, message) {
-	return utility.sendNewPostToGroup(groupId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendNewPostToGroup(groupId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN ) {
+	return utility.sendNewPostToGroup(groupId, message, accessToken)
 }
 
-function sendCommentToPost(postId, message) {
-	return utility.sendCommentToPost(postId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendCommentToPost(postId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN ) {
+	return utility.sendCommentToPost(postId, message, accessToken)
 }
 
-function sendTextMessageToExistingGroup(threadId, message) {
-	return utility.sendNewPostToGroup(threadId, message, WORKPLACE_PAGE_ACCESS_TOKEN)
+function sendTextMessageToExistingGroup(threadId, message, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) {
+	return utility.sendNewPostToGroup(threadId, message, accessToken)
 }
 
-const getUserProfile = userId => {
-	return utility.getUserProfile(userId, "first_name,last_name", WORKPLACE_PAGE_ACCESS_TOKEN)
+const getUserProfile = (userId, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return utility.getUserProfile(userId, "first_name, last_name, email", accessToken)
 }
 
-const sendProfileApiBatch = (profile, path) => {
-	utility.sendProfileApiBatch(profile, path, WORKPLACE_PAGE_ACCESS_TOKEN)
+const sendProfileApiBatch = (profile, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	utility.sendProfileApiBatch(profile, path, accessToken)
+}
+const getProfileApiBatch = (keys, path, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return utility.getProfileApiBatch(keys, path, accessToken)
 }
 
-const getCommunity = () => {
+
+const getCommunity = (accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
 	return new Promise( resolve => {
 		if ( community ) { 
-			return Promise.resolve(community)
+			resolve(community)
 		}
 		else {
-			utility.getCommunity(WORKPLACE_PAGE_ACCESS_TOKEN)
+			return utility.getCommunity(accessToken)
 				.then(communityResult => {
 					community = communityResult
 					resolve(community)
@@ -273,11 +348,40 @@ const getCommunity = () => {
 		}
 	})
 }
+const getGroupInfo = (groupId, accessToken = WORKPLACE_PAGE_ACCESS_TOKEN) => {
+	return new Promise( resolve => {
+	utility.getGroupInfo(groupId, accessToken)
+		.then(groupInfo => {
+			resolve(groupInfo)
+		})
+	})
+}
+
+const webhookSubscribe = () => {
+	utility.webhookSubscribe()
+}
+
+const generateProof = (accessToken) => {
+	return utility.generateProof(accessToken)
+}
+
+const parseSignedRequest = (signedRequest) => {
+	return utility.parseSignedRequest(signedRequest)
+}
 
 module.exports.handleInboundEvent = handleInboundEvent
+module.exports.handleInboundInstallEvent = handleInboundInstallEvent
+module.exports.handleInboundUninstallEvent = handleInboundUninstallEvent
+
 module.exports.sendMessage = sendMessage
 module.exports.sendNewPostToGroup = sendNewPostToGroup
 module.exports.getUserProfile = getUserProfile
 module.exports.startChannel = startChannel
 module.exports.sendProfileApiBatch = sendProfileApiBatch
+module.exports.getProfileApiBatch = getProfileApiBatch
+
 module.exports.getCommunity = getCommunity
+module.exports.getGroupInfo = getGroupInfo
+module.exports.webhookSubscribe = webhookSubscribe
+module.exports.generateProof = generateProof
+module.exports.parseSignedRequest = parseSignedRequest

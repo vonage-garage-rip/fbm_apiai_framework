@@ -3,11 +3,13 @@
 const
 	bodyParser = require("body-parser"),
 	crypto = require("crypto"),
-	rpn = require("request-promise-native")
+	rpn = require("request-promise-native"),
+	moment = require("moment")
+
 
 const AUTHORIZATION_URL = process.env.AUTHORIZATION_URL
 
-const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.10/"
+const FACEBOOK_GRAPH_URL = "https://graph.facebook.com/v2.12/"
 
 const PROFILE_API = {
 	PERSISTENT_MENU: "persistent_menu",
@@ -16,23 +18,43 @@ const PROFILE_API = {
 }
 
 const sendProfileApiBatch = ( propertyBody, path = "me", accessToken) => {
+
 	var options = {
 		method: "POST",
-		uri:FACEBOOK_GRAPH_URL +path+"?access_token=" + accessToken,
+		uri:FACEBOOK_GRAPH_URL+path+"?"+generateProof(accessToken),
 		headers: { "Content-Type": "application/json" },
 		body: propertyBody,
 		json: true // Automatically stringifies the body to JSON
 	}
-
 	rpn(options)
 		.then( parsedBody => {
 			// POST succeeded...
-			console.log("sendProfileApiBatch returned: " + parsedBody)
+			console.log("sendProfileApiBatch returned: ",parsedBody)
 		})
 		.catch( err => {
 			// POST failed...
 			console.log("sendProfileApiBatch returned error: " + err)
 		})
+}
+
+const getProfileApiBatch = (keys, path = "me", accessToken) => {
+	return new Promise(function (resolve, reject) {
+		var options = {
+			method: "GET",
+			uri:FACEBOOK_GRAPH_URL+path+"?fields="+keys+"&"+generateProof(accessToken),
+
+		}
+		rpn(options)
+			.then( json => {
+				console.log("getProfileApiBatch returned: ",json)
+				resolve(JSON.parse(json))
+			})
+			.catch( err => {
+				console.log("getProfileApiBatch returned error: " + err)
+				reject(err)
+			})
+		})
+
 }
 
 /*
@@ -137,6 +159,7 @@ function receivedMessageRead(event) {
 
 function sendTextMessage(recipientId, text, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -178,6 +201,7 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, acc
 	if (buttons && buttons.length > 0) element.buttons = buttons
 
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -197,6 +221,7 @@ function sendGenericMessage(recipientId, title, subtitle, imageUrl, buttons, acc
 
 function sendCustomMessage(recipientId, messageObject, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -208,6 +233,7 @@ function sendCustomMessage(recipientId, messageObject, accessToken) {
 
 function sendQuickReply(recipientId, title, quickReplies, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -233,6 +259,7 @@ function sendQuickReply(recipientId, title, quickReplies, accessToken) {
 
 function sendImageMessage(recipientId, url, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -295,6 +322,7 @@ function sendTypingOff(recipientId, accessToken) {
  */
 function sendAccountLinking(recipientId, accessToken) {
 	var messageData = {
+		messaging_type:"RESPONSE",
 		recipient: {
 			id: recipientId
 		},
@@ -331,7 +359,7 @@ function sendAccountLinking(recipientId, accessToken) {
 function callMessageAPI(messageData, accessToken) {
 	var options = {
 		method: "POST",
-		uri: FACEBOOK_GRAPH_URL + "me/messages?access_token=" + accessToken ,
+		uri: FACEBOOK_GRAPH_URL + "me/messages?"+generateProof(accessToken) ,
 		headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		body: messageData,
 		json: true
@@ -356,9 +384,10 @@ function getUserProfile(userId, fields, accessToken) {
 		if ( !userId ) {
 			return resolve({})
 		}
+
 		var options = {
 			method: "GET",
-			uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&access_token=" + accessToken ,
+			uri: FACEBOOK_GRAPH_URL + userId + "?fields=" + fields + "&"+generateProof(accessToken) ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 			json: true
 		}
@@ -378,7 +407,7 @@ var sendNewPostToGroup = (groupId, message, accessToken) => {
 	return new Promise(resolve => {
 		var options = {
 			method: "POST",
-			uri: FACEBOOK_GRAPH_URL + groupId + "/feed?access_token=" + accessToken + "&message=" + message ,
+			uri: FACEBOOK_GRAPH_URL + groupId + "/feed?" + generateProof(accessToken)+"&message=" + message ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 		rpn(options)
@@ -397,7 +426,7 @@ var sendCommentToPost = (postId, message, accessToken) => {
 	return new Promise(resolve => {
 		var options = {
 			method: "POST",
-			uri: FACEBOOK_GRAPH_URL + postId + "/comments?access_token=" + accessToken + "&message=" + message ,
+			uri: FACEBOOK_GRAPH_URL + postId + "/comments?"+generateProof(accessToken)+ "&message=" + message ,
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
@@ -431,18 +460,19 @@ var verifySubscription = (req, res) => {
 }
 
 var getCommunity = (accessToken) => {
-	return new Promise( resolve => {
+	return new Promise( (resolve, reject) => {
 		var options = {
-			uri: FACEBOOK_GRAPH_URL + "/community?access_token=" + accessToken,
+			uri: FACEBOOK_GRAPH_URL + "/community?"+generateProof(accessToken),
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
 		rpn(options)
 			.then( json => {
-				return resolve(JSON.parse(json))
+				resolve(JSON.parse(json))
 			})
-			.catch(err => {
-				console.error("getCommunity got an error:", err) /// show status code, status message and error
+			.catch(error => {
+				console.error("getCommunity got an error:", error) /// show status code, status message and error
+				reject(error)
 			})
 	})
 }
@@ -451,7 +481,7 @@ var getMembers = (community_id, next = null, limit, accessToken) => {
 	return new Promise( resolve => {
 		let fields = "title, department, name, location, locale, email, primary_phone"
 		var options = {      
-			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id + "/members?limit=" + limit + "&fields=" + fields +"&access_token=" + accessToken,
+			uri: (next != null) ? next : FACEBOOK_GRAPH_URL + community_id + "/members?limit=" + limit + "&fields=" + fields +"&" + generateProof(accessToken),
 			headers: { "Content-Type": "application/json", "Accept": "application/json" },
 		}
 
@@ -464,12 +494,150 @@ var getMembers = (community_id, next = null, limit, accessToken) => {
 			})
 	})
 }
+var webhookSubscribe = () => {
+	return new Promise( (resolve, reject) => {
+		let access_token = process.env.MESSENGER_APP_ID+"|"+process.env.MESSENGER_APP_SECRET
+		let fields = "mention,message_deliveries,messages,messaging_postbacks,message_reads"
+		var options = {
+			method:"POST",      
+			uri: FACEBOOK_GRAPH_URL + 'app/subscriptions?' + "object=page" + "&fields=" + fields + "&access_token=" + access_token + "&include_values=true" + "&verify_token="+process.env.WORKPLACE_VERIFY_TOKEN +"&callback_url=" + process.env.CALLBACK_URL,
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then( json => {
+				console.log("webhookSubscribe",json)
+				return resolve(JSON.parse(json))
+			})
+			.catch(err => {
+				console.error("webhookSubscribe got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+}
+
+var getAccessToken = (code) => {
+
+	return new Promise((resolve, reject) => {
+		const clientID = process.env.MESSENGER_APP_ID
+		const clientSecret = process.env.MESSENGER_APP_SECRET
+		const redirectURL = process.env.REDIRECT_URL
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + 'oauth/access_token?' + 'client_id=' + clientID + "&client_secret=" + clientSecret + "&redirect_uri=" + redirectURL + "&code=" + code,
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getAccessToken", json)
+				var access_token = json['access_token']
+				return resolve(access_token)
+			})
+			.catch(err => {
+				console.error("getAccessToken got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+
+}
+
+var getCompany = (accessToken) => {
+
+	return new Promise((resolve, reject) => {
+		const clientID = process.env.MESSENGER_APP_ID
+		const clientSecret = process.env.MESSENGER_APP_SECRET
+		const redirectURL = process.env.REDIRECT_URL
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + 'company?' + "fields=name&" + generateProof(accessToken),
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getCompany", json)
+				json['access_token'] = accessToken
+				return resolve(json)
+			})
+			.catch(err => {
+				console.error("getCompany got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+
+}
+
+var getGroupInfo = (groupId, accessToken) => {
+	return new Promise((resolve, reject) => {
+		var options = {
+			method: "GET",
+			uri: FACEBOOK_GRAPH_URL + groupId + "?"+generateProof(accessToken),
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then(json => {
+				json = JSON.parse(json)
+				console.log("getGroupInfo", json)
+				return resolve(json)
+			})
+			.catch(err => {
+				console.error("getGroupInfo got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+}
+
+var parseSignedRequest = (request) => {
+	return new Promise((resolve, reject) => {
+		console.log("signedRequest", request)
+		if (!request) {
+			reject(new Error('No signed request sent'))
+		  }
+		  const parts = request.split('.');
+		  if (parts.length !== 2) {
+			reject(new Error('Signed request is malformatted', request))
+		  }
+		  const base64url = require('base64url');
+		  const [signature, payload] = parts.map(value => base64url.decode(value));
+		  const expectedSignature = crypto.createHmac('sha256', process.env.MESSENGER_APP_SECRET)
+			.update(parts[1])
+			.digest('hex');
+		  if (expectedSignature !== signature) {
+			reject(new Error(`Signed request does not match. Expected ${expectedSignature} but got ${signature}.`))
+		  } else {
+			  resolve(JSON.parse(payload))
+		  }
+	});
+}
+/**
+ * 
+ * For Production installs of Application, 
+ * FB reqires sending the access_token as well as hash of the key/secret
+ * This is ONLY used in production apps
+ * see https://developers.facebook.com/docs/workplace/integrations/third-party
+ */
+var generateProof = (accessToken) => {
+	if (!process.env.WP_PRODUCTION) {
+		return 'access_token=' + accessToken 
+	}
+	
+	const appsecretTime = Math.floor(Date.now() / 1000) - 10;
+    const appsecretProof = crypto
+        .createHmac('sha256', process.env.MESSENGER_APP_SECRET)
+        .update(accessToken + '|' + appsecretTime)
+        .digest('hex');
+	return 'access_token=' + accessToken + '&appsecret_proof=' + appsecretProof + '&appsecret_time=' + appsecretTime
+}
 
 
 module.exports = {
-	PROFILE_API, sendProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
+	PROFILE_API, sendProfileApiBatch, getProfileApiBatch, getUserProfile, sendNewPostToGroup, sendCommentToPost,
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, getMembers
+	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, parseSignedRequest, generateProof
 }
