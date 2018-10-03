@@ -185,49 +185,26 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
-	let crypto = require("crypto")
-	const hdap = require("../../../intergrations/hdap.js")
-
 	console.log("Should be uninstalled here")
-	var data = req.body.entry[0]
-	try {
-		var community_id = req.body.entry[0].changes[0].value.community.id
-		return new Promise((resolve, reject) => {
-			//remove all VBC users in company
-			console.log("removing users with community Id " + community_id)
-			hdap.removeUsersWithCommunityId(community_id)
-			.then(() => {
-				console.log("removing chat sessions using " + community_id)
-				sessionsManager.clearChatSessions(community_id)
-				resolve()
-			}).catch(error => {
-				console.log("handleUninstallEvent error", error)
-				reject(error)
-			})
-		})
-	} catch (e) {
 
+	var signature = req.headers['x-hub-signature'];
+
+	if (!signature) {
+		throw new Error('Missing request signature.');
+	} else {
+		var elements = signature.split('=');
+		var signatureHash = elements[1];
+
+		var expectedHash = crypto.createHmac('sha1', process.env.MESSENGER_APP_SECRET).update(buf).digest('hex');
+
+		if (signatureHash != expectedHash) {
+			throw new Error('Couldn\'t validate the request signature.');
+		}
+		else {
+			// x-hub-signature validation success
+			// Proceed with uninstall logic
+		}
 	}
-	res.sendStatus(200);
-
-	// var signature = req.headers['x-hub-signature'];
-
-	// if (!signature) {
-	// 	throw new Error('Missing request signature.');
-	// } else {
-	// 	var elements = signature.split('=');
-	// 	var signatureHash = elements[1];
-
-	// 	var expectedHash = crypto.createHmac('sha1', process.env.MESSENGER_APP_SECRET).update(buf).digest('hex');
-
-	// 	if (signatureHash != expectedHash) {
-	// 		throw new Error('Couldn\'t validate the request signature.');
-	// 	}
-	// 	else {
-	// 		// x-hub-signature validation success
-	// 		// Proceed with uninstall logic
-	// 	}
-	// }
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
