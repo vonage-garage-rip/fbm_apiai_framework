@@ -82,7 +82,7 @@ const handlePostRequest = (req, res) => {
 			processWorkplaceSecurityEvents(data)
 			break
 		case "application":
-			processWorkplaceApplicationEvents(req, data)
+			processWorkplaceApplicationEvents(data)
 			break
 		default:
 			console.log("Unhandled Webhook Object", data.object)
@@ -273,40 +273,8 @@ function processWorkplaceSecurityEvents(data) {
 	})
 }
 
-function processWorkplaceApplicationEvents(req, data) {
-	
+function processWorkplaceApplicationEvents(data) {
 	console.log("processWorkplaceApplicationEvents", data)
-
-	var signature = req.headers['x-hub-signature'];
-
-  if (!signature) {
-      throw new Error('Missing request signature.');
-  } else {
-    var elements = signature.split('=');
-    var signatureHash = elements[1];
-
-    var expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET).update(buf).digest('hex');
-
-    if (signatureHash != expectedHash) {
-      throw new Error('Couldn\'t validate the request signature.');
-    }
-    else {
-      // x-hub-signature validation success
-	  // Proceed with uninstall logic
-	  
-	  return new Promise((resolve, reject) => {
-		//remove all VBC users in company
-		console.log("removing users with community Id " + data.community_id)
-		// hdap.removeUsersWithCommunityId(data.community_id)
-		.then(() => {
-			console.log("removing chat sessions using " + data.community_id)
-			// sessionsManager.clearChatSessions(data.community_id)
-			resolve()
-		}).catch(error => {
-			reject(error)
-		})
-	})
-    }
 } 
 
 function sendMessage(messageObj, session) {
