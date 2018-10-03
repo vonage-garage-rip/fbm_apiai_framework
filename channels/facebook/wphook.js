@@ -185,7 +185,7 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
-	console.log("Should be uninstalled here")
+	
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
