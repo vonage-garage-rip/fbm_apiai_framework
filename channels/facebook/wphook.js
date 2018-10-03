@@ -40,7 +40,13 @@ var handleInboundInstallEvent = function (req, res) {
 	return handleInstallEvent(req, res)
 }
 var handleInboundUninstallEvent = function (req, res) {
-	return handleUninstallEvent(req, res)
+	if (req.method == "GET") {
+		req.appSecret = WORKPLACE_VERIFY_TOKEN
+		utility.verifySubscription(req, res)
+	}
+	else if (req.method === "POST") {
+		handleUninstallEvent(req, res)
+	}
 }
 
 /*
@@ -177,6 +183,8 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
+	console.log("Uninstalled")
+	res.send(200)
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
