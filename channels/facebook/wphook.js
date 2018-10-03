@@ -81,9 +81,6 @@ const handlePostRequest = (req, res) => {
 		case "workplace_security":
 			processWorkplaceSecurityEvents(data)
 			break
-		case "application":
-			processWorkplaceApplicationEvents(data)
-			break
 		default:
 			console.log("Unhandled Webhook Object", data.object)
 		}
@@ -273,10 +270,6 @@ function processWorkplaceSecurityEvents(data) {
 	})
 }
 
-function processWorkplaceApplicationEvents(data) {
-	console.log("processWorkplaceApplicationEvents", data)
-} 
-
 function sendMessage(messageObj, session) {
 
 	var accessToken = WORKPLACE_PAGE_ACCESS_TOKEN
@@ -368,10 +361,6 @@ const webhookSubscribe = () => {
 	utility.webhookSubscribe()
 }
 
-const applicationSubscribe = () => {
-	utility.applicationSubscribe()
-}
-
 const generateProof = (accessToken) => {
 	return utility.generateProof(accessToken)
 }
@@ -394,6 +383,5 @@ module.exports.getProfileApiBatch = getProfileApiBatch
 module.exports.getCommunity = getCommunity
 module.exports.getGroupInfo = getGroupInfo
 module.exports.webhookSubscribe = webhookSubscribe
-module.exports.applicationSubscribe = applicationSubscribe
 module.exports.generateProof = generateProof
 module.exports.parseSignedRequest = parseSignedRequest
