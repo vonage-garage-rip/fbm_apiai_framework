@@ -46,7 +46,6 @@ var handleInboundUninstallEvent = function (req, res) {
 	else if (req.method === "POST") {
 		handleUninstallEvent(req, res)
 	}
-
 }
 
 /*
