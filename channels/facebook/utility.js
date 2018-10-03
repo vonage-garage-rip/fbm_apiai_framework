@@ -516,6 +516,28 @@ var webhookSubscribe = () => {
 	})
 }
 
+var applicationSubscribe = () => {
+	return new Promise( (resolve, reject) => {
+		let access_token = process.env.MESSENGER_APP_ID+"|"+process.env.MESSENGER_APP_SECRET
+		let fields = "mention,message_deliveries,messages,messaging_postbacks,message_reads"
+		var options = {
+			method:"POST",      
+			uri: FACEBOOK_GRAPH_URL + 'app/subscriptions?' + "object=page" + "&fields=" + fields + "&access_token=" + access_token + "&include_values=true" + "&verify_token="+process.env.WORKPLACE_VERIFY_TOKEN +"&callback_url=" + process.env.CALLBACK_URL,
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+		}
+
+		rpn(options)
+			.then( json => {
+				console.log("webhookSubscribe",json)
+				return resolve(JSON.parse(json))
+			})
+			.catch(err => {
+				console.error("webhookSubscribe got an error:", err) /// show status code, status message and error
+				reject(err)
+			})
+	})
+}
+
 var getAccessToken = (code) => {
 
 	return new Promise((resolve, reject) => {
@@ -639,5 +661,5 @@ module.exports = {
 	sendTextMessage, sendQuickReply, sendGenericMessage, sendCustomMessage, sendImageMessage, sendAccountLinking, 
 	verifyWithChannelAppSecretHandler, verifySubscription, 
 	receivedDeliveryConfirmation, receivedAuthentication, receivedMessageRead,
-	getCommunity, webhookSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, parseSignedRequest, generateProof
+	getCommunity, webhookSubscribe, applicationSubscribe, getMembers, getAccessToken, getCompany, getGroupInfo, parseSignedRequest, generateProof
 }
