@@ -40,7 +40,13 @@ var handleInboundInstallEvent = function (req, res) {
 	return handleInstallEvent(req, res)
 }
 var handleInboundUninstallEvent = function (req, res) {
-	return handleUninstallEvent(req, res)
+	if (req.method == "GET") {
+		req.appSecret = WORKPLACE_VERIFY_TOKEN
+		utility.verifySubscription(req, res)
+	}
+	else if (req.method === "POST") {
+		handleUninstallEvent(req, res)
+	}
 }
 
 /*
