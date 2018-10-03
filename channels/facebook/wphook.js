@@ -8,7 +8,7 @@
  */
 
 "use strict"
-const crypto = require("crypto")
+
 const sessionsManager = require("../../sessionsManager")
 const utility = require("./utility")
 const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
@@ -285,7 +285,7 @@ function processWorkplaceApplicationEvents(req, data) {
 		var elements = signature.split('=');
 		var signatureHash = elements[1];
 
-		var expectedHash = crypto.createHmac('sha1', process.env.MESSENGER_APP_SECRET).update(buf).digest('hex');
+		var expectedHash = crypto.createHmac('sha1', process.env.APP_SECRET).update(buf).digest('hex');
 
 		if (signatureHash != expectedHash) {
 			throw new Error('Couldn\'t validate the request signature.');
