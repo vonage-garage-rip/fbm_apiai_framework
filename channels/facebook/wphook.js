@@ -8,6 +8,7 @@
  */
 
 "use strict"
+const crypto = require("crypto")
 const sessionsManager = require("../../sessionsManager")
 const utility = require("./utility")
 const firebaseDatabase = require("../../DB/firebase").firebaseDatabase
@@ -273,7 +274,7 @@ function processWorkplaceSecurityEvents(data) {
 }
 
 function processWorkplaceApplicationEvents(req, data) {
-	var crypto = require('crypto');
+
 	console.log("processWorkplaceApplicationEvents", data)
 
 	var signature = req.headers['x-hub-signature'];
