@@ -185,7 +185,14 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
-	
+	if (req.method == "GET") {
+		req.appSecret = WORKPLACE_VERIFY_TOKEN
+		utility.verifySubscription(req, res)
+	}
+	else if (req.method === "POST") {
+		handleUninstallEvent(req, res)
+	}
+
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
