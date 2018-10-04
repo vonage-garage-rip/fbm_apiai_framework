@@ -183,7 +183,24 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
-	console.log("Uninstalled")
+	console.log("verify signature")
+	const shaSignature = req.get('x-hub-signature');
+	if (!shaSignature) {
+		console.log("Responds with '403 Forbidden' if no x-hub-signature")
+		res.sendStatus(403);
+		return;
+	}
+			
+	const bodySignature = crypto.createHmac('sha1', process.env.APP_SECRET)
+		.update(req.rawBody, 'utf-8')
+		.digest('hex');
+		
+	if ('sha1=' + bodySignature !== shaSignature) {
+		console.log("Invalid signature")
+		res.status(400).send('Invalid signature');
+		return
+	} 
+	console.log("signature verified")
 	const hdap = require("../../../intergrations/hdap.js")
 	try {
 		var community_id = req.body.entry[0].changes[0].value.community.id
