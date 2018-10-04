@@ -49,8 +49,8 @@ var SessionsDbClass = require("./DB/sessionsDB")
 var TokensDbClass = require("./DB/tokenDB")
 
 const getAllActiveSessions = () => {
-	console.log("userChannelToSessions", userChannelToSessions);
-	console.log("chatSessions", chatSessions);
+	// console.log("userChannelToSessions", userChannelToSessions);
+	// console.log("chatSessions", chatSessions);
 	sessionsDb.getAllActiveSessions()
 		.then(activeSessions => {
 			for ( const sessionID in activeSessions) {
