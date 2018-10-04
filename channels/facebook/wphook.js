@@ -184,6 +184,47 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
+	
+	let crypto = require("crypto")
+	console.log("verify signature")
+	const shaSignature = req.get('x-hub-signature');
+	if (!shaSignature) {
+		console.log("Responds with '403 Forbidden' if no x-hub-signature")
+		res.sendStatus(403);
+		return;
+	}
+			
+	const bodySignature = crypto.createHmac('sha1', process.env.MESSENGER_APP_SECRET)
+		.update(req.rawBody, 'utf-8')
+		.digest('hex');
+		
+	if ('sha1=' + bodySignature !== shaSignature) {
+		console.log("Invalid signature")
+		res.status(400).send('Invalid signature');
+		return
+	} 
+	console.log("signature verified")
+	const hdap = require("../../../intergrations/hdap.js")
+	try {
+		var community_id = req.body.entry[0].changes[0].value.community.id
+		return new Promise((resolve, reject) => {
+			//remove all VBC users in company
+			console.log("removing users with community Id " + community_id)
+			hdap.removeUsersWithCommunityId(community_id)
+			.then(() => {
+				console.log("removing chat sessions using " + community_id)
+				sessionsManager.clearChatSessions(community_id)
+				resolve()
+			}).catch(error => {
+				console.log("handleUninstallEvent error", error)
+				reject(error)
+			})
+		})
+	} catch (e) {
+
+	}
+
+	res.sendStatus(200)
 }
 
 const receivedMessage = (messagingEvent, pageID) => {
