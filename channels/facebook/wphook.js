@@ -183,6 +183,8 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
+	
+	let crypto = require("crypto")
 	console.log("verify signature")
 	const shaSignature = req.get('x-hub-signature');
 	if (!shaSignature) {
@@ -191,7 +193,7 @@ const handleUninstallEvent = (req, res) => {
 		return;
 	}
 			
-	const bodySignature = crypto.createHmac('sha1', process.env.APP_SECRET)
+	const bodySignature = crypto.createHmac('sha1', process.env.MESSENGER_APP_SECRET)
 		.update(req.rawBody, 'utf-8')
 		.digest('hex');
 		
