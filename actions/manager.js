@@ -20,4 +20,5 @@ const registerAction = (actionName, method) => {
 	actions[actionName] = method
 }
 
+
 module.exports = {registerAction, handleAction}
