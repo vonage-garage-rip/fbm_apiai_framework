@@ -260,7 +260,7 @@ var getSessionByChannelEvent = (messagingEvent) => {
 				profile: {},
 				sourceType: messagingEvent.sourceType || null,
 				source: messagingEvent.source || null, 
-				from: messagingEvent.from || source,
+				from: messagingEvent.from || messagingEvent.source,
 				lastInboundMessage: moment().format("MMMM Do YYYY, h:mm:ss a"),
 				externalIntegrations: {},
 				data: messagingEvent.data || {},

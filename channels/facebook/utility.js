@@ -384,6 +384,9 @@ function getUserProfile(userId, fields, accessToken) {
 		if ( !userId ) {
 			return resolve({})
 		}
+		if (userId == process.env.WORKPLACE_GROUP_ID) {
+			return resolve({})
+		}
 
 		var options = {
 			method: "GET",
