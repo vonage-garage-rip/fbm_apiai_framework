@@ -335,6 +335,10 @@ function sendMessage(messageObj, session) {
 			break
 		case sessionsManager.SOURCE_TYPE.ONE_ON_ONE_CHAT:
 
+			if (typeof messageObj.type == "undefined") {
+				utility.sendTextMessage(session.source, messageObj.text.text[0], accessToken)
+				return
+			}
 			//HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
 			switch (messageObj.type) {
 			case sessionsManager.MESSAGE_TYPES.TEXT:

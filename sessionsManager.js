@@ -336,7 +336,7 @@ var handleResponseWithMessages = (messages, session) => {
 			// filtering by platofmr property but this will add unneccessary delays
 			case CHANNELS.FB_MESSENGER:
 			case CHANNELS.FB_WORKPLACE:
-				if (!messageObj.platform || messageObj.platform=="facebook") {            
+				if (!messageObj.platform || messageObj.platform=="facebook" || messageObj.platform=="PLATFORM_UNSPECIFIED") {            
 					channel.sendMessage(messageObj, session)
 				}
 				break
@@ -353,14 +353,14 @@ var handleResponseWithMessages = (messages, session) => {
 const handleApiaiResponse = (apiairesponse) => {
 	if (apiairesponse) {
 		console.log("HANDLE APIAI RESPONSE", apiairesponse)
-		let actionName = apiairesponse.result.action
+		let actionName = apiairesponse.action
 		if ( actionName && actionName!=="input.unknown" ) {
-			actionsManager.handleAction(apiairesponse.result.action, apiairesponse.result, getSessionBySessionId(apiairesponse.sessionId))
+			actionsManager.handleAction(apiairesponse.action, apiairesponse, getSessionBySessionId(apiairesponse.sessionId))
 		}
         
-		let messages = apiairesponse.result.fulfillment.messages ? apiairesponse.result.fulfillment.messages : [apiairesponse.result.fulfillment.speech]
+		let messages = apiairesponse.fulfillmentMessages ? apiairesponse.fulfillmentMessages : [apiairesponse.result.fulfillmentText]
 		var filteredMessages = messages.filter(function (message) {
-			return message.speech != "" 
+			return message.text[0] != "" 
 		})
 		if (filteredMessages.length == 0) {
 			console.warn("handleApiaiResponse: No message to send")
