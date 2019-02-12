@@ -75,6 +75,7 @@ class ApiAi {
 		console.log('Detected intent');
 		const result = responses[0].queryResult;
 		result.sessionId = sessionId
+		result.parameters = structJson.structProtoToJson(result.parameters)
 		console.log(result)
 		console.log(`  Query: ${result.queryText}`);
 		console.log(`  Response: ${result.fulfillmentText}`);

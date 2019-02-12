@@ -345,7 +345,7 @@ function sendMessage(messageObj, session) {
 				utility.sendTextMessage(session.source, messageObj.text.text[0], accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
-				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, accessToken)
+				utility.sendQuickReply(session.source, messageObj.quickReplies.title, messageObj.quickReplies, accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.IMAGE:
 				utility.sendImageMessage(session.source, messageObj.imageUrl, accessToken)

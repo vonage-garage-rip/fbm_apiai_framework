@@ -343,6 +343,8 @@ var handleResponseWithMessages = (messages, session) => {
 					messageObj.payload = structjson.structProtoToJson(messageObj.payload)
 					if (messageObj.message == "text") {
 						messageObj.type = MESSAGE_TYPES.TEXT
+					} if (messageObj.message == "quickReplies") {
+						messageObj.type = MESSAGE_TYPES.QUICK_REPLY
 					} else {
 						messageObj.type = MESSAGE_TYPES.CUSTOME
 					}

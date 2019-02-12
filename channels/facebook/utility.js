@@ -239,7 +239,7 @@ function sendQuickReply(recipientId, title, quickReplies, accessToken) {
 		},
 		message: {
 			text: title,
-			quick_replies: quickReplies.map( quickReply => {
+			quick_replies: quickReplies.quickReplies.map( quickReply => {
 				if (typeof (quickReply) === "string") {
 					return {
 						content_type: "text",
@@ -357,6 +357,7 @@ function sendAccountLinking(recipientId, accessToken) {
 } */
 
 function callMessageAPI(messageData, accessToken) {
+	console.log("callMessageAPI: ", messageData)
 	var options = {
 		method: "POST",
 		uri: FACEBOOK_GRAPH_URL + "me/messages?"+generateProof(accessToken) ,
