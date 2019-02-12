@@ -4,6 +4,8 @@ const actionsManager = require("./actions/manager")
 
 const moment = require("moment")
 
+const structjson = require('./structjson.js')
+
 const EVENTS = {
 	GET_STARTED_PAYLOAD: "GET_STARTED_PAYLOAD",
 	ACCOUNT_LINKED: "ACCOUNT_LINKED"
@@ -336,7 +338,16 @@ var handleResponseWithMessages = (messages, session) => {
 			// filtering by platofmr property but this will add unneccessary delays
 			case CHANNELS.FB_MESSENGER:
 			case CHANNELS.FB_WORKPLACE:
-				if (!messageObj.platform || messageObj.platform=="facebook" || messageObj.platform=="PLATFORM_UNSPECIFIED") {            
+				if (!messageObj.platform || messageObj.platform.toLowerCase()=="facebook")  {    
+					//convert obj        
+					messageObj.payload = structjson.structProtoToJson(messageObj.payload)
+					if (messageObj.message == "text") {
+						messageObj.type = MESSAGE_TYPES.TEXT
+					} else {
+						messageObj.type = MESSAGE_TYPES.CUSTOME
+					}
+					channel.sendMessage(messageObj, session)
+				} else if (messageObj.platform == "PLATFORM_UNSPECIFIED") {
 					channel.sendMessage(messageObj, session)
 				}
 				break
@@ -359,14 +370,14 @@ const handleApiaiResponse = (apiairesponse) => {
 		}
         
 		let messages = apiairesponse.fulfillmentMessages ? apiairesponse.fulfillmentMessages : [apiairesponse.result.fulfillmentText]
-		var filteredMessages = messages.filter(function (message) {
-			return message.text[0] != "" 
-		})
-		if (filteredMessages.length == 0) {
-			console.warn("handleApiaiResponse: No message to send")
-			return
-		}
-		handleResponseWithMessages(filteredMessages, getSessionBySessionId(apiairesponse.sessionId))
+		// var filteredMessages = messages.filter(function (message) {
+		// 	return message.text[0] != "" 
+		// })
+		// if (filteredMessages.length == 0) {
+		// 	console.warn("handleApiaiResponse: No message to send")
+		// 	return
+		// }
+		handleResponseWithMessages(messages, getSessionBySessionId(apiairesponse.sessionId))
 	}
 }
 

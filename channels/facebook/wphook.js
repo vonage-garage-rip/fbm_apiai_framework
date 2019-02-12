@@ -342,7 +342,7 @@ function sendMessage(messageObj, session) {
 			//HANDLE MANY TYPES OF FB MESSAGES [TEXT, QUICK REPLY, IMAGE, CARD, CUSOTME].
 			switch (messageObj.type) {
 			case sessionsManager.MESSAGE_TYPES.TEXT:
-				utility.sendTextMessage(session.source, messageObj.speech, accessToken)
+				utility.sendTextMessage(session.source, messageObj.text.text[0], accessToken)
 				break
 			case sessionsManager.MESSAGE_TYPES.QUICK_REPLY:
 				utility.sendQuickReply(session.source, messageObj.title, messageObj.replies, accessToken)
