@@ -41,7 +41,7 @@ describe("*****ApiAi Test Suite: ", function() {
 					return agent.sendTextMessageToApiAi("This is a test.", session.sessionId)
 						.then( apiAiresponse => {
 							expect(apiAiresponse).to.exist
-							expect(apiAiresponse.result.resolvedQuery).to.equal("This is a test.")
+							expect(apiAiresponse.result.queryText).to.equal("This is a test.")
 						})
 				})
 		})
@@ -54,7 +54,7 @@ describe("*****ApiAi Test Suite: ", function() {
 					return agent.sendEventToApiAi(channelTest, session.sessionId)
 						.then( apiAiresponse => {
 							expect(apiAiresponse).to.exist
-							expect(apiAiresponse.result.resolvedQuery).to.equal("FB_WORKPLACE")
+							expect(apiAiresponse.result.queryText).to.equal("FB_WORKPLACE")
 						})
 				})
 		})
