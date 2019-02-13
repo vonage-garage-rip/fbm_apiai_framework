@@ -50,7 +50,7 @@ class ApiAi {
 	}
 
 
-	async sendText(textMessage, sessionId, projectId = 'vee-v2') {
+	async sendText(textMessage, sessionId, projectId = process.env.GCLOUD_PROJECT_ID) {
 		// A unique identifier for the given session
 
 		// Create a new session
@@ -87,7 +87,7 @@ class ApiAi {
 		return result
 	}
 
-	async sendEvent(event, sessionId, projectId = 'vee-v2') {
+	async sendEvent(event, sessionId, projectId = process.env.GCLOUD_PROJECT_ID) {
 		// A unique identifier for the given session
 
 		// Create a new session
