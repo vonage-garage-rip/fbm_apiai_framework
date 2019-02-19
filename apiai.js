@@ -1,4 +1,3 @@
-var apiai = require("apiai")
 const dialogflow = require('dialogflow');
 const structJson = require('./structjson.js')
 
