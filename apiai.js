@@ -1,5 +1,4 @@
-var apiai = require("apiai")
-const dialogflow = require('dialogflow');
+const dialogflow = require('dialogflow').v2beta1;
 const structJson = require('./structjson.js')
 
 const sessionsManager = require("./sessionsManager")
@@ -14,22 +13,7 @@ class ApiAi {
 	sendTextMessageToApiAi(textMessage, sessionId) {
 		var self = this
 		return new Promise((resolve, reject) => {
-
 			return resolve(self.sendText(textMessage, sessionId))
-
-			// 	var request = self.app.textRequest(textMessage, {sessionId: sessionId, contexts: session.apiaiContexts})
-
-			// 	request.on("response", function(response) {
-			// 		console.log("sendTextMessageToApiAi: response=" + JSON.stringify(response))
-			// 		return resolve(response)
-			// 	})
-
-			// 	request.on("error", function(error) {
-			// 		return reject(error)
-			// 	})
-
-			// 	request.end()
-
 		})
 	}
 
@@ -50,15 +34,22 @@ class ApiAi {
 	}
 
 
-	async sendText(textMessage, sessionId, projectId = 'vee-v2') {
+
+	async sendText(textMessage, sessionId) {
 		// A unique identifier for the given session
 
 		// Create a new session
 		const sessionClient = new dialogflow.SessionsClient();
-		const sessionPath = sessionClient.sessionPath(projectId, sessionId);
+		const sessionPath = sessionClient.sessionPath(process.env.GCLOUD_PROJECT_ID, sessionId);
+		const knowledgebase = new dialogflow.KnowledgeBasesClient();
+
+		const knowledgeBasePath = knowledgebase.knowledgeBasePath(
+			process.env.GCLOUD_PROJECT_ID,
+			process.env.KNOWLEDGE_BASE_NAME
+		);
 
 		// The text query request.
-		const request = {
+		var request = {
 			session: sessionPath,
 			queryInput: {
 				text: {
@@ -68,6 +59,9 @@ class ApiAi {
 					languageCode: 'en-US',
 				},
 			},
+			queryParams: {
+				knowledgeBaseNames:[knowledgeBasePath]
+			}
 		};
 
 		// Send request and log result
@@ -87,12 +81,12 @@ class ApiAi {
 		return result
 	}
 
-	async sendEvent(event, sessionId, projectId = 'vee-v2') {
+	async sendEvent(event, sessionId) {
 		// A unique identifier for the given session
 
 		// Create a new session
 		const sessionClient = new dialogflow.SessionsClient();
-		const sessionPath = sessionClient.sessionPath(projectId, sessionId);
+		const sessionPath = sessionClient.sessionPath(process.env.GCLOUD_PROJECT_ID, sessionId);
 
 		// The text query request.
 		const request = {
@@ -117,7 +111,7 @@ class ApiAi {
 		}
 		return result
 	}
-	
+
 }
 
 const getAgent = (apiaiToken) => {
