@@ -186,6 +186,8 @@ const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
 	console.log("un-install called")
 	console.log("request",req.body)
+	console.log("entry",req.body.entry)
+
 	console.log("***")
 	
 	let crypto = require("crypto")
