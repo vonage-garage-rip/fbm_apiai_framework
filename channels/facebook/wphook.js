@@ -210,19 +210,7 @@ const handleUninstallEvent = (req, res) => {
 	const hdap = require("../../../intergrations/hdap.js")
 	try {
 		var community_id = req.body.entry[0].changes[0].value.community.id
-		return new Promise((resolve, reject) => {
-			//remove all VBC users in company
-			console.log("removing users with community Id " + community_id)
-			hdap.removeUsersWithCommunityId(community_id)
-			.then(() => {
-				console.log("removing chat sessions using " + community_id)
-				sessionsManager.clearChatSessions(community_id)
-				resolve()
-			}).catch(error => {
-				console.log("handleUninstallEvent error", error)
-				reject(error)
-			})
-		})
+		hdap.removeUsers(community_id)
 	} catch (e) {
 
 	}
