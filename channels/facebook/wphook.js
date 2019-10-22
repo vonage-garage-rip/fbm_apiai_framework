@@ -212,6 +212,7 @@ const handleUninstallEvent = (req, res) => {
 		var community_id = req.body.entry[0].changes[0].value.community.id
 		hdap.removeUsers(community_id)
 	} catch (e) {
+		console.log("Uninstall Error",e)
 
 	}
 
