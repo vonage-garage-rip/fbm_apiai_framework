@@ -184,6 +184,10 @@ const handleInstallEvent = (req, res) => {
 
 const handleUninstallEvent = (req, res) => {
 	//TODO wating on implmention from FB
+	console.log("un-install called")
+	console.log("request",req)
+	console.log("response",res)
+	console.log("***")
 	
 	let crypto = require("crypto")
 	console.log("verify signature")
