@@ -48,6 +48,11 @@ class ApiAi {
 			process.env.KNOWLEDGE_BASE_NAME
 		);
 
+		//cap df text to 256
+		if(textMessage.length > 256) {
+			textMessage = textMessage.substring(0,256);
+		}
+
 		// The text query request.
 		var request = {
 			session: sessionPath,
